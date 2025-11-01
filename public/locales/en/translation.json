@@ -1,3 +1,7 @@
 {
-    "welcome":"welcome to our website"
+    "welcome":"welcome to our website",
+    "language":"en",
+    "auction":"auction",
+    "shareAdv":"post your ad",
+    "search":"search"
 }
