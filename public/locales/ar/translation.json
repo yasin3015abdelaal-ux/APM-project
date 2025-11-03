@@ -1,7 +1,17 @@
-{ 
-    "welcome":"أهلا بك في موقعنا",
-    "language":"ar",
-    "auction":"المزاد",
-    "shareAdv":"انشر اعلانك",
-    "search":"البحث"
+{
+    "welcome": "أهلا بك في موقعنا",
+    "language": "ar",
+    "auction": "المزاد",
+    "shareAdv": "انشر اعلانك",
+    "search": "البحث",
+    "home": {
+        "adsSection": {
+            "adsTitle": "الإعلانات",
+            "contactSeller": "تواصل مع البائع",
+            "hoursAgo": "منذ {{hours}} ساعات",
+            "price": "{{price}} جنيه",
+            "location": "حدائق المعادي",
+            "productTitle": "سادية صدور دجاج 450غ"
+        }
+    }
 }
