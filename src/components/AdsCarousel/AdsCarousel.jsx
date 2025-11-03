@@ -51,6 +51,54 @@ const ads = [
         time: "منذ 7 ساعات",
         price: "100 جنيه",
         image: sadiaChickenImg,
+    },
+    {
+        id: 7,
+        title: "ساديا صدور دجاج 450غ",
+        location: "حدائق المعادي",
+        time: "منذ 7 ساعات",
+        price: "100 جنيه",
+        image: sadiaChickenImg,
+    },
+    {
+        id: 8,
+        title: "ساديا صدور دجاج 450غ",
+        location: "حدائق المعادي",
+        time: "منذ 7 ساعات",
+        price: "100 جنيه",
+        image: sadiaChickenImg,
+    },
+    {
+        id: 9,
+        title: "ساديا صدور دجاج 450غ",
+        location: "حدائق المعادي",
+        time: "منذ 7 ساعات",
+        price: "100 جنيه",
+        image: sadiaChickenImg,
+    },
+    {
+        id: 10,
+        title: "ساديا صدور دجاج 450غ",
+        location: "حدائق المعادي",
+        time: "منذ 7 ساعات",
+        price: "100 جنيه",
+        image: sadiaChickenImg,
+    },
+    {
+        id: 11,
+        title: "ساديا صدور دجاج 450غ",
+        location: "حدائق المعادي",
+        time: "منذ 7 ساعات",
+        price: "100 جنيه",
+        image: sadiaChickenImg,
+    },
+    {
+        id: 12,
+        title: "ساديا صدور دجاج 450غ",
+        location: "حدائق المعادي",
+        time: "منذ 7 ساعات",
+        price: "100 جنيه",
+        image: sadiaChickenImg,
     }
 ];
 
@@ -63,34 +111,37 @@ function AdsCarousel() {
     const startX = useRef(0);
     const scrollLeft = useRef(0);
 
-    useEffect(() => {
-        const interval = setInterval(() => {
-            if (scrollRef.current && !isDragging.current) {
-                const container = scrollRef.current;
-                const cardWidth = container.offsetWidth / 4;
-                const moveBy = cardWidth * 4;
+useEffect(() => {
+    const interval = setInterval(() => {
+        if (scrollRef.current && !isDragging.current) {
+            const container = scrollRef.current;
+            const cardWidth = 250; 
+            const gap = 16; 
+            const cardsToScroll = 4;
+            const scrollAmount = (cardWidth + gap) * cardsToScroll;
+            
+            if (dir === "rtl") {
+                const currentScroll = Math.abs(container.scrollLeft);
                 const maxScroll = container.scrollWidth - container.clientWidth;
-
-                if (dir === "rtl") {
-                    if (container.scrollLeft <= 0) {
-                        container.scrollTo({ left: maxScroll, behavior: "smooth" });
-                    } else {
-                        container.scrollBy({ left: -moveBy, behavior: "smooth" });
-                    }
+                
+                if (currentScroll >= maxScroll - 10) {
+                    container.scrollTo({ left: 0, behavior: "smooth" });
                 } else {
-                    if (
-                        container.scrollLeft + container.clientWidth >=
-                        container.scrollWidth - 10
-                    ) {
-                        container.scrollTo({ left: 0, behavior: "smooth" });
-                    } else {
-                        container.scrollBy({ left: moveBy, behavior: "smooth" });
-                    }
+                    container.scrollBy({ left: -scrollAmount, behavior: "smooth" });
+                }
+            } else {
+                const atEnd = container.scrollLeft + container.clientWidth >= container.scrollWidth - 10;
+                
+                if (atEnd) {
+                    container.scrollTo({ left: 0, behavior: "smooth" });
+                } else {
+                    container.scrollBy({ left: scrollAmount, behavior: "smooth" });
                 }
             }
-        }, 5000);
-        return () => clearInterval(interval);
-    }, [dir]);
+        }
+    }, 5000);
+    return () => clearInterval(interval);
+}, [dir]);
 
     const handleMouseDown = (e) => {
         isDragging.current = true;
