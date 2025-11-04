@@ -4,7 +4,6 @@ import logo from "../../assets/images/8b69630b563db4747bc84994ad3369faa6869b8c.j
 import flag from "../../assets/images/egypt flag.png";
 const Navbar = () => {
   const { t, i18n } = useTranslation();
-  console.log(t("welcome"), i18n.language);
   return (
     <div className="w-full px-[90px] md:px-[50px] sm:px-2.5 flex justify-center items-center py-5">
       <div className="flex items-center justify-between gap-3">

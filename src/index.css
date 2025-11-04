@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+* {
+  font-family: "Cairo", sans-serif;
+}
+
 @theme {
   --color-main: #4CAF50;
   --breakpoint-sm: 576px;

@@ -1,17 +1,31 @@
 {
-    "welcome": "أهلا بك في موقعنا",
-    "language": "ar",
-    "auction": "المزاد",
-    "shareAdv": "انشر اعلانك",
-    "search": "البحث",
-    "home": {
-        "adsSection": {
-            "adsTitle": "الإعلانات",
-            "contactSeller": "تواصل مع البائع",
-            "hoursAgo": "منذ {{hours}} ساعات",
-            "price": "{{price}} جنيه",
-            "location": "حدائق المعادي",
-            "productTitle": "سادية صدور دجاج 450غ"
-        }
+  "welcome": "أهلا بك في موقعنا",
+  "language": "ar",
+  "auction": "المزاد",
+  "shareAdv": "انشر اعلانك",
+  "search": "البحث",
+  "home": {
+    "adsSection": {
+      "adsTitle": "الإعلانات",
+      "contactSeller": "تواصل مع البائع",
+      "hoursAgo": "منذ {{hours}} ساعات",
+      "price": "{{price}} جنيه",
+      "location": "حدائق المعادي",
+      "productTitle": "سادية صدور دجاج 450غ"
     }
+  },
+  "footer": {
+    "links": {
+      "aboutUs": "نبذة عنا",
+      "ads": "اعلاناتي",
+      "auction": "المزاد",
+      "contactUs": "تواصل معانا"
+    },
+    "countries": {
+      "title": "الدول",
+      "country": ["مصر", "السعودية", "البحرين"]
+    },
+    "copyRight": "جميع الحقوق محفوظة ل سوق الانتاج الحيوانى (ِAPM) 2025",
+    "development": "تم التطوير بواسطة Soft Forte"
+  }
 }
