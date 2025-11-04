@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useState } from "react";
-import { MapPin, Heart } from "lucide-react";
+import { HiOutlineLocationMarker } from 'react-icons/hi';
+import { FaRegHeart } from 'react-icons/fa';
 import { useTranslation } from "react-i18next";
 import sadiaChickenImg from "../../assets/images/sadia-chicken.png";
 
@@ -202,10 +203,9 @@ function AdsCarousel() {
               onClick={() => toggleFav(ad.id)}
               className="absolute top-2 left-2 transition"
             >
-              <Heart
+              <FaRegHeart
                 size={30}
-                fill={favs.includes(ad.id) ? "#4CAF50" : "none"}
-                color="#4CAF50"
+                className="fill-main"
               />
             </button>
 
@@ -221,7 +221,7 @@ function AdsCarousel() {
               <h3 className="font-bold text-md mb-1">{ad.title}</h3>
 
               <div className="flex items-center text-sm mb-1">
-                <MapPin size={20} className="ml-1 text-main" />
+                <HiOutlineLocationMarker size={20} className="ml-1 text-main" />
                 {ad.location}
               </div>
 

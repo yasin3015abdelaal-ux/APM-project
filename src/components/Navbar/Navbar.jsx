@@ -1,6 +1,6 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import logo from "../../assets/images/8b69630b563db4747bc84994ad3369faa6869b8c.jpg";
+import logo from "../../assets/images/logo.jpg";
 import flag from "../../assets/images/egypt flag.png";
 const Navbar = () => {
   const { t, i18n } = useTranslation();
