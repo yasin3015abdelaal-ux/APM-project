@@ -23,5 +23,12 @@ html,
 
 .container {
   @apply px-[15px] mx-auto sm:w-[540px] md:w-[720px] lg:w-[960px] xl:w-[1140px];
+}
 
+.section__title{
+  @apply text-main font-bold text-5xl mb-5 text-center tracking-normal;
+}
+
+.primary__btn{
+  @apply flex items-center justify-center text-white bg-main w-50 h-10 rounded-md font-bold;
 }
