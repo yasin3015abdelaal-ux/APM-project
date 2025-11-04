@@ -3,5 +3,16 @@
     "language":"en",
     "auction":"auction",
     "shareAdv":"post your ad",
-    "search":"search"
+    "search":"search",
+    "home":{
+        "adsSection":{
+            "adsTitle":"ads",
+            "contactSeller":"contact seller",
+            "hoursAgo":"{{hours}} hours ago",
+            "price":"{{price}} EGP",
+            "location":"Maadi Gardens",
+            "productTitle":"Sadia Chicken Breast 450g"
+        }
+    }
+    
 }

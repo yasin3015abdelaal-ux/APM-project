@@ -3,3 +3,7 @@
 @theme {
   --color-main: #4CAF50;
 }
+
+body {
+  padding: 0 30px;
+}
