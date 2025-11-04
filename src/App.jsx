@@ -1,4 +1,6 @@
-import Navbar from "./components/Navbar"
+import HomeProductsSection from "./components/HomeProductsSection"
+import Navbar from "./components/navbar"
+
 
 function App() {
 
@@ -6,6 +8,9 @@ function App() {
   return (
     <>
       <Navbar/>
+      <div className="px-[90px]">
+        <HomeProductsSection/>
+      </div>
     </>
   )
 }

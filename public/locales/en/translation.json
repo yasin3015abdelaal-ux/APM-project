@@ -3,5 +3,7 @@
     "language":"en",
     "auction":"auction",
     "shareAdv":"post your ad",
-    "search":"search"
+    "search":"search",
+    "viewProfile": "view profile"
+
 }
