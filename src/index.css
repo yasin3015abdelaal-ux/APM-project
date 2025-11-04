@@ -2,8 +2,22 @@
 
 @theme {
   --color-main: #4CAF50;
+  --breakpoint-sm: 576px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 992px;
+  --breakpoint-xl: 1200px;
+  --breakpoint-3xl: 1400px;
 }
 
-body {
-  padding: 0 30px;
+body,
+html,
+#root {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+.container {
+  @apply px-[15px] mx-auto sm:w-[540px] md:w-[720px] lg:w-[960px] xl:w-[1140px];
+
 }

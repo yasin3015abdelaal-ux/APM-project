@@ -1,16 +1,12 @@
-import Navbar from "./components/Navbar"
-import HomePage from "./pages/HomePage"
-
+import { Outlet } from "react-router";
+import Navbar from "./components/Navbar/Navbar";
 function App() {
-
-
   return (
     <>
-    {/* nav bar */}
-      <Navbar/>
-      <HomePage />
+      <Navbar />
+      <Outlet />
     </>
-  )
+  );
 }
 
-export default App
+export default App;
