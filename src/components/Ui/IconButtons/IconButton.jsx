@@ -43,9 +43,10 @@ export default function IconButton({
     </button>
   );
 }
+
 IconButton.propTypes = {
   children: PropTypes.node.isRequired,
   className: PropTypes.string,
   onClick: PropTypes.func,
-  size: PropTypes.oneOfType(["large", "small", "medium"]),
+  size: PropTypes.oneOf(["large", "small", "medium"]),
 };
