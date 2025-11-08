@@ -25,10 +25,14 @@ html,
   @apply px-[15px] mx-auto sm:w-[540px] md:w-[720px] lg:w-[960px] xl:w-[1140px];
 }
 
-.section__title{
+.section__title {
   @apply text-main font-bold text-5xl mb-5 text-center tracking-normal;
 }
 
-.primary__btn{
-  @apply flex items-center justify-center text-white bg-main w-50 h-10 rounded-md font-bold;
+.primary__btn {
+  @apply flex items-center justify-center text-white bg-main w-45 h-12 rounded-md font-bold text-2xl cursor-pointer active:scale-95 transition-all disabled:opacity-80 disabled:active:scale-100 disabled:cursor-not-allowed;
+}
+
+.icon__button {
+  @apply flex items-center justify-center hover:bg-black/5 text-main rounded-full cursor-pointer active:bg-main active:text-white transition-all appearance-none select-none disabled:opacity-80 disabled:hover:cursor-not-allowed disabled:active:bg-transparent disabled:active:text-main;
 }
