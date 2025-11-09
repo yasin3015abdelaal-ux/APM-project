@@ -4,6 +4,61 @@
   "auction": "المزاد",
   "shareAdv": "انشر اعلانك",
   "search": "البحث",
+  "auth": {
+    "login": {
+      "title": "تسجيل الدخول",
+      "email": "البريد الإلكتروني",
+      "emailPlaceholder": "أدخل البريد الإلكتروني",
+      "password": "كلمة المرور",
+      "passwordPlaceholder": "أدخل كلمة المرور",
+      "loginButton": "تسجيل الدخول",
+      "loggingIn": "جارٍ تسجيل الدخول...",
+      "noAccount": "ليس لديك حساب؟",
+      "createAccount": "إنشاء حساب جديد",
+      "error": "حدث خطأ أثناء تسجيل الدخول. تحقق من بياناتك.",
+      "phoneRequired": "رقم الهاتف مطلوب",
+      "passwordRequired": "كلمة المرور مطلوبة",
+      "fillAllFields": "برجاء ملء جميع الحقول",
+      "loginSuccess": "تم تسجيل الدخول بنجاح!",
+      "forgotPassword": "هل نسيت كلمة السر؟"
+    },
+    "register": {
+      "title": "إنشاء حساب",
+      "chooseCountry": "اختيار الدولة",
+      "selectCountry": "اختر الدولة",
+      "countryRequired": "يرجى اختيار الدولة",
+      "selectCountryFirst": "يرجى اختيار الدولة أولاً",
+      "name": "الاسم",
+      "nameRequired": "الاسم مطلوب",
+      "phone": "رقم الهاتف",
+      "phoneRequired": "رقم الهاتف مطلوب",
+      "email": "البريد الإلكتروني",
+      "governorate": "اختر المحافظة",
+      "governorateRequired": "المحافظة مطلوبة",
+      "activityType": "نوع النشاط",
+      "activityRequired": "نوع النشاط مطلوب",
+      "address": "العنوان",
+      "addressRequired": "العنوان مطلوب",
+      "password": "كلمة المرور",
+      "passwordRequired": "كلمة المرور مطلوبة",
+      "passwordLength": "كلمة المرور يجب أن تكون 8 أحرف على الأقل",
+      "passwordConfirmation": "تأكيد كلمة المرور",
+      "confirmPasswordRequired": "تأكيد كلمة المرور مطلوب",
+      "passwordMismatch": "كلمتا المرور غير متطابقتين",
+      "accountType": "نوع الحساب",
+      "individual": "فردي",
+      "organization": "شركة",
+      "next": "التالي",
+      "back": "رجوع",
+      "createButton": "إنشاء الحساب",
+      "creating": "جارٍ الإرسال...",
+      "haveAccount": "لديك حساب بالفعل؟",
+      "loginLink": "تسجيل الدخول",
+      "successMessage": "تم إنشاء الحساب بنجاح",
+      "error": "حدث خطأ أثناء إنشاء الحساب",
+      "fillAllFields": "يرجى ملء جميع الحقول المطلوبة"
+    }
+  },
   "home": {
     "adsSection": {
       "adsTitle": "الإعلانات",
@@ -28,17 +83,17 @@
     "copyRight": "جميع الحقوق محفوظة ل سوق الانتاج الحيوانى (ِAPM) 2025",
     "development": "تم التطوير بواسطة Soft Forte"
   },
-  "ads":{
-    "title":"اعلاناتي",
-    "noContent":"ليس لديك اعلانات  في الوقت الحالي",
-    "filterSection":{
-      "status":"حالة الاعلان",
-      "all":"الكل"
+  "ads": {
+    "title": "اعلاناتي",
+    "noContent": "ليس لديك اعلانات في الوقت الحالي",
+    "filterSection": {
+      "status": "حالة الاعلان",
+      "all": "الكل"
     },
-    "makeAds":"انشر اعلانك",
-    "watcher":"عدد المشاهدات",
-    "interested":"عملاء مهتمون",
-    "concurrency":"جنية",
-    "sell":"بيع اسرع"
+    "makeAds": "انشر اعلانك",
+    "watcher": "عدد المشاهدات",
+    "interested": "عملاء مهتمون",
+    "concurrency": "جنية",
+    "sell": "بيع اسرع"
   }
 }

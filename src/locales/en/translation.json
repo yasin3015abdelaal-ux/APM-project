@@ -1,18 +1,103 @@
 {
-    "welcome":"welcome to our website",
-    "language":"en",
-    "auction":"auction",
-    "shareAdv":"post your ad",
-    "search":"search",
-    "home":{
-        "adsSection":{
-            "adsTitle":"ads",
-            "contactSeller":"contact seller",
-            "hoursAgo":"{{hours}} hours ago",
-            "price":"{{price}} EGP",
-            "location":"Maadi Gardens",
-            "productTitle":"Sadia Chicken Breast 450g"
+    "welcome": "Welcome to our website",
+    "language": "en",
+    "auction": "Auction",
+    "shareAdv": "Post your ad",
+    "search": "Search",
+    "auth": {
+        "login": {
+            "title": "Login",
+            "email": "Email",
+            "emailPlaceholder": "Enter your email",
+            "password": "Password",
+            "passwordPlaceholder": "Enter your password",
+            "loginButton": "Login",
+            "loggingIn": "Logging in...",
+            "noAccount": "Don't have an account?",
+            "createAccount": "Create new account",
+            "error": "An error occurred during login. Please check your credentials.",
+            "phoneRequired": "Phone number is required",
+            "passwordRequired": "Password is required",
+            "fillAllFields": "Please fill in all fields",
+            "loginSuccess": "Logged in successfully!",
+            "forgotPassword": "Forgot your password?"
+        },
+        "register": {
+            "title": "Create Account",
+            "chooseCountry": "Choose Country",
+            "selectCountry": "Select Country",
+            "countryRequired": "Please select a country",
+            "selectCountryFirst": "Please select a country first",
+            "name": "Full Name",
+            "nameRequired": "Name is required",
+            "phone": "Phone Number",
+            "phoneRequired": "Phone number is required",
+            "email": "Email Address",
+            "governorate": "Select Governorate",
+            "governorateRequired": "Governorate is required",
+            "activityType": "Activity Type",
+            "activityRequired": "Activity type is required",
+            "address": "Address",
+            "addressRequired": "Address is required",
+            "password": "Password",
+            "passwordRequired": "Password is required",
+            "passwordLength": "Password must be at least 8 characters",
+            "passwordConfirmation": "Confirm Password",
+            "confirmPasswordRequired": "Password confirmation is required",
+            "passwordMismatch": "Passwords do not match",
+            "accountType": "Account Type",
+            "individual": "Individual",
+            "organization": "Organization",
+            "next": "Next",
+            "back": "Back",
+            "createButton": "Create Account",
+            "creating": "Creating...",
+            "haveAccount": "Already have an account?",
+            "loginLink": "Login",
+            "successMessage": "Account created successfully",
+            "error": "An error occurred while creating account",
+            "fillAllFields": "Please fill all required fields"
         }
+    },
+    "home": {
+        "adsSection": {
+            "adsTitle": "Ads",
+            "contactSeller": "Contact Seller",
+            "hoursAgo": "{{hours}} hours ago",
+            "price": "{{price}} EGP",
+            "location": "Maadi Gardens",
+            "productTitle": "Sadia Chicken Breast 450g"
+        }
+    },
+    "footer": {
+        "links": {
+            "aboutUs": "About Us",
+            "ads": "My Ads",
+            "auction": "Auction",
+            "contactUs": "Contact Us"
+        },
+        "countries": {
+            "title": "Countries",
+            "country": [
+                "Egypt",
+                "Saudi Arabia",
+                "Bahrain"
+            ]
+        },
+        "copyRight": "All rights reserved to Animal Production Market (APM) 2025",
+        "development": "Developed by Soft Forte"
+    },
+    "ads": {
+        "title": "My Ads",
+        "noContent": "You don't have any ads at the moment",
+        "filterSection": {
+            "status": "Ad Status",
+            "all": "All"
+        },
+        "makeAds": "Post your ad",
+        "watcher": "Views",
+        "interested": "Interested Customers",
+        "concurrency": "EGP",
+        "sell": "Sell Faster"
     }
-    
 }
