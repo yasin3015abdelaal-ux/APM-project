@@ -32,7 +32,9 @@ api.interceptors.response.use(
         return response;
     },
     (error) => {
-        if (error.response?.status === 401) {
+        const isLoginRequest = error.config?.url?.includes('/login');
+        
+        if (error.response?.status === 401 && !isLoginRequest) {
             localStorage.removeItem("authToken");
             localStorage.removeItem("userData");
             window.location.href = "/login";
@@ -49,9 +51,9 @@ export const authAPI = {
 
     logout: () => api.post("/logout"),
 
-    getProfile: () => api.get("/profile"),
+    // getProfile: () => api.get("/profile"),
 
-    updateProfile: (data) => api.put("/profile", data),
+    // updateProfile: (data) => api.put("/profile", data),
 };
 
 export const dataAPI = {
