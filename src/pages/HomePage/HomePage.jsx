@@ -4,7 +4,9 @@ import AdsCarousel from "../../components/Landing/AdsCarousel";
 const HomePage = () => {
   return (
     <div>
-      <AdsCarousel />
+      <div className="container">
+        <AdsCarousel />
+      </div>
     </div>
   );
 };
