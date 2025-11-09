@@ -180,9 +180,10 @@ function AdsCarousel() {
         {t("home.adsSection.adsTitle")}
       </h2>
 
+      <div className="py-3">
       <div
         ref={scrollRef}
-        className="flex gap-4 overflow-x-auto scroll-smooth px-4 snap-x snap-mandatory scrollbar-hide cursor-grab active:cursor-grabbing"
+        className="flex gap-4 overflow-x-auto py-2 scroll-smooth px-4 snap-x snap-mandatory scrollbar-hide cursor-grab active:cursor-grabbing"
         style={{
           scrollbarWidth: "none",
           msOverflowStyle: "none",
@@ -236,6 +237,7 @@ function AdsCarousel() {
             </div>
           </div>
         ))}
+      </div>
       </div>
     </div>
   );
