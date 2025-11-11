@@ -1,68 +1,78 @@
 import axios from "axios";
 
-// Base URL 
-export const API_BASE_URL = "https://api.world-apm.com/api";
+// USER API
+const USER_BASE = "https://api.world-apm.com/api";
 
-// axios instance 
-const api = axios.create({
-    baseURL: API_BASE_URL,
-    headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-    },
+export const userAPI = axios.create({
+    baseURL: USER_BASE,
+    headers: { "Content-Type": "application/json" },
 });
 
-// Request Interceptor
-api.interceptors.request.use(
-    (config) => {
-        const token = localStorage.getItem("authToken");
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
-        }
-        return config;
-    },
-    (error) => {
-        return Promise.reject(error);
-    }
-);
+// Add token for user
+userAPI.interceptors.request.use((config) => {
+    const token = localStorage.getItem("authToken");
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+    return config;
+});
 
-// Response Interceptor 
-api.interceptors.response.use(
-    (response) => {
-        return response;
-    },
-    (error) => {
-        const isLoginRequest = error.config?.url?.includes('/login');
-        
-        if (error.response?.status === 401 && !isLoginRequest) {
+// Handle user logout on 401
+userAPI.interceptors.response.use(
+    (res) => res,
+    (err) => {
+        if (err.response?.status === 401) {
             localStorage.removeItem("authToken");
             localStorage.removeItem("userData");
             window.location.href = "/login";
         }
-        return Promise.reject(error);
+        return Promise.reject(err);
     }
 );
 
-// API Endpoints
+// ADMIN API
+const ADMIN_BASE = "https://api.world-apm.com/admin";
+
+export const adminAPI = axios.create({
+    baseURL: ADMIN_BASE,
+    headers: { "Content-Type": "application/json" },
+});
+
+// Add token for admin
+adminAPI.interceptors.request.use((config) => {
+    const token = localStorage.getItem("adminToken");
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+    return config;
+});
+
+// Handle admin logout on 401
+adminAPI.interceptors.response.use(
+    (res) => res,
+    (err) => {
+        if (err.response?.status === 401) {
+            localStorage.removeItem("adminToken");
+            localStorage.removeItem("adminData");
+            window.location.href = "/admin/login";
+        }
+        return Promise.reject(err);
+    }
+);
+
+// ENDPOINTS
+
+// User Auth
 export const authAPI = {
-    login: (credentials) => api.post("/login", credentials),
-
-    register: (data) => api.post("/register", data),
-
-    logout: () => api.post("/logout"),
-
-    // getProfile: () => api.get("/profile"),
-
-    // updateProfile: (data) => api.put("/profile", data),
+    login: (data) => userAPI.post("/login", data),
+    register: (data) => userAPI.post("/register", data),
+    logout: () => userAPI.post("/logout"),
 };
 
+// Admin Auth
+export const adminAuthAPI = {
+    login: (data) => adminAPI.post("/login", data),
+    logout: () => adminAPI.post("/logout"),
+};
+
+// Shared Data (Countries, Cities, etc)
 export const dataAPI = {
-    getCountries: () => api.get("/countries"),
-
-    getGovernorates: (countryId) =>
-        api.get("/governorates", { params: { country_id: countryId } }),
-
-    getActivityTypes: () => api.get("/activity_types"),
+    getCountries: () => userAPI.get("/countries"),
+    getCities: (id) => userAPI.get(`/countries/${id}/cities`),
 };
-
-export default api;

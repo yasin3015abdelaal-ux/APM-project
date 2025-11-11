@@ -7,10 +7,10 @@
   "auth": {
     "login": {
       "title": "تسجيل الدخول",
+      "adminTitle": "تسجيل دخول المسؤول",
       "email": "البريد الإلكتروني",
-      "emailPlaceholder": "أدخل البريد الإلكتروني",
+      "emailRequired": "البريد الإلكتروني مطلوب",
       "password": "كلمة المرور",
-      "passwordPlaceholder": "أدخل كلمة المرور",
       "loginButton": "تسجيل الدخول",
       "loggingIn": "جارٍ تسجيل الدخول...",
       "noAccount": "ليس لديك حساب؟",
@@ -95,5 +95,147 @@
     "interested": "عملاء مهتمون",
     "concurrency": "جنية",
     "sell": "بيع اسرع"
+  },
+  "common": {
+    "loading": "جاري التحميل...",
+    "error": "خطأ",
+    "retry": "إعادة المحاولة"
+  },
+  "dashboard": {
+    "sidebar": {
+      "accounts": "الحسابات",
+      "posts": "المنشورات",
+      "auctions": "المزادات",
+      "additions": "الاضافات",
+      "products": "المنتجات",
+      "packages": "الباقات",
+      "reports": "البلاغات",
+      "verification": "توثيق الحسابات",
+      "logos": "الشعارات",
+      "articles": "المقالات",
+      "ads": "الاعلانات",
+      "admins": "المسؤولين",
+      "invoices": "الفواتير",
+      "todayPrice": "السعر اليوم",
+      "logout": "تسجيل الخروج",
+      "Egypt": "مصر"
+    },
+    "additions": {
+      "title": "الإضافات",
+      "addProduct": "إضافة منتج",
+      "addProductTitle": "إضافة منتج",
+      "productName": "اسم المنتج",
+      "productNamePlaceholder": "أدخل اسم المنتج",
+      "productImage": "صورة المنتج",
+      "chooseImage": "اختر صورة",
+      "stop": "إيقاف",
+      "confirmStop": "هل أنت متأكد من إيقاف المنتج",
+      "yes": "نعم",
+      "no": "لا",
+      "successMessage": "تم إيقاف المنتج بنجاح",
+      "productAdded": "تم إضافة المنتج بنجاح",
+      "productNameAr": "اسم المنتج بالعربي",
+      "productNameEn": "اسم المنتج بالإنجليزي"
+    },
+    "accounts": {
+      "title": "الحسابات",
+      "export": "تصدير",
+      "verification": "التوثيق",
+      "email": "البريد الإلكتروني",
+      "phone": "رقم التليفون",
+      "name": "الاسم",
+      "accountType": "نوع الحساب",
+      "registrationDate": "تاريخ التسجيل",
+      "accountNumber": "رقم الحساب",
+      "verified": "موثق",
+      "notVerified": "غير موثق",
+      "noAccounts": "لا توجد حسابات",
+      "totalAccounts": "إجمالي الحسابات",
+      "refreshData": "تحديث البيانات",
+      "fetchError": "فشل في جلب البيانات",
+      "accountDetails": {
+        "title": "الحساب",
+        "email": "البريد الإلكتروني",
+        "phoneNumber": "رقم التليفون",
+        "address": "العنوان",
+        "governorate": "المحافظة",
+        "accountType": "نوع الحساب",
+        "individual": "فردي",
+        "company": "شركة",
+        "publishedAdsCount": "عدد الإعلانات التي تم نشرها",
+        "rejectedAdsCount": "عدد الإعلانات التي تم رفضها",
+        "underReviewAdsCount": "عدد الإعلانات قيد المراجعة",
+        "reservedAdsCount": "عدد الإعلانات المحجوزة",
+        "expiredAdsCount": "عدد الإعلانات منتهية الصلاحية",
+        "subscriptionsCount": "عدد الإشتراكات",
+        "noSubscriptions": "لا توجد إشتراكات",
+        "servicesCount": "عدد الخدمات",
+        "activateAccount": "توثيق الحساب",
+        "deactivateAccount": "إلغاء توثيق الحساب",
+        "deleteAccount": "حذف الحساب",
+        "accountVerified": "تم توثيق الحساب بنجاح",
+        "accountUnverified": "تم إلغاء توثيق الحساب بنجاح",
+        "accountDeleted": "تم حذف الحساب بنجاح",
+        "errorVerifying": "حدث خطأ في توثيق الحساب",
+        "errorDeleting": "حدث خطأ في الحذف",
+        "errorFetching": "حدث خطأ في جلب البيانات",
+        "confirmVerify": "هل أنت متأكد من توثيق هذا الحساب؟",
+        "confirmUnverify": "هل أنت متأكد من إلغاء توثيق هذا الحساب؟",
+        "confirmDelete": "هل أنت متأكد من حذف هذا الحساب؟"
+      }
+    },
+    "invoices": {
+      "title": "الفواتير",
+      "export": "تصدير",
+      "fetchError": "فشل في تحميل الفواتير",
+      "exportSuccess": "تم التصدير بنجاح",
+      "exportError": "فشل التصدير",
+      "noInvoices": "لا توجد فواتير",
+      "noFilterResults": "لا توجد نتائج تطابق الفلتر",
+      "currency": "جنيه",
+
+      "stats": {
+        "totalInvoices": "عدد الفواتير",
+        "totalAmount": "الإجمالي"
+      },
+
+      "table": {
+        "invoiceNumber": "رقم الفاتورة",
+        "date": "تاريخ الدفع",
+        "userName": "الاسم",
+        "subscriptionType": "نوع الاشتراك",
+        "paymentMethod": "طريقة الدفع",
+        "requestInvoice": "طلب فاتورة",
+        "status": "قيمة الفاتورة"
+      },
+
+      "status": {
+        "paid": "مدفوع",
+        "pending": "معلق",
+        "cancelled": "ملغي"
+      },
+
+      "paymentMethods": {
+        "credit_card": "بطاقة ائتمان",
+        "bank_transfer": "تحويل بنكي",
+        "cash": "نقدي",
+        "wallet": "محفظة إلكترونية"
+      },
+
+      "filterTitle": "تصفية الفواتير",
+
+      "filter": {
+        "status": "الحالة",
+        "dateFrom": "من تاريخ",
+        "dateTo": "إلى تاريخ",
+        "all": "الكل",
+        "reset": "إعادة تعيين",
+        "apply": "تطبيق"
+      },
+
+      "errors": {
+        "missingId": "خطأ: معرف الفاتورة غير موجود"
+      }
+    }
   }
 }

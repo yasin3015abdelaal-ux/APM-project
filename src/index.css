@@ -36,3 +36,14 @@ html,
 .icon__button {
   @apply flex items-center justify-center hover:bg-black/5 text-main rounded-full cursor-pointer active:bg-main active:text-white transition-all appearance-none select-none disabled:opacity-80 disabled:hover:cursor-not-allowed disabled:active:bg-transparent disabled:active:text-main;
 }
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.scrollbar-hide {
+  -ms-overflow-style: none; 
+  scrollbar-width: none; 
+}

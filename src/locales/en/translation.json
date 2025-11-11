@@ -8,9 +8,8 @@
         "login": {
             "title": "Login",
             "email": "Email",
-            "emailPlaceholder": "Enter your email",
+            "emailRequired": "Email is required",
             "password": "Password",
-            "passwordPlaceholder": "Enter your password",
             "loginButton": "Login",
             "loggingIn": "Logging in...",
             "noAccount": "Don't have an account?",
@@ -99,5 +98,140 @@
         "interested": "Interested Customers",
         "concurrency": "EGP",
         "sell": "Sell Faster"
+    },
+    "common": {
+        "loading": "Loading...",
+        "error": "Error",
+        "retry": "Retry"
+    },
+    "dashboard": {
+        "sidebar": {
+            "accounts": "Accounts",
+            "posts": "Posts",
+            "auctions": "Auctions",
+            "additions": "Additions",
+            "products": "Products",
+            "packages": "Packages",
+            "reports": "Reports",
+            "verification": "Account Verification",
+            "logos": "Logos",
+            "articles": "Articles",
+            "ads": "Advertisements",
+            "admins": "Admins",
+            "invoices": "Invoices",
+            "todayPrice": "Today's Price",
+            "logout": "Logout",
+            "Egypt": "Egypt"
+        },
+        "additions": {
+            "title": "Additions",
+            "addProduct": "Add Product",
+            "addProductTitle": "Add Product",
+            "productName": "Product Name",
+            "productNamePlaceholder": "Enter product name",
+            "productImage": "Product Image",
+            "chooseImage": "Choose Image",
+            "stop": "Stop",
+            "confirmStop": "Are you sure you want to stop the product?",
+            "yes": "Yes",
+            "no": "No",
+            "successMessage": "Product stopped successfully",
+            "productAdded": "Product added successfully",
+            "productNameAr": "Product name in Arabic",
+            "productNameEn": "Product name in English"
+        },
+        "accounts": {
+            "title": "Accounts",
+            "export": "Export",
+            "verification": "Verification",
+            "email": "Email",
+            "phone": "Phone Number",
+            "name": "Name",
+            "accountType": "Account Type",
+            "registrationDate": "Registration Date",
+            "accountNumber": "Account Number",
+            "verified": "Verified",
+            "notVerified": "Not Verified",
+            "noAccounts": "No accounts found",
+            "totalAccounts": "Total Accounts",
+            "refreshData": "Refresh Data",
+            "fetchError": "Failed to fetch data",
+            "accountDetails": {
+                "title": "Account",
+                "email": "Email",
+                "phoneNumber": "Phone Number",
+                "address": "Address",
+                "governorate": "Governorate",
+                "accountType": "Account Type",
+                "individual": "Individual",
+                "company": "Company",
+                "publishedAdsCount": "Published Ads Count",
+                "rejectedAdsCount": "Rejected Ads Count",
+                "underReviewAdsCount": "Under Review Ads Count",
+                "reservedAdsCount": "Reserved Ads Count",
+                "expiredAdsCount": "Expired Ads Count",
+                "subscriptionsCount": "Subscriptions Count",
+                "noSubscriptions": "No subscriptions",
+                "servicesCount": "Services Count",
+                "activateAccount": "Verify Account",
+                "deactivateAccount": "Unverify Account",
+                "deleteAccount": "Delete Account",
+                "accountVerified": "Account verified successfully",
+                "accountUnverified": "Account unverified successfully",
+                "accountDeleted": "Account deleted successfully",
+                "errorVerifying": "Error verifying account",
+                "errorDeleting": "Error deleting account",
+                "errorFetching": "Error fetching data",
+                "confirmVerify": "Are you sure you want to verify this account?",
+                "confirmUnverify": "Are you sure you want to unverify this account?",
+                "confirmDelete": "Are you sure you want to delete this account?"
+            }
+        },
+        "invoices": {
+            "title": "Invoices",
+            "export": "Export",
+            "fetchError": "Failed to load invoices",
+            "exportSuccess": "Export successful",
+            "exportError": "Export failed",
+            "noInvoices": "No invoices found",
+            "noFilterResults": "No results match your filter",
+            "currency": "EGP",
+            "stats": {
+                "totalInvoices": "Total Invoices",
+                "totalAmount": "Total Amount"
+            },
+            "table": {
+                "invoiceNumber": "Invoice Number",
+                "date": "Payment Date",
+                "userName": "Name",
+                "subscriptionType": "Subscription Type",
+                "paymentMethod": "Payment Method",
+                "requestInvoice": "Request Invoice",
+                "status": "Invoice Value"
+            },
+            "status": {
+                "paid": "Paid",
+                "pending": "Pending",
+                "cancelled": "Cancelled"
+            },
+            "paymentMethods": {
+                "credit_card": "Credit Card",
+                "bank_transfer": "Bank Transfer",
+                "cash": "Cash",
+                "wallet": "E-Wallet"
+            },
+            "filterTitle": "Filter Invoices",
+            "filter": {
+                "status": "Status",
+                "dateFrom": "From Date",
+                "dateTo": "To Date",
+                "all": "All",
+                "reset": "Reset",
+                "apply": "Apply"
+            },
+            "errors": {
+                "missingId": "Error: Invoice ID is missing"
+            }
+        }
     }
 }
