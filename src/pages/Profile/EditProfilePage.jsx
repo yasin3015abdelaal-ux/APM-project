@@ -193,6 +193,7 @@ useEffect(() => {
                             name="password"
                             value={formData.password}
                             onChange={handleChange}
+                            placeholder={isRTL ? "اتركه فارغاً إذا لم ترد تغيير كلمة المرور" : "Leave blank if you don't want to change password"}
                             className={`border border-gray-300 py-2 px-3 rounded-md text-sm focus:outline-none focus:border-main ${isRTL ? 'text-right' : 'text-left'}`}
                         />
                     </div>
