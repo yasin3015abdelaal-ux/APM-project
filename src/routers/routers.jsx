@@ -16,6 +16,9 @@ import Category from "../components/Dashboard/Additions/Category";
 import Accounts from "../components/Dashboard/Accounts/Accounts";
 import UpdateAccount from "../components/Dashboard/Accounts/UpdateAccount";
 import Invoices from "../components/Dashboard/Invoices/Invoices";
+import VerifyAccountPage from "../pages/Profile/VerifyAccount";
+import EditProfilePage from "../pages/Profile/EditProfilePage";
+import ProfilePage from "../pages/Profile/ProfilePage";
 
 export const routers = createBrowserRouter([
   {
@@ -57,6 +60,30 @@ export const routers = createBrowserRouter([
             element: (
               <ProtectedRoute>
                 <AdForm mode="update" />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "profile",
+            element: (
+              <ProtectedRoute>
+                <ProfilePage />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "profile/edit",
+            element: (
+              <ProtectedRoute>
+                <EditProfilePage />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "profile/verify",
+            element: (
+              <ProtectedRoute>
+                <VerifyAccountPage />
               </ProtectedRoute>
             ),
           },

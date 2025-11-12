@@ -225,14 +225,6 @@ const Invoices = () => {
                 </div>
             )}
 
-            <style>{`
-                @keyframes slide-in {
-                    from { transform: translateY(-100%); opacity: 0; }
-                    to { transform: translateY(0); opacity: 1; }
-                }
-                .animate-slide-in { animation: slide-in 0.3s ease-out; }
-            `}</style>
-
             <div className="max-w-full">
                 {/* Header */}
                 <div className="mb-6 flex justify-between items-center">

@@ -1,14 +1,13 @@
 import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import Loader from "../components/Ui/Loader/Loader";
 
 export const ProtectedRoute = ({ children }) => {
     const { isAuthenticated, loading } = useAuth();
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
-            </div>
+            <Loader />
         );
     }
 
@@ -24,9 +23,7 @@ export const PublicRoute = ({ children, restricted = false }) => {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
-            </div>
+            <Loader />
         );
     }
 

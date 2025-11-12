@@ -29,8 +29,8 @@ const Register = () => {
         address: "",
         password: "",
         password_confirmation: "",
-        gender: "male",
-        type: "individual",
+        gender: "",
+        type: "",
         activity_type_id: "",
     });
 
@@ -187,7 +187,7 @@ const Register = () => {
     };
 
     return (
-        <div dir={dir} className="min-h-screen w-full flex items-center justify-center mb-5">
+        <div dir={dir} className="min-h-screen w-full flex items-center justify-center p-6">
             {toast && (
                 <div className={`fixed top-4 sm:top-5 ${dir === "rtl" ? "left-4 sm:left-5" : "right-4 sm:right-5"} z-50 animate-slide-in max-w-[90%] sm:max-w-md`}>
                     <div className={`px-4 py-3 sm:px-6 sm:py-4 rounded-lg sm:rounded-xl shadow-lg flex items-center gap-2 sm:gap-3 ${toast.type === "success" ? "bg-main text-white" : "bg-red-500 text-white"}`}>
@@ -397,21 +397,6 @@ const Register = () => {
                 )}
             </div>
 
-            <style jsx>{`
-                @keyframes slide-in {
-                    from {
-                        transform: translateY(-100%);
-                        opacity: 0;
-                    }
-                    to {
-                        transform: translateY(0);
-                        opacity: 1;
-                    }
-                }
-                .animate-slide-in {
-                    animation: slide-in 0.3s ease-out;
-                }
-            `}</style>
         </div>
     );
 };
