@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next'
-import logo from '../assets/8b69630b563db4747bc84994ad3369faa6869b8c.jpg'
-import flag from '../assets/egypt flag.png'
-import accPhoto from '../assets/WhatsApp Image 2025-07-23 at 18.03.38_cd179190.jpg'
+import logo from '../../assets/images/logo.jpg'
+import flag from '../../assets/images/flag.png'
+import accPhoto from '../../assets/images/sadia-chicken.png'
 import ProfileHover from './ProfileHover'
 import { useEffect, useState } from 'react'
 
