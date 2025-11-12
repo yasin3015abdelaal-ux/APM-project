@@ -20,9 +20,14 @@ userAPI.interceptors.response.use(
     (res) => res,
     (err) => {
         if (err.response?.status === 401) {
-            localStorage.removeItem("authToken");
-            localStorage.removeItem("userData");
-            window.location.href = "/login";
+            const isAuthRequest = err.config?.url?.includes('/login') ||
+                err.config?.url?.includes('/register');
+
+            if (!isAuthRequest) {
+                localStorage.removeItem("authToken");
+                localStorage.removeItem("userData");
+                window.location.href = "/login";
+            }
         }
         return Promise.reject(err);
     }
@@ -48,9 +53,13 @@ adminAPI.interceptors.response.use(
     (res) => res,
     (err) => {
         if (err.response?.status === 401) {
-            localStorage.removeItem("adminToken");
-            localStorage.removeItem("adminData");
-            window.location.href = "/admin/login";
+            const isAuthRequest = err.config?.url?.includes('/login');
+
+            if (!isAuthRequest) {
+                localStorage.removeItem("adminToken");
+                localStorage.removeItem("adminData");
+                window.location.href = "/admin/login";
+            }
         }
         return Promise.reject(err);
     }
@@ -71,8 +80,9 @@ export const adminAuthAPI = {
     logout: () => adminAPI.post("/logout"),
 };
 
-// Shared Data (Countries, Cities, etc)
+// Shared Data (Countries, governorates, activity_types)
 export const dataAPI = {
     getCountries: () => userAPI.get("/countries"),
-    getCities: (id) => userAPI.get(`/countries/${id}/cities`),
+    getGovernorates: (country_id) => userAPI.get(`/governorates?country_id=${country_id}`),
+    getActivityTypes: () => userAPI.get(`/activity_types`),
 };
