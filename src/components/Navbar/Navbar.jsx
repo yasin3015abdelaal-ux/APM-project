@@ -13,6 +13,8 @@ const Navbar = () => {
     const onResize = () => setmakeSearchChangePositin(window.innerWidth >= 680);
     window.addEventListener("resize", onResize);
     onResize();
+
+    
     return () => window.removeEventListener("resize", onResize);
     }, []);
     return (
