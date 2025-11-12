@@ -131,6 +131,9 @@
     "emailReadOnly": "البريد الإلكتروني",
     "phoneReadOnly": "رقم الهاتف",
     "id":"البطاقة الشخصية",
+    "businessDocs": "الوثائق التجارية",
+    "uploadCommercialRecord": "رفع صورة السجل التجاري",
+    "uploadTaxCard": "رفع صورة البطاقة الضريبية",
     "successModal": {
       "title": "تم إرسال طلبك",
       "message": "تم إرسال طلبك وسوف يتم الرد في أسرع وقت",

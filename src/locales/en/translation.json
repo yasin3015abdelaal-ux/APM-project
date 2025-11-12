@@ -134,6 +134,9 @@
         "emailReadOnly": "Email",
         "phoneReadOnly": "Phone Number",
         "id":"ID Card",
+        "businessDocs": "Business Documents",
+        "uploadCommercialRecord": "Upload Commercial Record Image",
+        "uploadTaxCard": "Upload Tax Card Image",
         "successModal": {
             "title": "Request Submitted",
             "message": "Your request has been submitted and will be reviewed as soon as possible",

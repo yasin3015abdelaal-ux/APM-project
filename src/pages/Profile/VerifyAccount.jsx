@@ -22,12 +22,16 @@ const VerifyAccountPage = () => {
         idCardFront: null,
         idCardBack: null,
         personalPhoto: null,
+        commercialRecord: null,
+        taxCard: null,
     });
 
     const [previews, setPreviews] = useState({
         idCardFront: null,
         idCardBack: null,
         personalPhoto: null,
+        commercialRecord: null,
+        taxCard: null,
     });
 
     const showToast = (message, type = "success") => {
@@ -58,7 +62,6 @@ const VerifyAccountPage = () => {
                 [fieldName]: file,
             });
 
-            // إنشاء معاينة للصورة
             const reader = new FileReader();
             reader.onloadend = () => {
                 setPreviews({
@@ -73,7 +76,7 @@ const VerifyAccountPage = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (!files.idCardFront || !files.idCardBack || !files.personalPhoto) {
+        if (!files.idCardFront || !files.idCardBack || !files.personalPhoto ||  !files.commercialRecord || !files.taxCard) {
             showToast(
                 isRTL
                     ? "يرجى رفع جميع الصور المطلوبة"
@@ -89,6 +92,8 @@ const VerifyAccountPage = () => {
             formData.append("id_card_front", files.idCardFront);
             formData.append("id_card_back", files.idCardBack);
             formData.append("personal_photo", files.personalPhoto);
+            formData.append("commercial_record", files.commercialRecord);
+            formData.append("tax_card", files.taxCard);
 
             // await userAPI.post("/verify-account", formData);
 
@@ -126,8 +131,8 @@ const VerifyAccountPage = () => {
                     >
                         <div
                             className={`px-4 py-3 sm:px-6 sm:py-4 rounded-lg sm:rounded-xl shadow-lg flex items-center gap-2 sm:gap-3 ${toast.type === "success"
-                                    ? "bg-main text-white"
-                                    : "bg-red-500 text-white"
+                                ? "bg-main text-white"
+                                : "bg-red-500 text-white"
                                 }`}
                         >
                             {toast.type === "success" ? (
@@ -307,6 +312,63 @@ const VerifyAccountPage = () => {
                                     </>
                                 )}
                             </label>
+                        </div>
+                        <div className="border-t pt-5">
+                            <label
+                                className={`text-sm font-bold mb-3 block ${isRTL ? "text-right" : "text-left"}`}
+                            >
+                                {t("profile.businessDocs")}
+                            </label>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                {/* صورة السجل التجاري */}
+                                <label className="cursor-pointer flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-main transition">
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={(e) => handleFileChange(e, "commercialRecord")}
+                                        className="hidden"
+                                    />
+                                    {previews.commercialRecord ? (
+                                        <img
+                                            src={previews.commercialRecord}
+                                            alt="Commercial Record"
+                                            className="w-full h-32 object-cover rounded"
+                                        />
+                                    ) : (
+                                        <>
+                                            <Upload className="w-8 h-8 text-gray-400 mb-2" />
+                                            <span className="text-xs text-gray-500 text-center">
+                                                {t("profile.uploadCommercialRecord")}
+                                            </span>
+                                        </>
+                                    )}
+                                </label>
+
+                                {/* صورة الرقم الضريبي */}
+                                <label className="cursor-pointer flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-main transition">
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={(e) => handleFileChange(e, "taxCard")}
+                                        className="hidden"
+                                    />
+                                    {previews.taxCard ? (
+                                        <img
+                                            src={previews.taxCard}
+                                            alt="Tax Card"
+                                            className="w-full h-32 object-cover rounded"
+                                        />
+                                    ) : (
+                                        <>
+                                            <Upload className="w-8 h-8 text-gray-400 mb-2" />
+                                            <span className="text-xs text-gray-500 text-center">
+                                                {t("profile.uploadTaxCard")}
+                                            </span>
+                                        </>
+                                    )}
+                                </label>
+                            </div>
                         </div>
 
                         <button
