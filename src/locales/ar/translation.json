@@ -1,9 +1,45 @@
 {
-  "welcome": "أهلا بك في موقعنا",
-  "language": "ar",
-  "auction": "المزاد",
-  "shareAdv": "انشر اعلانك",
-  "search": "البحث",
+    "welcome":"أهلا بك في موقعنا",
+    "language":"اللغة",
+    "auction":"المزاد",
+    "shareAdv":"انشر اعلانك",
+    "search":"البحث",
+
+  
+    "products":"المنتجات",
+    "sacrifice":"الاضحية",
+    "animals":"الحيوانات",
+    "pure breeds":"السلالات الاصيلة",
+    "butchery":"الجزارة",
+    "birds":"الطيور",
+    "animal products":"منتجات الحيوانات",
+    "fodder":"الاعلاف",
+    "farming supplies":"متطلبات المزارع",
+    "veterinary supervision services":"خدمات الاشراف البيطري",
+    "fish and others":"السمك وأخري",
+    "articles":"المقالات",
+    "veterinary medicines":"أدوية بيطرية",
+    "leather and fur":"الجلود والفراء",
+    "veterinary testing laboratories":"مختبارات التحاليل البيطارية",
+
+  
+    "viewProfile":"عرض الملف الشخصي",
+    "favorite ads":"الاعلانات المفضلة",
+    "subscriptions":"الاشتراكات",
+    "contact us":"تواصل معنا",
+    "share the app":"شارك التطبيق",
+    "my ads":"اعلاناتي",
+    "notifications":"الاشعارات",
+    "subscriptions and invoices":"الاشتراكات والفواتير",
+    "today's meat price":"سعر اللحم اليوم",
+    "about us":"من نحن",
+    "privacy, terms, and conditions":"الخصوصية والشروط والاحكام",
+    "log out":"تسجيل الخروج",
+    "country":"الدولة",
+    "create account":"إنشاء حساب",
+    "log in":"تسجيل الدخول",
+
+  
   "auth": {
     "login": {
       "title": "تسجيل الدخول",
