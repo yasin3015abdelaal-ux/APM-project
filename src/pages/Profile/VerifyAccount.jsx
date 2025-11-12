@@ -321,7 +321,6 @@ const VerifyAccountPage = () => {
                             </label>
 
                             <div className="grid grid-cols-2 gap-4">
-                                {/* صورة السجل التجاري */}
                                 <label className="cursor-pointer flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-main transition">
                                     <input
                                         type="file"
@@ -344,8 +343,6 @@ const VerifyAccountPage = () => {
                                         </>
                                     )}
                                 </label>
-
-                                {/* صورة الرقم الضريبي */}
                                 <label className="cursor-pointer flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-main transition">
                                     <input
                                         type="file"
