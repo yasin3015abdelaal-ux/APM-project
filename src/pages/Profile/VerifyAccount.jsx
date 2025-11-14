@@ -123,7 +123,7 @@ const VerifyAccountPage = () => {
 
     return (
         <>
-            <div dir={dir} className="min-h-screen flex flex-col items-center">
+            <div dir={dir} className="min-h-screen flex flex-col items-center py-6">
                 {toast && (
                     <div
                         className={`fixed top-4 sm:top-5 ${dir === "rtl" ? "left-4 sm:left-5" : "right-4 sm:right-5"
@@ -176,11 +176,19 @@ const VerifyAccountPage = () => {
 
                 <div className="p-6 w-full max-w-xl text-center">
                     <div className="relative w-28 h-28 mx-auto mb-4">
-                        <img
-                            src={profile.profile_image}
-                            alt="profile"
-                            className="w-28 h-28 rounded-full border-2 border-main object-cover"
-                        />
+                        {profile?.image ? (
+                            <img
+                                src={profile.image}
+                                alt="profile"
+                                className="w-28 h-28 rounded-full border-2 border-main object-cover"
+                            />
+                        ) : (
+                            <div className="w-28 h-28 rounded-full border-2 border-main bg-gray-100 flex items-center justify-center">
+                                <svg className="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                </svg>
+                            </div>
+                        )}
                     </div>
 
                     <h3 className="text-lg font-bold text-gray-800 mb-1">

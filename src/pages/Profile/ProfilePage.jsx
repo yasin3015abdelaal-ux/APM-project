@@ -44,16 +44,24 @@ const ProfilePage = () => {
     const lang = i18n.language;
 
     return (
-        <div dir={dir} className="min-h-screen flex flex-col items-center">
+        <div dir={dir} className="min-h-screen flex flex-col items-center py-6">
             <h2 className="text-main font-black text-2xl">{t("profile.title")}</h2>
 
             <div className="p-6 w-full max-w-xl text-center">
                 <div className="relative w-28 h-28 mx-auto mb-4">
-                    <img
-                        src={profile.profile_image}
-                        alt="profile"
-                        className="w-28 h-28 rounded-full border-2 border-main object-cover"
-                    />
+                    {profile?.image ? (
+                        <img
+                            src={profile.image}
+                            alt="profile"
+                            className="w-28 h-28 rounded-full border-2 border-main object-cover"
+                        />
+                    ) : (
+                        <div className="w-28 h-28 rounded-full border-2 border-main bg-gray-100 flex items-center justify-center">
+                            <svg className="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                        </div>
+                    )}
                 </div>
 
                 <h3 className="text-lg font-bold text-gray-800 mb-1">{profile.name}</h3>
@@ -66,7 +74,7 @@ const ProfilePage = () => {
                         >
                             {t("profile.phone")}
                         </label>
-                        <div className="bg-gray-100 py-2 px-3 rounded-md text-sm text-gray-700 text-start">
+                        <div className="border border-gray-300 bg-gray-100 py-2 px-3 rounded-md text-sm text-gray-700 text-start">
                             {profile.phone || "-"}
                         </div>
                     </div>
@@ -77,7 +85,7 @@ const ProfilePage = () => {
                         >
                             {t("profile.email")}
                         </label>
-                        <div className="bg-gray-100 py-2 px-3 rounded-md text-sm text-gray-700 text-start">
+                        <div className="border border-gray-300 bg-gray-100 py-2 px-3 rounded-md text-sm text-gray-700 text-start">
                             {profile.email || "-"}
                         </div>
                     </div>
@@ -88,7 +96,7 @@ const ProfilePage = () => {
                         >
                             {t("profile.country")}
                         </label>
-                        <div className="bg-gray-100 py-2 px-3 rounded-md text-sm text-gray-700 text-start">
+                        <div className="border border-gray-300 bg-gray-100 py-2 px-3 rounded-md text-sm text-gray-700 text-start">
                             {lang === "ar"
                                 ? profile.country?.name_ar || profile.country_name || "-"
                                 : profile.country?.name_en || profile.country_name || "-"}
@@ -101,7 +109,7 @@ const ProfilePage = () => {
                         >
                             {t("profile.governorate")}
                         </label>
-                        <div className="bg-gray-100 py-2 px-3 rounded-md text-sm text-gray-700 text-start">
+                        <div className="border border-gray-300 bg-gray-100 py-2 px-3 rounded-md text-sm text-gray-700 text-start">
                             {lang === "ar"
                                 ? profile.governorate?.name_ar || "-"
                                 : profile.governorate?.name_en || "-"}
