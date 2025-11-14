@@ -4,9 +4,9 @@ import MainLayout from "../layouts/MainLayout";
 import DashboardLayout from "../layouts/DashboardLayout";
 import HomePage from "../pages/HomePage/HomePage";
 import Ads from "../pages/Ads/Ads";
-import AdForm from "../pages/Ads/Form/adForm";
 import Register from "../components/Register/Register";
 import Login from "../components/Login/Login";
+import ProductsPage from "../components/Products/ProductsPage";
 import DashboardHome from "../pages/Dashboard/Home";
 import { ProtectedRoute, PublicRoute } from "../RouteGuards/RouteGuards";
 import { ProtectedAdminRoute } from "../contexts/AdminContext";
@@ -19,6 +19,8 @@ import Invoices from "../components/Dashboard/Invoices/Invoices";
 import VerifyAccountPage from "../pages/Profile/VerifyAccount";
 import EditProfilePage from "../pages/Profile/EditProfilePage";
 import ProfilePage from "../pages/Profile/ProfilePage";
+import EditAds from "../pages/Ads/EditAd";
+import AddAds from "../pages/Ads/AddAd";
 
 export const routers = createBrowserRouter([
   {
@@ -51,7 +53,7 @@ export const routers = createBrowserRouter([
             path: "ads/create",
             element: (
               <ProtectedRoute>
-                <AdForm mode="create" />
+                <AddAds />
               </ProtectedRoute>
             ),
           },
@@ -59,7 +61,7 @@ export const routers = createBrowserRouter([
             path: "ads/:id/edit",
             element: (
               <ProtectedRoute>
-                <AdForm mode="update" />
+                <EditAds />
               </ProtectedRoute>
             ),
           },
@@ -87,6 +89,38 @@ export const routers = createBrowserRouter([
               </ProtectedRoute>
             ),
           },
+{
+  path: "products",
+  children: [
+    {
+      // Route for all products (no category selected)
+      index: true,
+      element: (
+        <ProtectedRoute>
+          <ProductsPage />
+        </ProtectedRoute>
+      ),
+    },
+    {
+      // Route for specific category
+      path: ":categoryId",
+      element: (
+        <ProtectedRoute>
+          <ProductsPage />
+        </ProtectedRoute>
+      ),
+    },
+  ],
+},
+{
+  // Route for product details
+  path: "product-details/:productId",
+  element: (
+    <ProtectedRoute>
+      {/* <ProductDetailsPage /> */}
+    </ProtectedRoute>
+  ),
+},
         ],
       },
 
@@ -108,7 +142,7 @@ export const routers = createBrowserRouter([
           { index: true, element: <DashboardHome /> },
           { path: "additions", element: <Additions /> },
           { path: "additions/category/:categoryId", element: <Category /> },
-          { path: "products", element: <Products /> },
+          // { path: "products", element: <Products /> },
           { path: "accounts", element: <Accounts /> },
           { path: "accounts/update-account/:userId", element: <UpdateAccount /> },
           { path: "invoices", element: <Invoices /> },
