@@ -7,11 +7,11 @@ import Ads from "../pages/Ads/Ads";
 import Register from "../components/Register/Register";
 import Login from "../components/Login/Login";
 import ProductsPage from "../components/Products/ProductsPage";
+import ProductDetails from "../components/Products/ProductDetails";
 import DashboardHome from "../pages/Dashboard/Home";
 import { ProtectedRoute, PublicRoute } from "../RouteGuards/RouteGuards";
 import { ProtectedAdminRoute } from "../contexts/AdminContext";
 import Additions from "../components/Dashboard/Additions/Additions";
-import Products from "../components/Dashboard/Products";
 import Category from "../components/Dashboard/Additions/Category";
 import Accounts from "../components/Dashboard/Accounts/Accounts";
 import UpdateAccount from "../components/Dashboard/Accounts/UpdateAccount";
@@ -21,6 +21,11 @@ import EditProfilePage from "../pages/Profile/EditProfilePage";
 import ProfilePage from "../pages/Profile/ProfilePage";
 import EditAds from "../pages/Ads/EditAd";
 import AddAds from "../pages/Ads/AddAd";
+import NotFound from "../pages/NotFound";
+import Messages from "../pages/Messages/Messages";
+import Notifications from "../pages/Notifications/Notifications";
+import FavoritesPage from "../pages/Favorites/FavoritesPage";
+import ProductsReview from "../components/Dashboard/Products";
 
 export const routers = createBrowserRouter([
   {
@@ -62,6 +67,30 @@ export const routers = createBrowserRouter([
             element: (
               <ProtectedRoute>
                 <EditAds />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "messages",
+            element: (
+              <ProtectedRoute>
+                <Messages />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "notifications",
+            element: (
+              <ProtectedRoute>
+                <Notifications />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "favorites",
+            element: (
+              <ProtectedRoute>
+                <FavoritesPage />
               </ProtectedRoute>
             ),
           },
@@ -117,7 +146,7 @@ export const routers = createBrowserRouter([
   path: "product-details/:productId",
   element: (
     <ProtectedRoute>
-      {/* <ProductDetailsPage /> */}
+      <ProductDetails />
     </ProtectedRoute>
   ),
 },
@@ -146,12 +175,13 @@ export const routers = createBrowserRouter([
           { path: "accounts", element: <Accounts /> },
           { path: "accounts/update-account/:userId", element: <UpdateAccount /> },
           { path: "invoices", element: <Invoices /> },
+          { path: "products", element: <ProductsReview /> },
           { path: "*", element: <Navigate to="/dashboard" replace /> },
         ],
       },
 
       // 404 Route
-      { path: "*", element: <Navigate to="/" replace /> },
+      { path: "*", element: <NotFound /> },
     ],
   },
 ]);

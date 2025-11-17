@@ -2,9 +2,9 @@ import React, { useState, useEffect } from "react";
 import { Upload } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import Categories from "../../components/Categories/Categories";
-import { userAPI } from "../../api";
+import { adminAPI, userAPI } from "../../api";
 import Loader from "../../components/Ui/Loader/Loader";
+import Categories from "../../components/Categories/Categories";
 
 const AddAds = () => {
     const { t, i18n } = useTranslation();
@@ -26,12 +26,12 @@ const AddAds = () => {
         price: "",
         age: "",
         weight: "",
-        delivery_available: false,
+        delivery_available: "",
         governorate_id: "",
         location: "",
-        needs_vaccinations: false,
-        retail_sale_available: false,
-        price_negotiable: false,
+        needs_vaccinations: "",
+        retail_sale_available: "",
+        price_negotiable: "",
         contact_method: "",
     });
 
@@ -42,8 +42,13 @@ const AddAds = () => {
     const [dataLoading, setDataLoading] = useState(false);
     const [imagePreview, setImagePreview] = useState(null);
     const [error, setError] = useState(null);
+    const [toast, setToast] = useState(null);
 
-    // Check if category is already selected from URL
+    const showToast = (message, type = "success") => {
+        setToast({ message, type });
+        setTimeout(() => setToast(null), 4000);
+    };
+
     useEffect(() => {
         const categoryFromUrl = searchParams.get("category");
         if (categoryFromUrl) {
@@ -71,13 +76,8 @@ const AddAds = () => {
                 userAPI.get(`/governorates?country_id=${country_id}`),
             ]);
 
-            console.log("Categories:", categoriesRes.data);
-            console.log("Governorates:", governoratesRes.data.data.governorates);
-
-            const categoriesData =
-                categoriesRes?.data?.data || categoriesRes?.data?.categories;
-            const governoratesData =
-                governoratesRes?.data?.data?.governorates;
+            const categoriesData = categoriesRes?.data?.data || categoriesRes?.data?.categories;
+            const governoratesData = governoratesRes?.data?.data?.governorates;
 
             setCategories(Array.isArray(categoriesData) ? categoriesData : []);
             setGovernorates(Array.isArray(governoratesData) ? governoratesData : []);
@@ -97,15 +97,17 @@ const AddAds = () => {
 
     const loadSubCategories = async (categoryId) => {
         try {
-            const res = await userAPI.get(`/subcategories/${categoryId}`);
-            console.log("SubCategories:", res.data);
-            const subCategoriesData = res?.data?.data || res?.data?.subcategories;
-            setSubCategories(
-                Array.isArray(subCategoriesData) ? subCategoriesData : []
-            );
+            let res;
+            try {
+                res = await adminAPI.get(`/subcategories?category_id=${categoryId}`);
+            } catch (err) {
+                res = await userAPI.get(`/subcategories/${categoryId}`);
+            }
+            
+            const subCategoriesData = res?.data?.data || res?.data?.subcategories || res?.data;
+            setSubCategories(Array.isArray(subCategoriesData) ? subCategoriesData : []);
         } catch (error) {
             console.error("Error loading subcategories:", error);
-            console.error("Error details:", error.response?.data);
             setSubCategories([]);
         }
     };
@@ -130,6 +132,26 @@ const AddAds = () => {
         }
     };
 
+    const translateFieldName = (fieldName) => {
+        const translations = {
+            'category_id': 'الفئة',
+            'sub_category_id': 'النوع',
+            'name_ar': 'الاسم بالعربية',
+            'name_en': 'الاسم بالإنجليزية',
+            'description_ar': 'الوصف بالعربية',
+            'description_en': 'الوصف بالإنجليزية',
+            'gender': 'الجنس',
+            'quantity': 'الكمية',
+            'price': 'السعر',
+            'age': 'العمر',
+            'governorate_id': 'المحافظة',
+            'location': 'الموقع',
+            'contact_method': 'طريقة التواصل',
+            'image': 'الصورة'
+        };
+        return translations[fieldName] || fieldName;
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
@@ -137,7 +159,6 @@ const AddAds = () => {
         try {
             const dataToSend = new FormData();
 
-            // Required fields
             dataToSend.append("category_id", formData.category_id);
             dataToSend.append("sub_category_id", formData.sub_category_id);
             dataToSend.append("name_ar", formData.name_ar || "");
@@ -152,25 +173,11 @@ const AddAds = () => {
             dataToSend.append("location", formData.location);
             dataToSend.append("contact_method", formData.contact_method);
 
-            // Boolean fields
-            dataToSend.append(
-                "delivery_available",
-                formData.delivery_available ? "1" : "0"
-            );
-            dataToSend.append(
-                "needs_vaccinations",
-                formData.needs_vaccinations ? "1" : "0"
-            );
-            dataToSend.append(
-                "retail_sale_available",
-                formData.retail_sale_available ? "1" : "0"
-            );
-            dataToSend.append(
-                "price_negotiable",
-                formData.price_negotiable ? "1" : "0"
-            );
+            dataToSend.append("delivery_available", formData.delivery_available ? "1" : "0");
+            dataToSend.append("needs_vaccinations", formData.needs_vaccinations ? "1" : "0");
+            dataToSend.append("retail_sale_available", formData.retail_sale_available ? "1" : "0");
+            dataToSend.append("price_negotiable", formData.price_negotiable ? "1" : "0");
 
-            // Image
             if (formData.image instanceof File) {
                 dataToSend.append("image", formData.image);
             }
@@ -181,30 +188,53 @@ const AddAds = () => {
                 },
             });
 
-            alert(t("ads.publishSuccess"));
-            navigate("/ads");
+            showToast(isRTL ? 'تم نشر الإعلان بنجاح!' : 'Ad published successfully!', 'success');
+            setTimeout(() => {
+                navigate("/ads");
+            }, 1500);
         } catch (error) {
             console.error("Error creating product:", error);
-            alert(
-                error.response?.data?.message ||
-                t("ads.publishError")
-            );
+            console.error("Error response:", error.response?.data);
+            
+            const validationErrors = error.response?.data?.errors;
+            let errorMessage = '';
+            
+            if (validationErrors) {
+                const firstErrorKey = Object.keys(validationErrors)[0];
+                const firstError = validationErrors[firstErrorKey];
+                const errorText = Array.isArray(firstError) ? firstError[0] : firstError;
+                
+                if (isRTL) {
+                    if (errorText.includes('required')) {
+                        errorMessage = `حقل ${translateFieldName(firstErrorKey)} مطلوب`;
+                    } else if (errorText.includes('invalid')) {
+                        errorMessage = `حقل ${translateFieldName(firstErrorKey)} غير صالح`;
+                    } else if (errorText.includes('must be')) {
+                        errorMessage = `حقل ${translateFieldName(firstErrorKey)} يجب أن يكون صحيحاً`;
+                    } else {
+                        errorMessage = errorText;
+                    }
+                } else {
+                    errorMessage = errorText;
+                }
+            } else {
+                errorMessage = isRTL ? 'حدث خطأ أثناء نشر الإعلان' : 'Error publishing ad';
+            }
+            
+            showToast(errorMessage, 'error');
         } finally {
             setLoading(false);
         }
     };
+
     if (!showForm) {
         return <Categories mode="create-ad" />;
     }
 
-    // Loading state
     if (dataLoading) {
-        return (
-            <Loader />
-        );
+        return <Loader />;
     }
 
-    // Error state
     if (error) {
         return (
             <div className="min-h-screen flex items-center justify-center p-4">
@@ -225,20 +255,30 @@ const AddAds = () => {
     }
 
     return (
-        <div
-            className={`w-full max-w-5xl mx-auto bg-white ${isRTL ? "rtl" : "ltr"}`}
-            dir={isRTL ? "rtl" : "ltr"}
-        >
-            {/* Header */}
+        <div className={`w-full max-w-5xl mx-auto bg-white ${isRTL ? "rtl" : "ltr"}`} dir={isRTL ? "rtl" : "ltr"}>
+            {toast && (
+                <div className={`fixed top-4 sm:top-5 ${isRTL ? "left-4 sm:left-5" : "right-4 sm:right-5"} z-50 animate-slide-in max-w-[90%] sm:max-w-md`}>
+                    <div className={`px-4 py-3 sm:px-6 sm:py-4 rounded-lg sm:rounded-xl shadow-lg flex items-center gap-2 sm:gap-3 ${toast.type === "success" ? "bg-main text-white" : "bg-red-500 text-white"}`}>
+                        {toast.type === "success" ? (
+                            <svg className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                        ) : (
+                            <svg className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        )}
+                        <span className="font-semibold text-sm sm:text-base break-words">{toast.message}</span>
+                    </div>
+                </div>
+            )}
+
             <div className="text-main text-center py-4 rounded-t-lg">
-                <h1 className="text-3xl font-bold">
-                    {t("ads.publishYourAd")}
-                </h1>
+                <h1 className="text-3xl font-bold">{t("ads.publishYourAd")}</h1>
             </div>
 
             <form onSubmit={handleSubmit} className="p-8 space-y-6">
-                {/* Image Upload Area */}
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center">
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center relative">
                     <input
                         type="file"
                         accept="image/*"
@@ -248,35 +288,36 @@ const AddAds = () => {
                     />
                     <label htmlFor="image-upload" className="cursor-pointer block">
                         {imagePreview ? (
-                            <img
-                                src={imagePreview}
-                                alt="Preview"
-                                className="max-h-64 mx-auto rounded-lg"
-                            />
+                            <div className="relative inline-block">
+                                <img src={imagePreview} alt="Preview" className="max-h-64 mx-auto rounded-lg" />
+                                <button
+                                    type="button"
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        setImagePreview(null);
+                                        setFormData((prev) => ({ ...prev, image: null }));
+                                        document.getElementById('image-upload').value = '';
+                                    }}
+                                    className="absolute -top-3 -right-3 bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center cursor-pointer transition shadow-lg"
+                                >
+                                    ×
+                                </button>
+                            </div>
                         ) : (
                             <div className="flex flex-col items-center">
                                 <Upload className="w-16 h-16 text-gray-400 mb-4" />
-                                <p className="text-gray-600 mb-2">
-                                    {t("ads.clickToUpload")}
-                                </p>
-                                <p className="text-gray-400 text-sm">
-                                    {t("ads.pngOrJpg") || "PNG or JPG"}
-                                </p>
+                                <p className="text-gray-600 mb-2">{t("ads.clickToUpload")}</p>
+                                <p className="text-gray-400 text-sm">{t("ads.pngOrJpg") || "PNG or JPG"}</p>
                             </div>
                         )}
                     </label>
                 </div>
 
-                {/* Two Column Layout */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    {/* Right Column */}
                     <div className="space-y-6">
                         <div>
                             <label className="block text-gray-700 font-medium mb-2">
-                                {t("ads.type")}{" "}
-                                    {categories.find((cat) => cat.id == formData.category_id)?.[
-                                        isRTL ? "name_ar" : "name_en"
-                                    ]}
+                                {t("ads.type")} {categories.find((cat) => cat.id == formData.category_id)?.[isRTL ? "name_ar" : "name_en"]}
                             </label>
                             <select
                                 name="sub_category_id"
@@ -284,23 +325,19 @@ const AddAds = () => {
                                 onChange={handleChange}
                                 required
                                 disabled={!formData.category_id}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:bg-gray-100 bg-main text-white disabled:text-gray-500"
+                                className="w-full cursor-pointer px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:bg-gray-100 bg-main text-white disabled:text-gray-500"
                             >
-                                <option value="">
-                                    {t("ads.selectAdType")}
-                                </option>
-                                {Array.isArray(subCategories) &&
-                                    subCategories.map((sub) => (
-                                        <option key={sub.id} value={sub.id}>
-                                            {isRTL ? sub.name_ar : sub.name_en}
-                                        </option>
-                                    ))}
+                                <option value="">{t("ads.selectAdType")}</option>
+                                {Array.isArray(subCategories) && subCategories.map((sub) => (
+                                    <option key={sub.id} value={sub.id}>
+                                        {isRTL ? sub.name_ar : sub.name_en}
+                                    </option>
+                                ))}
                             </select>
                         </div>
+
                         <div>
-                            <label className="block text-gray-700 font-medium mb-2">
-                                {t("ads.adNameAr")}
-                            </label>
+                            <label className="block text-gray-700 font-medium mb-2">{t("ads.adNameAr")}</label>
                             <input
                                 type="text"
                                 name="name_ar"
@@ -311,10 +348,9 @@ const AddAds = () => {
                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                             />
                         </div>
+
                         <div>
-                            <label className="block text-gray-700 font-medium mb-2">
-                                {t("ads.adNameEn")}
-                            </label>
+                            <label className="block text-gray-700 font-medium mb-2">{t("ads.adNameEn")}</label>
                             <input
                                 type="text"
                                 name="name_en"
@@ -324,10 +360,9 @@ const AddAds = () => {
                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                             />
                         </div>
+
                         <div>
-                            <label className="block text-gray-700 font-medium mb-2">
-                                {t("ads.age")}
-                            </label>
+                            <label className="block text-gray-700 font-medium mb-2">{t("ads.age")}</label>
                             <input
                                 type="text"
                                 name="age"
@@ -338,24 +373,21 @@ const AddAds = () => {
                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                             />
                         </div>
+
                         <div>
-                            <label className="block text-gray-700 font-medium mb-2">
-                                {t("ads.location")}
-                            </label>
+                            <label className="block text-gray-700 font-medium mb-2">{t("ads.location")}</label>
                             <input
                                 name="location"
                                 value={formData.location}
                                 onChange={handleChange}
                                 required
-                                rows="4"
                                 placeholder={t("ads.locationPlaceholder")}
                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                             />
                         </div>
+
                         <div>
-                            <label className="block text-gray-700 font-medium mb-2">
-                                {t("ads.price")}
-                            </label>
+                            <label className="block text-gray-700 font-medium mb-2">{t("ads.price")}</label>
                             <input
                                 type="number"
                                 name="price"
@@ -367,10 +399,9 @@ const AddAds = () => {
                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                             />
                         </div>
+
                         <div>
-                            <label className="block text-gray-700 font-medium mb-2">
-                                {t("ads.quantity")}
-                            </label>
+                            <label className="block text-gray-700 font-medium mb-2">{t("ads.quantity")}</label>
                             <input
                                 type="number"
                                 name="quantity"
@@ -383,52 +414,27 @@ const AddAds = () => {
                         </div>
                     </div>
 
-                    {/* Left Column */}
                     <div className="space-y-6">
                         <div>
-                            <label className="block text-gray-700 font-medium mb-2">
-                                {t("ads.gender")}
-                            </label>
+                            <label className="block text-gray-700 font-medium mb-2">{t("ads.gender")}</label>
                             <div className="flex gap-4">
                                 <label className="flex items-center gap-2 cursor-pointer">
-                                    <input
-                                        type="radio"
-                                        name="gender"
-                                        value="male"
-                                        checked={formData.gender === "male"}
-                                        onChange={handleChange}
-                                        className="w-4 h-4 text-main"
-                                    />
+                                    <input type="radio" name="gender" value="male" checked={formData.gender === "male"} onChange={handleChange} className="w-4 h-4 cursor-pointer text-main" />
                                     <span>{t("ads.male")}</span>
                                 </label>
                                 <label className="flex items-center gap-2 cursor-pointer">
-                                    <input
-                                        type="radio"
-                                        name="gender"
-                                        value="female"
-                                        checked={formData.gender === "female"}
-                                        onChange={handleChange}
-                                        className="w-4 h-4 text-main"
-                                    />
+                                    <input type="radio" name="gender" value="female" checked={formData.gender === "female"} onChange={handleChange} className="w-4 h-4 cursor-pointer text-main" />
                                     <span>{t("ads.female")}</span>
                                 </label>
                                 <label className="flex items-center gap-2 cursor-pointer">
-                                    <input
-                                        type="radio"
-                                        name="gender"
-                                        value="both"
-                                        checked={formData.gender === "both"}
-                                        onChange={handleChange}
-                                        className="w-4 h-4 text-main"
-                                    />
+                                    <input type="radio" name="gender" value="both" checked={formData.gender === "both"} onChange={handleChange} className="w-4 h-4 cursor-pointer text-main" />
                                     <span>{t("ads.both")}</span>
                                 </label>
                             </div>
                         </div>
+
                         <div>
-                            <label className="block text-gray-700 font-medium mb-2">
-                                {t("ads.descriptionAr")}
-                            </label>
+                            <label className="block text-gray-700 font-medium mb-2">{t("ads.descriptionAr")}</label>
                             <textarea
                                 name="description_ar"
                                 value={formData.description_ar}
@@ -439,10 +445,9 @@ const AddAds = () => {
                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                             />
                         </div>
+
                         <div>
-                            <label className="block text-gray-700 font-medium mb-2">
-                                {t("ads.descriptionEn")}
-                            </label>
+                            <label className="block text-gray-700 font-medium mb-2">{t("ads.descriptionEn")}</label>
                             <textarea
                                 name="description_en"
                                 value={formData.description_en}
@@ -452,235 +457,108 @@ const AddAds = () => {
                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                             />
                         </div>
+
                         <div>
-                            <label className="block text-gray-700 font-medium mb-2">
-                                {t("ads.governorate")}
-                            </label>
+                            <label className="block text-gray-700 font-medium mb-2">{t("ads.governorate")}</label>
                             <select
                                 name="governorate_id"
                                 value={formData.governorate_id}
                                 onChange={handleChange}
                                 required
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-main text-white"
+                                className="w-full cursor-pointer px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-main text-white"
                             >
-                                <option value="">
-                                    {t("ads.selectGovernorate")}
-                                </option>
-                                {Array.isArray(governorates) &&
-                                    governorates.map((gov) => (
-                                        <option key={gov.id} value={gov.id}>
-                                            {isRTL ? gov.name_ar : gov.name_en}
-                                        </option>
-                                    ))}
+                                <option value="">{t("ads.selectGovernorate")}</option>
+                                {Array.isArray(governorates) && governorates.map((gov) => (
+                                    <option key={gov.id} value={gov.id}>
+                                        {isRTL ? gov.name_ar : gov.name_en}
+                                    </option>
+                                ))}
                             </select>
                         </div>
+
                         <div className="flex items-center gap-6 rounded-lg">
-
-                            <h3 className="text-gray-700 font-medium whitespace-nowrap">
-                                {t("ads.contactMethod")}
-                            </h3>
-
-                            <div className="flex items-center gap-6">
-
-                                <label className="flex items-center gap-2 cursor-pointer">
-                                    <input
-                                        type="radio"
-                                        name="contact_method"
-                                        value="phone"
-                                        checked={formData.contact_method === "phone"}
-                                        onChange={handleChange}
-                                        className="w-5 h-5 text-main border-gray-300 focus:ring-green-500"
-                                    />
-                                    <span className="text-gray-700">
-                                        {t("ads.call")}
-                                    </span>
-                                </label>
-
-                                <label className="flex items-center gap-2 cursor-pointer">
-                                    <input
-                                        type="radio"
-                                        name="contact_method"
-                                        value="whatsapp"
-                                        checked={formData.contact_method === "whatsapp"}
-                                        onChange={handleChange}
-                                        className="w-5 h-5 text-main border-gray-300 focus:ring-green-500"
-                                    />
-                                    <span className="text-gray-700">
-                                        {t("ads.whatsapp")}
-                                    </span>
-                                </label>
-
-                                <label className="flex items-center gap-2 cursor-pointer">
-                                    <input
-                                        type="radio"
-                                        name="contact_method"
-                                        value="both"
-                                        checked={formData.contact_method === "both"}
-                                        onChange={handleChange}
-                                        className="w-5 h-5 text-main border-gray-300 focus:ring-green-500"
-                                    />
-                                    <span className="text-gray-700">
-                                        {t("ads.both")}
-                                    </span>
-                                </label>
-
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-6 mb-4">
-                            <label className="text-gray-700 font-medium whitespace-nowrap w-40">
-                                {t("ads.deliveryAvailable")}
-                            </label>
-
+                            <h3 className="text-gray-700 font-medium whitespace-nowrap">{t("ads.contactMethod")}</h3>
                             <div className="flex items-center gap-6">
                                 <label className="flex items-center gap-2 cursor-pointer">
-                                    <input
-                                        type="radio"
-                                        name="delivery_available"
-                                        value="true"
-                                        checked={formData.delivery_available === true}
-                                        onChange={() =>
-                                            setFormData((prev) => ({ ...prev, delivery_available: true }))
-                                        }
-                                        className="w-4 h-4 text-main"
-                                    />
-                                    <span>{isRTL ? "نعم" : "Yes"}</span>
+                                    <input type="radio" name="contact_method" value="phone" checked={formData.contact_method === "phone"} onChange={handleChange} className="w-5 h-5 text-main border-gray-300 focus:ring-green-500" />
+                                    <span className="text-gray-700">{t("ads.call")}</span>
                                 </label>
-
                                 <label className="flex items-center gap-2 cursor-pointer">
-                                    <input
-                                        type="radio"
-                                        name="delivery_available"
-
-                                        checked={formData.delivery_available === false}
-                                        onChange={() =>
-                                            setFormData((prev) => ({ ...prev, delivery_available: false }))
-                                        }
-                                        className="w-4 h-4 text-main"
-                                    />
-                                    <span>{isRTL ? "لا" : "No"}</span>
+                                    <input type="radio" name="contact_method" value="chat" checked={formData.contact_method === "chat"} onChange={handleChange} className="w-5 h-5 text-main border-gray-300 focus:ring-green-500" />
+                                    <span className="text-gray-700">{t("ads.chat")}</span>
+                                </label>
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input type="radio" name="contact_method" value="both" checked={formData.contact_method === "both"} onChange={handleChange} className="w-5 h-5 text-main border-gray-300 focus:ring-green-500" />
+                                    <span className="text-gray-700">{t("ads.both")}</span>
                                 </label>
                             </div>
                         </div>
-                        <div className="flex items-center gap-6 mb-4">
-                            <label className="text-gray-700 font-medium whitespace-nowrap w-40">
-                                {t("ads.needsVaccinations")}
-                            </label>
 
+                        <div className="flex items-center gap-6 mb-4">
+                            <label className="text-gray-700 font-medium whitespace-nowrap w-40">{t("ads.deliveryAvailable")}</label>
                             <div className="flex items-center gap-6">
                                 <label className="flex items-center gap-2 cursor-pointer">
-                                    <input
-                                        type="radio"
-                                        name="needs_vaccinations"
-                                        value="true"
-                                        checked={formData.needs_vaccinations === true}
-                                        onChange={() =>
-                                            setFormData((prev) => ({ ...prev, needs_vaccinations: true }))
-                                        }
-                                        className="w-4 h-4 text-main"
-                                    />
+                                    <input type="radio" name="delivery_available" value="true" checked={formData.delivery_available === true} onChange={() => setFormData((prev) => ({ ...prev, delivery_available: true }))} className="w-4 h-4 cursor-pointer text-main" />
                                     <span>{isRTL ? "نعم" : "Yes"}</span>
                                 </label>
-
                                 <label className="flex items-center gap-2 cursor-pointer">
-                                    <input
-                                        type="radio"
-                                        name="needs_vaccinations"
-
-                                        checked={formData.needs_vaccinations === false}
-                                        onChange={() =>
-                                            setFormData((prev) => ({ ...prev, needs_vaccinations: false }))
-                                        }
-                                        className="w-4 h-4 text-main"
-                                    />
-                                    <span>{isRTL ? "لا" : "No"}</span>
-                                </label>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-6 mb-4">
-                            <label className="text-gray-700 font-medium whitespace-nowrap w-40">
-                                {t("ads.retailSaleAvailable")}
-                            </label>
-
-                            <div className="flex items-center gap-6">
-                                <label className="flex items-center gap-2 cursor-pointer">
-                                    <input
-                                        type="radio"
-                                        name="retail_sale_available"
-                                        value="true"
-                                        checked={formData.retail_sale_available === true}
-                                        onChange={() =>
-                                            setFormData((prev) => ({ ...prev, retail_sale_available: true }))
-                                        }
-                                        className="w-4 h-4 text-main"
-                                    />
-                                    <span>{isRTL ? "نعم" : "Yes"}</span>
-                                </label>
-
-                                <label className="flex items-center gap-2 cursor-pointer">
-                                    <input
-                                        type="radio"
-                                        name="retail_sale_available"
-
-                                        checked={formData.retail_sale_available === false}
-                                        onChange={() =>
-                                            setFormData((prev) => ({ ...prev, retail_sale_available: false }))
-                                        }
-                                        className="w-4 h-4 text-main"
-                                    />
-                                    <span>{isRTL ? "لا" : "No"}</span>
-                                </label>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-6 mb-4">
-                            <label className="text-gray-700 font-medium whitespace-nowrap w-40">
-                                {t("ads.priceNegotiable")}
-                            </label>
-
-                            <div className="flex items-center gap-6">
-                                <label className="flex items-center gap-2 cursor-pointer">
-                                    <input
-                                        type="radio"
-                                        name="price_negotiable"
-                                        value="true"
-                                        checked={formData.price_negotiable === true}
-                                        onChange={() =>
-                                            setFormData((prev) => ({ ...prev, price_negotiable: true }))
-                                        }
-                                        className="w-4 h-4 text-main"
-                                    />
-                                    <span>{isRTL ? "نعم" : "Yes"}</span>
-                                </label>
-
-                                <label className="flex items-center gap-2 cursor-pointer">
-                                    <input
-                                        type="radio"
-                                        name="price_negotiable"
-
-                                        checked={formData.price_negotiable === false}
-                                        onChange={() =>
-                                            setFormData((prev) => ({ ...prev, price_negotiable: false }))
-                                        }
-                                        className="w-4 h-4 text-main"
-                                    />
+                                    <input type="radio" name="delivery_available" value="false" checked={formData.delivery_available === false} onChange={() => setFormData((prev) => ({ ...prev, delivery_available: false }))} className="w-4 h-4 cursor-pointer text-main" />
                                     <span>{isRTL ? "لا" : "No"}</span>
                                 </label>
                             </div>
                         </div>
 
+                        <div className="flex items-center gap-6 mb-4">
+                            <label className="text-gray-700 font-medium whitespace-nowrap w-40">{t("ads.needsVaccinations")}</label>
+                            <div className="flex items-center gap-6">
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input type="radio" name="needs_vaccinations" value="true" checked={formData.needs_vaccinations === true} onChange={() => setFormData((prev) => ({ ...prev, needs_vaccinations: true }))} className="w-4 h-4 cursor-pointer text-main" />
+                                    <span>{isRTL ? "نعم" : "Yes"}</span>
+                                </label>
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input type="radio" name="needs_vaccinations" value="false" checked={formData.needs_vaccinations === false} onChange={() => setFormData((prev) => ({ ...prev, needs_vaccinations: false }))} className="w-4 h-4 cursor-pointer text-main" />
+                                    <span>{isRTL ? "لا" : "No"}</span>
+                                </label>
+                            </div>
+                        </div>
 
+                        <div className="flex items-center gap-6 mb-4">
+                            <label className="text-gray-700 font-medium whitespace-nowrap w-40">{t("ads.retailSaleAvailable")}</label>
+                            <div className="flex items-center gap-6">
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input type="radio" name="retail_sale_available" value="true" checked={formData.retail_sale_available === true} onChange={() => setFormData((prev) => ({ ...prev, retail_sale_available: true }))} className="w-4 h-4 cursor-pointer text-main" />
+                                    <span>{isRTL ? "نعم" : "Yes"}</span>
+                                </label>
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input type="radio" name="retail_sale_available" value="false" checked={formData.retail_sale_available === false} onChange={() => setFormData((prev) => ({ ...prev, retail_sale_available: false }))} className="w-4 h-4 cursor-pointer text-main" />
+                                    <span>{isRTL ? "لا" : "No"}</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-6 mb-4">
+                            <label className="text-gray-700 font-medium whitespace-nowrap w-40">{t("ads.priceNegotiable")}</label>
+                            <div className="flex items-center gap-6">
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input type="radio" name="price_negotiable" value="true" checked={formData.price_negotiable === true} onChange={() => setFormData((prev) => ({ ...prev, price_negotiable: true }))} className="w-4 h-4 cursor-pointer text-main" />
+                                    <span>{isRTL ? "نعم" : "Yes"}</span>
+                                </label>
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input type="radio" name="price_negotiable" value="false" checked={formData.price_negotiable === false} onChange={() => setFormData((prev) => ({ ...prev, price_negotiable: false }))} className="w-4 h-4 cursor-pointer text-main" />
+                                    <span>{isRTL ? "لا" : "No"}</span>
+                                </label>
+                            </div>
+                        </div>
                     </div>
                 </div>
+
                 <div className="pt-6">
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full bg-main hover:bg-green-700 text-white font-bold py-4 px-6 rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed text-lg"
+                        className="w-full cursor-pointer bg-main hover:bg-green-700 text-white font-bold py-4 px-6 rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed text-lg"
                     >
-                        {loading
-                            ? isRTL
-                                ? "جاري النشر..."
-                                : "Publishing..."
-                            : t("ads.publish")}
+                        {loading ? (isRTL ? "جاري النشر..." : "Publishing...") : t("ads.publish")}
                     </button>
                 </div>
             </form>

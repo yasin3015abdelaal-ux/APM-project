@@ -1,14 +1,13 @@
-
 import { Outlet } from 'react-router-dom';
 import Sidebar from '../components/Dashboard/Sidebar';
 
 const DashboardLayout = () => {
     return (
-        <div style={{ display: 'flex', minHeight: '100vh' }}>
+        <div className="flex min-h-screen">
             <Sidebar />
 
-            <div style={{ flex: 1 }}>
-                <div style={{ padding: '20px' }}>
+            <div className="flex-1">
+                <div className="p-5 pt-15 lg:pt-2">
                     <Outlet />
                 </div>
             </div>

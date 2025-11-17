@@ -6,6 +6,7 @@ import { IoLogOutOutline } from "react-icons/io5";
 import { dataAPI } from "../../api";
 import logo from "../../assets/images/logo.jpg";
 import { useAuth } from "../../contexts/AuthContext";
+import { countriesFlags } from "../../data/flags";
 
 const Sidebar = () => {
     const { t, i18n } = useTranslation();
@@ -19,22 +20,39 @@ const Sidebar = () => {
 
     const isRTL = i18n.language === "ar";
 
+    // Get user data from localStorage
+    const userData = JSON.parse(localStorage.getItem("userData"));
+    const userCountryId = userData?.country?.id;
+
+    // Get flag for selected country
+    const selectedCountryData = countriesFlags.find((c) => c.id === parseInt(selectedCountry));
+    const flagImage = selectedCountryData?.flag || "";
+
     // Fetch countries on component mount
     useEffect(() => {
         dataAPI
             .getCountries()
             .then((res) => {
-                const data = res.data?.data || res.data || [];
+                const data = res.data?.data?.countries || res.data?.countries || res.data?.data || [];
                 setCountries(Array.isArray(data) ? data : []);
-                if (data.length > 0) {
-                    setSelectedCountry(data[0].id);
+                
+                // Set initial selected country from user data or first country
+                if (userCountryId) {
+                    setSelectedCountry(userCountryId.toString());
+                } else if (data.length > 0) {
+                    setSelectedCountry(data[0].id.toString());
                 }
             })
             .catch((err) => {
                 console.error("Error fetching countries:", err);
                 setCountries([]);
+                
+                // Fallback to user country if API fails
+                if (userCountryId) {
+                    setSelectedCountry(userCountryId.toString());
+                }
             });
-    }, []);
+    }, [userCountryId]);
 
     const menuItems = [
         { label: t("dashboard.sidebar.accounts"), path: "/dashboard/accounts" },
@@ -61,6 +79,7 @@ const Sidebar = () => {
     const handleCountryChange = (e) => {
         const countryId = e.target.value;
         setSelectedCountry(countryId);
+        // يمكنك إضافة logic إضافي هنا مثل تحديث localStorage أو إرسال request للسيرفر
     };
 
     const handleMenuClick = (path) => {
@@ -68,13 +87,25 @@ const Sidebar = () => {
         navigate(path);
     };
 
+    // Check if menu item is active (supports nested routes)
+    const isMenuItemActive = (path) => {
+        if (path === "/dashboard/additions") {
+            return location.pathname.startsWith("/dashboard/additions");
+        }
+        if (path === "/dashboard/accounts") {
+            return location.pathname.startsWith("/dashboard/accounts");
+        }
+        return location.pathname === path;
+    };
+
     return (
         <>
-            {/* Button for Mobile */}
+            {/* Button for Mobile - Fixed at top */}
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="lg:hidden cursor-pointer fixed top-4 z-50 p-2 bg-main text-white rounded-md shadow-lg hover:bg-green-700 transition"
-                style={{ [isRTL ? "left" : "right"]: "1rem" }}
+                className={`lg:hidden cursor-pointer fixed top-4 z-50 p-2 bg-main text-white rounded-md shadow-lg hover:bg-green-700 transition ${
+                    isRTL ? "left-4" : "right-4"
+                }`}
             >
                 {isOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
             </button>
@@ -108,25 +139,38 @@ const Sidebar = () => {
                 <div>
                     {/* Header with Country Select and Language Toggle */}
                     <div className={`flex justify-between items-center px-3 py-2 gap-2 ${isRTL ? "flex-row" : "flex-row-reverse"}`}>
-                        {/* Country Select */}
+                        {/* Country Select with Flag */}
                         <div className="relative flex-1">
                             <select
                                 value={selectedCountry}
                                 onChange={handleCountryChange}
                                 className={`w-full appearance-none flex items-center px-3 py-1.5 rounded-md bg-main text-white text-sm cursor-pointer focus:outline-none focus:ring-2 focus:ring-green-600 ${
-                                    isRTL ? "pr-8" : "pl-8"
+                                    isRTL ? "pr-8 pl-8" : "pl-8 pr-8"
                                 }`}
                             >
                                 {countries.length === 0 ? (
-                                    <option value="">{t("dashboard.sidebar.Egypt")}</option>
+                                    <option value="">{t("dashboard.sidebar.Egypt") || "مصر"}</option>
                                 ) : (
                                     countries.map((country) => (
                                         <option key={country.id} value={country.id}>
-                                            {country.name}
+                                            {i18n.language === "ar" ? country.name_ar : country.name_en}
                                         </option>
                                     ))
                                 )}
                             </select>
+                            
+                            {/* Flag Image */}
+                            {flagImage && (
+                                <img
+                                    src={flagImage}
+                                    alt="Country flag"
+                                    className={`absolute top-1/2 transform -translate-y-1/2 w-5 h-5 rounded-full pointer-events-none ${
+                                        isRTL ? "right-2" : "left-2"
+                                    }`}
+                                />
+                            )}
+                            
+                            {/* Dropdown Arrow */}
                             <div
                                 className={`absolute top-1/2 transform -translate-y-1/2 pointer-events-none ${
                                     isRTL ? "left-2" : "right-2"
@@ -157,7 +201,7 @@ const Sidebar = () => {
                                 <button
                                     onClick={() => handleMenuClick(item.path)}
                                     className={`w-full text-base font-medium rounded-md px-3 py-1.5 transition text-right cursor-pointer
-                                    ${location.pathname === item.path
+                                    ${isMenuItemActive(item.path)
                                         ? "bg-main text-white"
                                         : "text-main hover:translate-x-[-5px]"
                                     }`}

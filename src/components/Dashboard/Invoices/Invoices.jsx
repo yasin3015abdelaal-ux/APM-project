@@ -152,7 +152,7 @@ const Invoices = () => {
     const handleRowClick = (invoice) => {
         if (!invoice || !invoice.id) {
             console.error('Invoice ID is missing:', invoice);
-            alert(t('dashboard.invoices.errors.missingId'));
+            showToast(t('dashboard.invoices.errors.missingId'));
             return;
         }
         sessionStorage.setItem('selectedInvoice', JSON.stringify(invoice));

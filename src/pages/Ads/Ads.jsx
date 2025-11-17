@@ -1,13 +1,14 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import fakeImage from "../../assets/images/sadia-chicken.png";
 import { IoLocationOutline } from "react-icons/io5";
-import { FaEye, FaRegEdit, FaRegHeart } from "react-icons/fa";
-import IconButton from "../../components/Ui/IconButtons/IconButton";
-import Button from "../../components/Ui/Button/Button";
+import { FaRegEdit } from "react-icons/fa";
 import Loader from "../../components/Ui/Loader/Loader";
 import { useNavigate } from "react-router-dom";
 import { userAPI } from "../../api";
+import PlaceholderSVG from "../../assets/PlaceholderSVG";
+import { BiCategoryAlt } from "react-icons/bi";
+import { TbListDetails } from "react-icons/tb";
+
 
 function FilterAds({ setFilter, categories }) {
   const { t, i18n } = useTranslation();
@@ -15,10 +16,9 @@ function FilterAds({ setFilter, categories }) {
   
   const statusOptions = [
     { id: "all", nameAr: "كل الحالات", nameEn: "All Status" },
-    { id: 1, nameAr: "مقبول", nameEn: "Accepted" },
-    { id: 2, nameAr: "مرفوض", nameEn: "Rejected" },
-    { id: 3, nameAr: "تحت المراجعة", nameEn: "Under Review" },
-    { id: 4, nameAr: "انتظار", nameEn: "Pending" }
+    { id: "accepted", nameAr: "مقبول", nameEn: "Accepted" },
+    { id: "rejected", nameAr: "مرفوض", nameEn: "Rejected" },
+    { id: "pending", nameAr: "تحت المراجعة", nameEn: "Pending" },
   ];
 
   function handleFilterChange(e) {
@@ -26,10 +26,10 @@ function FilterAds({ setFilter, categories }) {
   }
 
   return (
-    <div className="flex items-center gap-3 flex-wrap">
+    <div className="flex items-center gap-2 flex-wrap">
       {/* Category Filter */}
       <select
-        className="text-white bg-main focus:outline-none rounded-md px-3 py-2"
+        className="text-white bg-main focus:outline-none rounded-md px-3 py-1.5 text-sm cursor-pointer"
         name="category_id"
         onChange={handleFilterChange}
       >
@@ -43,7 +43,7 @@ function FilterAds({ setFilter, categories }) {
 
       {/* Status Filter */}
       <select
-        className="text-white bg-main focus:outline-none rounded-md px-3 py-2"
+        className="text-white bg-main focus:outline-none rounded-md px-3 py-1.5 text-sm cursor-pointer"
         name="status"
         onChange={handleFilterChange}
       >
@@ -58,58 +58,89 @@ function FilterAds({ setFilter, categories }) {
 }
 
 function AdsItem({ item }) {
-  const { id, images, name, governorate, views, likes, price } = item;
-  const { t } = useTranslation();
+  const { id, images, image, name, name_ar, name_en, governorate, price } = item;
+  const { t, i18n } = useTranslation();
+  const isRTL = i18n.language === 'ar';
   const navigate = useNavigate();
 
-  // Use the first image if available, otherwise use fakeImage
-  const imageUrl = images && images.length > 0 ? images[0] : fakeImage;
+  // Use the first image if available
+  const imageUrl = images && images.length > 0 ? images[0] : image;
+  const displayName = isRTL ? name_ar : name_en || name;
 
   return (
-    <div className="flex rounded-xl border-2 border-main gap-2 flex-col md:flex-row">
+    <div className="flex rounded-lg border border-gray-200 gap-3 flex-col md:flex-row bg-white shadow-sm hover:shadow-md transition-shadow">
       {/* image */}
-      <div className="border-b-2 border-l-0 border-main p-2 md:border-l-2 md:border-b-0">
-        <img
-          src={imageUrl}
-          alt={`image-logo-for-${id}`}
-          className="w-full object-cover md:w-48 md:h-48"
-        />
+      <div className="border-b border-l-0 border-gray-200 p-2 md:border-l md:border-b-0 bg-gray-50">
+        {imageUrl ? (
+          <img
+            src={imageUrl}
+            alt={`image-logo-for-${id}`}
+            className="w-full object-cover rounded md:w-40 md:h-40"
+            onError={(e) => {
+              e.target.style.display = 'none';
+              e.target.nextElementSibling.style.display = 'block';
+            }}
+          />
+        ) : null}
+        <div 
+          className={`${imageUrl ? 'hidden' : 'block'} w-full md:w-40 md:h-40`}
+          style={{ display: imageUrl ? 'none' : 'block' }}
+        >
+          <PlaceholderSVG />
+        </div>
       </div>
       {/* text */}
-      <div className="flex flex-col ms-3 md:ms-0 flex-1 p-3">
-        <div className="flex items-center justify-between">
-          <h3 className="font-bold text-2xl md:text-3xl my-1">{name}</h3>
+      <div className="flex flex-col flex-1 p-3">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="font-bold text-lg md:text-xl">{displayName}</h3>
           {/* edit */}
-          <IconButton 
-            size="medium" 
+          <button 
             onClick={() => navigate(`/ads/${id}/edit`)}
+            className="cursor-pointer"
           >
-            <FaRegEdit />
-          </IconButton>
+            <FaRegEdit size={30} className="text-main p-1 hover:rounded-4xl hover:bg-gray-300" />
+          </button>
         </div>
-        <div className="flex items-center gap-1">
-          <IoLocationOutline className="text-main" size={20} />
-          <p className="font-semibold text-sm md:text-base">
-            {governorate?.name_a || "موقع غير محدد"}
+        <div className="flex items-center gap-1 mb-1.5">
+          <IoLocationOutline className="text-main" size={16} />
+          <p className="font-medium text-xs md:text-sm text-gray-700">
+            {isRTL ? governorate?.name_ar : governorate?.name_en}
           </p>
         </div>
-        <div className="flex items-center my-2 gap-1">
-          <FaEye className="text-main" size={20} />
-          <p className="font-semibold text-sm md:text-base">
-            {t("ads.watcher")}: {views || 0}
-          </p>
-        </div>
-        <div className="flex items-center gap-1">
-          <FaRegHeart className="text-main" size={20} />
-          <p className="font-semibold text-sm md:text-base">
-            {t("ads.interested")}: {likes || 0}
-          </p>
-        </div>
-        <div className="flex items-center justify-between mt-auto mb-2 me-2 flex-col md:flex-row gap-2">
-          <h6 className="font-bold text-2xl md:text-3xl">
+        
+        {/* Sub Category (Type) */}
+        {item.sub_category && (
+          <div className="flex items-center gap-1 mb-1.5">
+            <span className="font-semibold text-xs md:text-sm text-gray-600">
+              {t("ads.type")}:
+            </span>
+            <p className="font-medium text-xs md:text-sm text-gray-700">
+              <BiCategoryAlt className="text-main" size={16} />
+              {isRTL ? item.sub_category.name_ar : item.sub_category.name_en}
+            </p>
+          </div>
+        )}
+        
+        {/* Description */}
+        {(item.description || item.description_ar || item.description_en) && (
+          <div className="flex flex-col gap-1 mb-2">
+            <span className="font-semibold text-xs md:text-sm text-gray-600">
+              {t("ads.description")}:
+            </span>
+            <p className="font-medium text-xs md:text-sm text-gray-700 line-clamp-2">
+              <TbListDetails className="text-main" size={16}/>
+              {isRTL ? (item.description_ar || item.description) : (item.description_en || item.description)}
+            </p>
+          </div>
+        )}
+        
+        <div className="flex items-center justify-between mt-auto pt-2 border-t border-gray-100 flex-col md:flex-row gap-2">
+          <h6 className="font-bold text-xl md:text-2xl text-main">
             {price} {t("ads.concurrency")}
           </h6>
-          <Button>{t("ads.sell")}</Button>
+          <button className="bg-main text-white py-2 px-4 rounded-lg hover:bg-green-700 transition text-sm cursor-pointer">
+            {t("ads.sell")}
+          </button>
         </div>
       </div>
     </div>
@@ -149,6 +180,7 @@ export default function Ads() {
         const response = await userAPI.get("/products/my-products");
         setAdsItems(response.data.data || []);
         setFilteredAds(response.data.data || []);
+        console.log("resss",response);
       } catch (err) {
         console.error("Error fetching ads:", err);
         setError("فشل في تحميل الإعلانات. يرجى المحاولة مرة أخرى لاحقاً.");
@@ -173,9 +205,7 @@ export default function Ads() {
 
     // Filter by status
     if (filter.status && filter.status !== "all") {
-      filtered = filtered.filter(
-        (item) => item.status === parseInt(filter.status)
-      );
+      filtered = filtered.filter((item) => item.status === filter.status);
     }
 
     setFilteredAds(filtered);
@@ -189,11 +219,11 @@ export default function Ads() {
   // Handle error state
   if (error) {
     return (
-      <section>
+      <section className="py-6">
         <div className="container">
-          <h3 className="section__title">{t("ads.title")}</h3>
+          <h3 className="text-2xl font-bold text-main mb-4">{t("ads.title")}</h3>
           <div className="flex justify-center items-center min-h-64">
-            <p className="text-center text-red-500 text-xl">{error}</p>
+            <p className="text-center text-red-500 text-lg">{error}</p>
           </div>
         </div>
       </section>
@@ -201,21 +231,24 @@ export default function Ads() {
   }
 
   return (
-    <section>
+    <section className="py-4">
       <div className="container">
-        <h3 className="section__title">{t("ads.title")}</h3>
-        <div className="flex items-center justify-between flex-wrap gap-3 my-4">
+        <h3 className="text-2xl text-center font-bold text-main mb-3">{t("ads.title")}</h3>
+        <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
           {/* filter section */}
           <FilterAds setFilter={setFilter} categories={categories} />
           {/* add new ads */}
-          <Button onClick={() => navigate("/ads/create")}>
+          <button 
+            onClick={() => navigate("/ads/create")}
+            className="bg-main text-white py-2 px-4 rounded-lg hover:bg-green-700 transition text-sm cursor-pointer w-full md:w-auto"
+          >
             {t("ads.makeAds")}
-          </Button>
+          </button>
         </div>
         {/* ads list */}
-        <div className="grid grid-cols-1 gap-4 my-3">
+        <div className="grid grid-cols-1 gap-4">
           {filteredAds.length === 0 ? (
-            <p className="text-center text-2xl md:text-3xl font-bold min-h-screen flex items-center justify-center">
+            <p className="text-center text-xl md:text-2xl font-bold min-h-96 flex items-center justify-center text-gray-500">
               {t("ads.noContent")}
             </p>
           ) : (

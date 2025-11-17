@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Upload, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate } from 'react-router-dom';
-import { userAPI } from '../../api';
+import { adminAPI, userAPI } from '../../api';
 import Loader from '../../components/Ui/Loader/Loader';
 
 const EditAds = () => {
@@ -41,6 +41,12 @@ const EditAds = () => {
     const [imagePreview, setImagePreview] = useState(null);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [error, setError] = useState(null);
+    const [toast, setToast] = useState(null);
+
+    const showToast = (message, type = "success") => {
+        setToast({ message, type });
+        setTimeout(() => setToast(null), 4000);
+    };
 
     useEffect(() => {
         loadInitialData();
@@ -59,13 +65,33 @@ const EditAds = () => {
             const userData = JSON.parse(localStorage.getItem('userData'));
             const country_id = userData.country?.id;
 
-            const [productRes, categoriesRes, governoratesRes] = await Promise.all([
-                userAPI.get(`/products/${id}`),
+            console.log('Loading product with ID:', id);
+
+            // Load product first to check if it exists
+            let productRes;
+            try {
+                productRes = await userAPI.get(`/products/${id}`);
+                console.log('Product Response:', productRes.data);
+            } catch (err) {
+                console.error('Error loading product:', err);
+                console.error('Error response:', err.response?.data);
+                
+                // Check the error message
+                if (err.response?.status === 404) {
+                    throw new Error('المنتج غير موجود أو تم حذفه');
+                } else if (err.response?.status === 403) {
+                    throw new Error('ليس لديك صلاحية لتعديل هذا المنتج');
+                } else {
+                    throw new Error('حدث خطأ في تحميل المنتج');
+                }
+            }
+
+            // Then load categories and governorates
+            const [categoriesRes, governoratesRes] = await Promise.all([
                 userAPI.get('/categories'),
                 userAPI.get(`/governorates?country_id=${country_id}`)
             ]);
 
-            console.log('Product:', productRes.data);
             console.log('Categories:', categoriesRes.data);
             console.log('Governorates:', governoratesRes.data.data.governorates);
 
@@ -79,8 +105,8 @@ const EditAds = () => {
             // Set form data from product
             if (productData) {
                 setFormData({
-                    category_id: productData.category_id || '',
-                    sub_category_id: productData.sub_category_id || '',
+                    category_id: productData.category?.id || productData.category_id || '',
+                    sub_category_id: productData.sub_category?.id || productData.sub_category_id || '',
                     name_ar: productData.name_ar || '',
                     name_en: productData.name_en || '',
                     description_ar: productData.description_ar || '',
@@ -92,7 +118,7 @@ const EditAds = () => {
                     age: productData.age || '',
                     weight: productData.weight || '',
                     delivery_available: productData.delivery_available || false,
-                    governorate_id: productData.governorate_id || '',
+                    governorate_id: productData.governorate?.id || productData.governorate_id || '',
                     location: productData.location || '',
                     needs_vaccinations: productData.needs_vaccinations || false,
                     retail_sale_available: productData.retail_sale_available || false,
@@ -100,13 +126,18 @@ const EditAds = () => {
                     contact_method: productData.contact_method || ''
                 });
 
+                // Set subcategory from product response if available
+                if (productData.sub_category) {
+                    setSubCategories([productData.sub_category]);
+                }
+
                 if (productData.image) {
                     setImagePreview(productData.image);
                 }
             }
         } catch (error) {
             console.error('Error loading data:', error);
-            setError('حدث خطأ في تحميل البيانات');
+            setError(error.message || 'حدث خطأ في تحميل البيانات');
             setCategories([]);
             setGovernorates([]);
         } finally {
@@ -116,9 +147,16 @@ const EditAds = () => {
 
     const loadSubCategories = async (categoryId) => {
         try {
-            const res = await userAPI.get(`/subcategories/${categoryId}`);
-            console.log('SubCategories:', res.data);
-            const subCategoriesData = res?.data?.data || res?.data?.subcategories;
+            // Try different endpoint patterns
+            let res;
+            try {
+                res = await adminAPI.get(`/subcategories?category_id=${categoryId}`);
+            } catch (err) {
+                res = await userAPI.get(`/subcategories/${categoryId}`);
+            }
+            
+            console.log('SubCategories Response:', res.data);
+            const subCategoriesData = res?.data?.data || res?.data?.subcategories || res?.data;
             setSubCategories(Array.isArray(subCategoriesData) ? subCategoriesData : []);
         } catch (error) {
             console.error('Error loading subcategories:', error);
@@ -179,30 +217,98 @@ const EditAds = () => {
                 dataToSend.append('image', formData.image);
             }
 
-            await userAPI.put(`/products/${id}`, dataToSend, {
+            dataToSend.append('_method', 'PUT');
+
+            console.log('Sending data:', {
+                category_id: formData.category_id,
+                sub_category_id: formData.sub_category_id,
+                name_ar: formData.name_ar,
+                name_en: formData.name_en,
+                governorate_id: formData.governorate_id,
+                hasImage: formData.image instanceof File
+            });
+
+            await userAPI.post(`/products/${id}`, dataToSend, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 }
             });
 
-            alert(t('ads.updateSuccess') || 'تم تعديل الإعلان بنجاح!');
-            navigate('/ads');
+            showToast(isRTL ? 'تم تعديل الإعلان بنجاح!' : 'Ad updated successfully!', 'success');
+            setTimeout(() => {
+                navigate('/ads');
+            }, 1500);
         } catch (error) {
             console.error('Error updating product:', error);
-            alert(error.response?.data?.message || t('ads.updateError') || 'حدث خطأ أثناء تعديل الإعلان');
+            console.error('Error response:', error.response?.data);
+            
+            // Get validation errors if available
+            const validationErrors = error.response?.data?.errors;
+            let errorMessage = '';
+            
+            if (validationErrors) {
+                // Get first validation error
+                const firstErrorKey = Object.keys(validationErrors)[0];
+                const firstError = validationErrors[firstErrorKey];
+                const errorText = Array.isArray(firstError) ? firstError[0] : firstError;
+                
+                // Translate common validation errors to Arabic if RTL
+                if (isRTL) {
+                    if (errorText.includes('required')) {
+                        errorMessage = `حقل ${translateFieldName(firstErrorKey)} مطلوب`;
+                    } else if (errorText.includes('invalid')) {
+                        errorMessage = `حقل ${translateFieldName(firstErrorKey)} غير صالح`;
+                    } else if (errorText.includes('must be')) {
+                        errorMessage = `حقل ${translateFieldName(firstErrorKey)} يجب أن يكون صحيحاً`;
+                    } else {
+                        errorMessage = errorText;
+                    }
+                } else {
+                    errorMessage = errorText;
+                }
+            } else {
+                errorMessage = isRTL 
+                    ? 'حدث خطأ أثناء تعديل الإعلان' 
+                    : 'Error updating ad';
+            }
+            
+            showToast(errorMessage, 'error');
         } finally {
             setLoading(false);
         }
     };
 
+    // Helper function to translate field names
+    const translateFieldName = (fieldName) => {
+        const translations = {
+            'category_id': 'الفئة',
+            'sub_category_id': 'النوع',
+            'name_ar': 'الاسم بالعربية',
+            'name_en': 'الاسم بالإنجليزية',
+            'description_ar': 'الوصف بالعربية',
+            'description_en': 'الوصف بالإنجليزية',
+            'gender': 'الجنس',
+            'quantity': 'الكمية',
+            'price': 'السعر',
+            'age': 'العمر',
+            'governorate_id': 'المحافظة',
+            'location': 'الموقع',
+            'contact_method': 'طريقة التواصل',
+            'image': 'الصورة'
+        };
+        return translations[fieldName] || fieldName;
+    };
+
     const handleDelete = async () => {
         try {
             await userAPI.delete(`/products/${id}`);
-            alert(t('ads.deleteSuccess') || 'تم حذف الإعلان بنجاح!');
-            navigate('/ads');
+            showToast(t('ads.deleteSuccess') || 'تم حذف الإعلان بنجاح!');
+            setTimeout(() => {
+                navigate('/ads');
+            }, 1500);
         } catch (error) {
             console.error('Error deleting product:', error);
-            alert(error.response?.data?.message || t('ads.deleteError') || 'حدث خطأ أثناء حذف الإعلان');
+            showToast(error.response?.data?.message || t('ads.deleteError') || 'حدث خطأ أثناء حذف الإعلان', 'error');
         }
         setShowDeleteConfirm(false);
     };
@@ -217,16 +323,24 @@ const EditAds = () => {
         return (
             <div className="min-h-screen flex items-center justify-center p-4">
                 <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md">
-                    <p className="text-red-600 text-center mb-4">{error}</p>
-                    <button
-                        onClick={() => {
-                            setError(null);
-                            loadInitialData();
-                        }}
-                        className="w-full bg-main text-white py-2 px-4 rounded-lg hover:bg-green-700"
-                    >
-                        {isRTL ? 'إعادة المحاولة' : 'Retry'}
-                    </button>
+                    <p className="text-red-600 text-center mb-4 text-lg font-medium">{error}</p>
+                    <div className="flex gap-3">
+                        <button
+                            onClick={() => navigate('/ads')}
+                            className="flex-1 cursor-pointer bg-main text-white py-2 px-4 rounded-lg hover:bg-green-700"
+                        >
+                            {isRTL ? 'الرجوع للإعلانات' : 'Back to Ads'}
+                        </button>
+                        <button
+                            onClick={() => {
+                                setError(null);
+                                loadInitialData();
+                            }}
+                            className="flex-1 cursor-pointer bg-gray-200 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-300"
+                        >
+                            {isRTL ? 'إعادة المحاولة' : 'Retry'}
+                        </button>
+                    </div>
                 </div>
             </div>
         );
@@ -234,6 +348,22 @@ const EditAds = () => {
 
     return (
         <div className={`w-full max-w-5xl mx-auto bg-white ${isRTL ? 'rtl' : 'ltr'}`} dir={isRTL ? 'rtl' : 'ltr'}>
+            {toast && (
+                <div className={`fixed top-4 sm:top-5 ${isRTL ? "left-4 sm:left-5" : "right-4 sm:right-5"} z-50 animate-slide-in max-w-[90%] sm:max-w-md`}>
+                    <div className={`px-4 py-3 sm:px-6 sm:py-4 rounded-lg sm:rounded-xl shadow-lg flex items-center gap-2 sm:gap-3 ${toast.type === "success" ? "bg-main text-white" : "bg-red-500 text-white"}`}>
+                        {toast.type === "success" ? (
+                            <svg className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                        ) : (
+                            <svg className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        )}
+                        <span className="font-semibold text-sm sm:text-base break-words">{toast.message}</span>
+                    </div>
+                </div>
+            )}
             {/* Header */}
             <div className="text-main text-center py-4 rounded-t-lg">
                 <h1 className="text-3xl font-bold">{t('ads.editYourAd')}</h1>
@@ -241,7 +371,7 @@ const EditAds = () => {
 
             <form onSubmit={handleUpdate} className="p-8 space-y-6">
                 {/* Image Upload Area */}
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center">
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center relative">
                     <input
                         type="file"
                         accept="image/*"
@@ -251,7 +381,21 @@ const EditAds = () => {
                     />
                     <label htmlFor="image-upload-edit" className="cursor-pointer block">
                         {imagePreview ? (
-                            <img src={imagePreview} alt="Preview" className="max-h-64 mx-auto rounded-lg" />
+                            <div className="relative inline-block">
+                                <img src={imagePreview} alt="Preview" className="max-h-64 mx-auto rounded-lg" />
+                                <button
+                                    type="button"
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        setImagePreview(null);
+                                        setFormData((prev) => ({ ...prev, image: null }));
+                                        document.getElementById('image-upload-edit').value = '';
+                                    }}
+                                    className="absolute -top-3 -right-3 bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center cursor-pointer transition shadow-lg"
+                                >
+                                    ×
+                                </button>
+                            </div>
                         ) : (
                             <div className="flex flex-col items-center">
                                 <Upload className="w-16 h-16 text-gray-400 mb-4" />
@@ -280,7 +424,7 @@ const EditAds = () => {
                                 onChange={handleChange}
                                 required
                                 disabled={!formData.category_id}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:bg-gray-100 bg-main text-white disabled:text-gray-500"
+                                className="w-full px-4 py-3 cursor-pointer border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:bg-gray-100 bg-main text-white disabled:text-gray-500"
                             >
                                 <option value="">{t('ads.selectAdType')}</option>
                                 {Array.isArray(subCategories) &&
@@ -389,7 +533,7 @@ const EditAds = () => {
                                         value="male"
                                         checked={formData.gender === 'male'}
                                         onChange={handleChange}
-                                        className="w-4 h-4 text-main"
+                                        className="w-4 h-4 cursor-pointer text-main"
                                     />
                                     <span>{t('ads.male')}</span>
                                 </label>
@@ -400,7 +544,7 @@ const EditAds = () => {
                                         value="female"
                                         checked={formData.gender === 'female'}
                                         onChange={handleChange}
-                                        className="w-4 h-4 text-main"
+                                        className="w-4 h-4 cursor-pointer text-main"
                                     />
                                     <span>{t('ads.female')}</span>
                                 </label>
@@ -411,7 +555,7 @@ const EditAds = () => {
                                         value="both"
                                         checked={formData.gender === 'both'}
                                         onChange={handleChange}
-                                        className="w-4 h-4 text-main"
+                                        className="w-4 h-4 cursor-pointer text-main"
                                     />
                                     <span>{t('ads.both')}</span>
                                 </label>
@@ -453,7 +597,7 @@ const EditAds = () => {
                                 value={formData.governorate_id}
                                 onChange={handleChange}
                                 required
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-main text-white"
+                                className="w-full px-4 py-3 cursor-pointer border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-main text-white"
                             >
                                 <option value="">{t('ads.selectGovernorate')}</option>
                                 {Array.isArray(governorates) &&
@@ -484,12 +628,12 @@ const EditAds = () => {
                                     <input
                                         type="radio"
                                         name="contact_method"
-                                        value="whatsapp"
-                                        checked={formData.contact_method === 'whatsapp'}
+                                        value="chat"
+                                        checked={formData.contact_method === 'chat'}
                                         onChange={handleChange}
                                         className="w-5 h-5 text-main border-gray-300 focus:ring-green-500"
                                     />
-                                    <span className="text-gray-700">{t('ads.whatsapp')}</span>
+                                    <span className="text-gray-700">{t('ads.chat')}</span>
                                 </label>
                                 <label className="flex items-center gap-2 cursor-pointer">
                                     <input
@@ -518,7 +662,7 @@ const EditAds = () => {
                                         value="true"
                                         checked={formData.delivery_available === true}
                                         onChange={() => setFormData((prev) => ({ ...prev, delivery_available: true }))}
-                                        className="w-4 h-4 text-main"
+                                        className="w-4 h-4 cursor-pointer text-main"
                                     />
                                     <span>{isRTL ? 'نعم' : 'Yes'}</span>
                                 </label>
@@ -528,7 +672,7 @@ const EditAds = () => {
                                         name="delivery_available"
                                         checked={formData.delivery_available === false}
                                         onChange={() => setFormData((prev) => ({ ...prev, delivery_available: false }))}
-                                        className="w-4 h-4 text-main"
+                                        className="w-4 h-4 cursor-pointer text-main"
                                     />
                                     <span>{isRTL ? 'لا' : 'No'}</span>
                                 </label>
@@ -548,7 +692,7 @@ const EditAds = () => {
                                         value="true"
                                         checked={formData.needs_vaccinations === true}
                                         onChange={() => setFormData((prev) => ({ ...prev, needs_vaccinations: true }))}
-                                        className="w-4 h-4 text-main"
+                                        className="w-4 h-4 cursor-pointer text-main"
                                     />
                                     <span>{isRTL ? 'نعم' : 'Yes'}</span>
                                 </label>
@@ -558,7 +702,7 @@ const EditAds = () => {
                                         name="needs_vaccinations"
                                         checked={formData.needs_vaccinations === false}
                                         onChange={() => setFormData((prev) => ({ ...prev, needs_vaccinations: false }))}
-                                        className="w-4 h-4 text-main"
+                                        className="w-4 h-4 cursor-pointer text-main"
                                     />
                                     <span>{isRTL ? 'لا' : 'No'}</span>
                                 </label>
@@ -578,7 +722,7 @@ const EditAds = () => {
                                         value="true"
                                         checked={formData.retail_sale_available === true}
                                         onChange={() => setFormData((prev) => ({ ...prev, retail_sale_available: true }))}
-                                        className="w-4 h-4 text-main"
+                                        className="w-4 h-4 cursor-pointer text-main"
                                     />
                                     <span>{isRTL ? 'نعم' : 'Yes'}</span>
                                 </label>
@@ -588,7 +732,7 @@ const EditAds = () => {
                                         name="retail_sale_available"
                                         checked={formData.retail_sale_available === false}
                                         onChange={() => setFormData((prev) => ({ ...prev, retail_sale_available: false }))}
-                                        className="w-4 h-4 text-main"
+                                        className="w-4 h-4 cursor-pointer text-main"
                                     />
                                     <span>{isRTL ? 'لا' : 'No'}</span>
                                 </label>
@@ -608,7 +752,7 @@ const EditAds = () => {
                                         value="true"
                                         checked={formData.price_negotiable === true}
                                         onChange={() => setFormData((prev) => ({ ...prev, price_negotiable: true }))}
-                                        className="w-4 h-4 text-main"
+                                        className="w-4 h-4 cursor-pointer text-main"
                                     />
                                     <span>{isRTL ? 'نعم' : 'Yes'}</span>
                                 </label>
@@ -618,7 +762,7 @@ const EditAds = () => {
                                         name="price_negotiable"
                                         checked={formData.price_negotiable === false}
                                         onChange={() => setFormData((prev) => ({ ...prev, price_negotiable: false }))}
-                                        className="w-4 h-4 text-main"
+                                        className="w-4 h-4 cursor-pointer text-main"
                                     />
                                     <span>{isRTL ? 'لا' : 'No'}</span>
                                 </label>
@@ -632,7 +776,7 @@ const EditAds = () => {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="bg-main hover:bg-green-700 text-white font-bold py-4 px-6 rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed text-lg"
+                        className="bg-main cursor-pointer hover:bg-green-700 text-white font-bold py-4 px-6 rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed text-lg"
                     >
                         {loading ? (isRTL ? 'جاري التعديل...' : 'Updating...') : t('ads.update')}
                     </button>
@@ -640,7 +784,7 @@ const EditAds = () => {
                     <button
                         type="button"
                         onClick={() => setShowDeleteConfirm(true)}
-                        className="bg-white hover:bg-red-50 text-red-600 font-bold py-4 px-6 rounded-lg border-2 border-red-600 transition-colors text-lg"
+                        className="bg-white cursor-pointer hover:bg-red-50 text-red-600 font-bold py-4 px-6 rounded-lg border-2 border-red-600 transition-colors text-lg"
                     >
                         {t('ads.delete')}
                     </button>
@@ -653,7 +797,7 @@ const EditAds = () => {
                     <div className="bg-white rounded-lg p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
                         <div className="flex justify-between items-center mb-4">
                             <h3 className="text-xl font-bold text-gray-900">{t('ads.deleteConfirmTitle')}</h3>
-                            <button onClick={() => setShowDeleteConfirm(false)} className="text-gray-400 hover:text-gray-600">
+                            <button onClick={() => setShowDeleteConfirm(false)} className="cursor-pointer text-gray-400 hover:text-gray-600">
                                 <X className="w-6 h-6" />
                             </button>
                         </div>
@@ -661,13 +805,13 @@ const EditAds = () => {
                         <div className="flex gap-4">
                             <button
                                 onClick={handleDelete}
-                                className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg transition-colors"
+                                className="flex-1 cursor-pointer bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg transition-colors"
                             >
                                 {t('ads.yes')}
                             </button>
                             <button
                                 onClick={() => setShowDeleteConfirm(false)}
-                                className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-4 rounded-lg transition-colors"
+                                className="flex-1 cursor-pointer bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-4 rounded-lg transition-colors"
                             >
                                 {t('ads.no')}
                             </button>

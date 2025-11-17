@@ -23,7 +23,6 @@ const UpdateAccount = () => {
     };
 
     useEffect(() => {
-        // Try to get from sessionStorage first
         const storedUser = sessionStorage.getItem('selectedUser');
         if (storedUser) {
             setUserData(JSON.parse(storedUser));

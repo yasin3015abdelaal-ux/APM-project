@@ -178,7 +178,7 @@ const Accounts = () => {
     const handleRowClick = (user) => {
         if (!user || !user.id) {
             console.error('User ID is missing:', user);
-            alert(isRTL ? 'خطأ: معرف المستخدم غير موجود' : 'Error: User ID is missing');
+            showToast(isRTL ? 'خطأ: معرف المستخدم غير موجود' : 'Error: User ID is missing','error');
             return;
         }
         sessionStorage.setItem('selectedUser', JSON.stringify(user));

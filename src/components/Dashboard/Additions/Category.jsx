@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Plus, Trash2, X } from 'lucide-react';
 import { useParams } from 'react-router-dom';
+import { adminAPI } from '../../../api';
+import Loader from '../../Ui/Loader/Loader';
 
 const Category = () => {
     const { t, i18n } = useTranslation();
@@ -10,111 +12,177 @@ const Category = () => {
 
     const [showAddModal, setShowAddModal] = useState(false);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
-    const [showSuccessModal, setShowSuccessModal] = useState(false);
-    const [selectedProduct, setSelectedProduct] = useState(null);
-    const [newProductNameAr, setNewProductNameAr] = useState('');
-    const [newProductNameEn, setNewProductNameEn] = useState('');
+    const [selectedSubCategory, setSelectedSubCategory] = useState(null);
+    const [newSubCategoryNameAr, setNewSubCategoryNameAr] = useState('');
+    const [newSubCategoryNameEn, setNewSubCategoryNameEn] = useState('');
     const [successMessage, setSuccessMessage] = useState('');
-
-    const categoryName = {
-        ar: 'الأضحية',
-        en: 'Sacrifice'
+    const [subCategories, setSubCategories] = useState([]);
+    const [categoryName, setCategoryName] = useState({ ar: '', en: '' });
+    const [loading, setLoading] = useState(true);
+    const [toast, setToast] = useState(null);
+    const showToast = (message, type = "success") => {
+        setToast({ message, type });
+        setTimeout(() => setToast(null), 4000);
     };
+    // Fetch category details and subcategories
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                setLoading(true);
+                const allCategoriesResponse = await adminAPI.get('/categories');
+                const allCategories = allCategoriesResponse.data.data || allCategoriesResponse.data;
+                const currentCategory = allCategories.find(cat => cat.id === parseInt(categoryId));
+                
+                if (currentCategory) {
+                    setCategoryName({
+                        ar: currentCategory.name_ar,
+                        en: currentCategory.name_en
+                    });
+                }
+                
+                const subCategoriesResponse = await adminAPI.get(`/subcategories?category_id=${categoryId}`);
+                setSubCategories(subCategoriesResponse.data.data || subCategoriesResponse.data);
+                
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
 
-    const [products, setProducts] = useState([
-        { id: 1, nameAr: 'خروف بلدي', nameEn: 'Local Sheep', active: true },
-        { id: 2, nameAr: 'خروف صومالي', nameEn: 'Somali Sheep', active: true },
-        { id: 3, nameAr: 'خروف سوداني', nameEn: 'Sudanese Sheep', active: true },
-        { id: 4, nameAr: 'عجل صغير', nameEn: 'Small Calf', active: true },
-        { id: 5, nameAr: 'عجل كبير', nameEn: 'Large Calf', active: true },
-        { id: 6, nameAr: 'جمل', nameEn: 'Camel', active: true },
-    ]);
+        if (categoryId) {
+            fetchData();
+        }
+    }, [categoryId]);
 
-    const handleAddProduct = () => {
-        if (newProductNameAr.trim() && newProductNameEn.trim()) {
-            const newProduct = {
-                id: Date.now(),
-                nameAr: newProductNameAr,
-                nameEn: newProductNameEn,
-                active: true
-            };
-            setProducts([...products, newProduct]);
-            setNewProductNameAr('');
-            setNewProductNameEn('');
-            setShowAddModal(false);
-            setSuccessMessage(t('dashboard.additions.productAdded'));
-            setShowSuccessModal(true);
+    const handleAddSubCategory = async () => {
+        if (newSubCategoryNameAr.trim() && newSubCategoryNameEn.trim()) {
+            try {
+                const response = await adminAPI.post('/subcategories', {
+                    category_id: parseInt(categoryId),
+                    name_ar: newSubCategoryNameAr,
+                    name_en: newSubCategoryNameEn
+                });
+
+                setSubCategories([...subCategories, response.data.data || response.data]);
+                
+                setNewSubCategoryNameAr('');
+                setNewSubCategoryNameEn('');
+                setShowAddModal(false);
+                setSuccessMessage(t('dashboard.additions.subCategoryAdded'));
+                showToast(successMessage);
+            } catch (error) {
+                console.error('Error adding subcategory:', error);
+                showToast(isRTL ? 'حدث خطأ أثناء إضافة الفئة الفرعية' : 'Error adding subcategory');
+            }
         }
     };
 
-    const handleStopProduct = (product) => {
-        setSelectedProduct(product);
-        setShowConfirmModal(true);
-    };
+    // Temporarily disabled until API is ready
+    // const handleStopSubCategory = (subCategory) => {
+    //     setSelectedSubCategory(subCategory);
+    //     setShowConfirmModal(true);
+    // };
 
-    const confirmStop = () => {
-        setProducts(products.map(p =>
-            p.id === selectedProduct.id ? { ...p, active: false } : p
-        ));
-        setShowConfirmModal(false);
-        setSuccessMessage(t('dashboard.additions.successMessage'));
-        setShowSuccessModal(true);
-    };
+    // const confirmStop = async () => {
+    //     try {
+    //         await adminAPI.put(`/subcategories/${selectedSubCategory.id}`, { is_active: false });
+            
+    //         setSubCategories(subCategories.map(sc =>
+    //             sc.id === selectedSubCategory.id ? { ...sc, is_active: false } : sc
+    //         ));
+            
+    //         setShowConfirmModal(false);
+    //         setSuccessMessage(t('dashboard.additions.successMessage'));
+    //         showToast(successMessge)
+    //     } catch (error) {
+    //         console.error('Error stopping subcategory:', error);
+    //    showToast(isRTL ? 'حدث خطأ أثناء إيقاف الفئة' : 'Error stopping subcategory');
+    //     }
+    // };
+
+    if (loading) {
+        return (
+            <Loader />
+        );
+    }
 
     return (
         <div className="min-h-screen relative" dir={isRTL ? 'rtl' : 'ltr'}>
+                        {toast && (
+                <div className={`fixed top-4 sm:top-5 ${isRTL ? "left-4 sm:left-5" : "right-4 sm:right-5"} z-50 animate-slide-in max-w-[90%] sm:max-w-md`}>
+                    <div className={`px-4 py-3 sm:px-6 sm:py-4 rounded-lg sm:rounded-xl shadow-lg flex items-center gap-2 sm:gap-3 ${toast.type === "success" ? "bg-main text-white" : "bg-red-500 text-white"}`}>
+                        {toast.type === "success" ? (
+                            <svg className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                        ) : (
+                            <svg className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        )}
+                        <span className="font-semibold text-sm sm:text-base break-words">{toast.message}</span>
+                    </div>
+                </div>
+            )}
             {/* Header */}
             <div className="mb-6 flex justify-between items-center">
                 <h1 className="text-2xl font-bold text-main">
-                    {isRTL ? categoryName.ar : categoryName.en}
+                    {(isRTL ? categoryName.ar : categoryName.en)}
                 </h1>
             </div>
 
-            {/* Products List */}
+            {/* SubCategories List */}
             <div className="">
-                    {products.map((product) => (
+                {subCategories.length === 0 ? (
+                    <div className="text-center py-10 text-gray-500">
+                        {isRTL ? 'لا توجد فئات فرعية' : 'No subcategories found'}
+                    </div>
+                ) : (
+                    subCategories.map((subCategory) => (
                         <div
-                            key={product.id}
-                            className={`flex items-center justify-between px-6 py-4 hover:bg-gray-50 transition ${!product.active && 'opacity-50 bg-gray-50'
-                                }`}
+                            key={subCategory.id}
+                            className="flex items-center justify-between px-6 py-4 hover:bg-gray-50 transition"
                         >
                             <span className="text-main font-bold">
-                                {isRTL ? product.nameAr : product.nameEn}
+                                {isRTL ? subCategory.name_ar : subCategory.name_en}
                             </span>
-                            {product.active && (
-                                <button
-                                    onClick={() => handleStopProduct(product)}
-                                    className="cursor-pointer text-sm text-main hover:text-green-700 underline"
-                                >
-                                    <Trash2 />
-                                </button>
-                            )}
+                            {/* Delete button temporarily disabled until API is ready */}
+                            {/* <button
+                                onClick={() => handleStopSubCategory(subCategory)}
+                                className="cursor-pointer text-main hover:text-green-700 transition"
+                            >
+                                <Trash2 size={20} />
+                            </button> */}
                         </div>
-                    ))}
+                    ))
+                )}
             </div>
+
+            {/* Add Button */}
             <div className="absolute inset-x-0 bottom-8 flex justify-center">
                 <button
                     onClick={() => setShowAddModal(true)}
                     className="bg-main cursor-pointer hover:bg-green-700 text-white px-6 py-3 rounded-lg flex items-center gap-2 transition shadow-md hover:shadow-lg"
                 >
                     <Plus size={20} />
-                    {t('dashboard.additions.addProduct')}
+                    {t('dashboard.additions.addSubCategory')}
                 </button>
             </div>
 
-            {/* Add Modal */}
+            {/* Add SubCategory Modal */}
             {showAddModal && (
                 <div className="fixed inset-0 bg-[#00000062] flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-xl">
                         <div className="flex justify-between items-center mb-4">
                             <h2 className="text-xl font-bold text-main">
-                                {t('dashboard.additions.addProductTitle')}
+                                {t('dashboard.additions.addSubCategoryTitle')}
                             </h2>
                             <button
                                 onClick={() => {
                                     setShowAddModal(false);
-                                    setNewProductNameAr('');
-                                    setNewProductNameEn('');
+                                    setNewSubCategoryNameAr('');
+                                    setNewSubCategoryNameEn('');
                                 }}
                                 className="cursor-pointer text-gray-500 hover:text-gray-700"
                             >
@@ -125,12 +193,12 @@ const Category = () => {
                         <div className="space-y-4">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    {t('dashboard.additions.productNameAr')}
+                                    {t('dashboard.additions.subCategoryNameAr')}
                                 </label>
                                 <input
                                     type="text"
-                                    value={newProductNameAr}
-                                    onChange={(e) => setNewProductNameAr(e.target.value)}
+                                    value={newSubCategoryNameAr}
+                                    onChange={(e) => setNewSubCategoryNameAr(e.target.value)}
                                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                                     dir="rtl"
                                 />
@@ -138,31 +206,31 @@ const Category = () => {
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    {t('dashboard.additions.productNameEn')}
+                                    {t('dashboard.additions.subCategoryNameEn')}
                                 </label>
                                 <input
                                     type="text"
-                                    value={newProductNameEn}
-                                    onChange={(e) => setNewProductNameEn(e.target.value)}
+                                    value={newSubCategoryNameEn}
+                                    onChange={(e) => setNewSubCategoryNameEn(e.target.value)}
                                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                                     dir="ltr"
                                 />
                             </div>
 
                             <button
-                                onClick={handleAddProduct}
-                                disabled={!newProductNameAr.trim() || !newProductNameEn.trim()}
+                                onClick={handleAddSubCategory}
+                                disabled={!newSubCategoryNameAr.trim() || !newSubCategoryNameEn.trim()}
                                 className="w-full cursor-pointer bg-main hover:bg-green-700 text-white py-2 rounded-lg font-medium transition disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                {t('dashboard.additions.addProduct')}
+                                {t('dashboard.additions.addSubCategory')}
                             </button>
                         </div>
                     </div>
                 </div>
             )}
 
-            {/* Confirm Stop Modal */}
-            {showConfirmModal && (
+            {/* Confirm Stop Modal - Temporarily disabled */}
+            {/* {showConfirmModal && (
                 <div className="fixed inset-0 bg-[#00000062] flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-xl p-6 w-full max-w-sm shadow-xl">
                         <h2 className="text-lg font-bold text-main mb-4 text-center">
@@ -184,27 +252,7 @@ const Category = () => {
                         </div>
                     </div>
                 </div>
-            )}
-
-            {/* Success Modal */}
-            {showSuccessModal && (
-                <div className="fixed inset-0 bg-[#00000062] flex items-center justify-center z-50 p-4">
-                    <div className="relative bg-white rounded-xl p-6 w-full max-w-sm shadow-xl">
-                        <button
-                            onClick={() => setShowSuccessModal(false)}
-                            className={`cursor-pointer absolute top-2 ${isRTL ? 'left-2' : 'right-2'} p-1 rounded-full hover:bg-gray-200 transition z-50`}
-                        >
-                            <X size={18} />
-                        </button>
-
-                        <h2 className="text-lg font-bold text-main text-center">
-                            {successMessage}
-                        </h2>
-                    </div>
-                </div>
-            )}
-
-
+            )} */}
         </div>
     );
 };
