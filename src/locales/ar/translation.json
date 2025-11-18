@@ -1,11 +1,11 @@
 {
   "welcome": "أهلا بك في موقعنا",
   "language": "اللغة",
-  "auction": "المزاد",
+  "auctions": "المزاد",
   "shareAdv": "انشر اعلانك",
   "search": "البحث",
-"menu":"القائمة",
-"notification":"الإشعارات",
+  "menu": "القائمة",
+  "notification": "الإشعارات",
   "products": "المنتجات",
   "sacrifice": "الاضحية",
   "animals": "الحيوانات",
@@ -21,7 +21,6 @@
   "veterinary medicines": "أدوية بيطرية",
   "leather and fur": "الجلود والفراء",
   "veterinary testing laboratories": "مختبارات التحاليل البيطارية",
-
   "viewProfile": "عرض الملف الشخصي",
   "favorite ads": "الاعلانات المفضلة",
   "subscriptions": "الاشتراكات",
@@ -107,7 +106,7 @@
       "empty": "لا توجد تصنيفات متاحة",
       "empty_description": "لم يتم إضافة اي تصنيفات بعد",
       "inactive": "غير متاح",
-      "publishTitle":"انشر إعلانك"
+      "publishTitle": "انشر إعلانك"
     }
   },
   "footer": {
@@ -119,7 +118,11 @@
     },
     "countries": {
       "title": "الدول",
-      "country": ["مصر", "السعودية", "البحرين"]
+      "country": [
+        "مصر",
+        "السعودية",
+        "البحرين"
+      ]
     },
     "copyRight": "جميع الحقوق محفوظة ل سوق الانتاج الحيوانى (ِAPM) 2025",
     "development": "تم التطوير بواسطة Soft Forte"
@@ -137,7 +140,6 @@
     "interested": "عملاء مهتمون",
     "concurrency": "جنيه",
     "sell": "بيع أسرع",
-
     "publishYourAd": "انشر إعلانك",
     "editYourAd": "تعديل إعلانك",
     "clickToUpload": "اضغط لرفع الصورة",
@@ -150,7 +152,7 @@
     "adNameAr": "اسم الإعلان (باللغة العربية)",
     "adNamePlaceholderAr": "أدخل اسم الإعلان (باللغة العربية)",
     "adNamePlaceholderEn": "أدخل اسم الإعلان (باللغة الإنجليزية)",
-    "description":"وصف المنتج",
+    "description": "وصف المنتج",
     "descriptionAr": "الوصف (باللغة العربية)",
     "descriptionEn": "الوصف (باللغة الإنجليزية)",
     "descriptionPlaceholderAr": "اكتب وصفاً تفصيلياً (باللغة العربية)",
@@ -232,37 +234,88 @@
     "error": "خطأ",
     "retry": "إعادة المحاولة"
   },
-"messages": {
-  "title": "الرسائل",
-  "noMessages": "لا توجد رسائل في الوقت الحالي",
-  "startConversation": "اضغط على المنتجات لتبدأ محادثة مع البائعين",
-  "searchPlaceholder": "ابحث في الرسائل...",
-  "tabs": {
-    "all": "الكل",
-    "buy": "شراء",
-    "sell": "بيع"
+  "messages": {
+    "title": "الرسائل",
+    "noMessages": "لا توجد رسائل في الوقت الحالي",
+    "startConversation": "اضغط على المنتجات لتبدأ محادثة مع البائعين",
+    "searchPlaceholder": "ابحث في الرسائل...",
+    "tabs": {
+      "all": "الكل",
+      "buy": "شراء",
+      "sell": "بيع"
+    },
+    "typePlaceholder": "اكتب رسالتك...",
+    "startChatNow": "ابدأ المحادثة الآن",
+    "selectChat": "اختر محادثة لعرضها"
   },
-  "typePlaceholder": "اكتب رسالتك...",
-  "startChatNow": "ابدأ المحادثة الآن",
-  "selectChat": "اختر محادثة لعرضها"
-},
-"notifications": {
-  "title": "الإشعارات",
-  "noNotifications": "لا توجد إشعارات",
-  "noNotificationsDesc": "ستظهر إشعاراتك هنا عندما تتوفر",
-  "unread": "غير مقروءة",
-  "markAsRead": "تعليم كمقروءة",
-  "markAllAsRead": "تعليم الكل كمقروءة",
-  "delete": "حذف",
-  "clearAll": "حذف الكل",
-  "autoDelete": "سيتم حذف الإشعارات تلقائياً بعد 30 يوم",
-  "filter": {
-    "all": "الكل",
+  "notifications": {
+    "title": "الإشعارات",
+    "noNotifications": "لا توجد إشعارات",
+    "noNotificationsDesc": "ستظهر إشعاراتك هنا عندما تتوفر",
     "unread": "غير مقروءة",
-    "read": "مقروءة"
-  }
-},
-"dashboard": {
+    "markAsRead": "تعليم كمقروءة",
+    "markAllAsRead": "تعليم الكل كمقروءة",
+    "delete": "حذف",
+    "clearAll": "حذف الكل",
+    "autoDelete": "سيتم حذف الإشعارات تلقائياً بعد 30 يوم",
+    "filter": {
+      "all": "الكل",
+      "unread": "غير مقروءة",
+      "read": "مقروءة"
+    }
+  },
+  "auction": {
+    "myAuctions": "مزاداتي",
+    "auctionProducts": "منتجات المزاد",
+    "upcomingAuctions": "المزادات القادمة",
+    "pastAuctions": "المزادات السابقة",
+    "currentAuction": "المزاد الحالي",
+    "noAuctions": "لا توجد مزادات",
+    "noProducts": "لا توجد منتجات في المزاد",
+    "auctionClosed": "المزاد مغلق",
+    "auctionOpen": "المزاد مفتوح",
+    "startDate": "تاريخ البداية",
+    "endDate": "تاريخ النهاية",
+    "startingPrice": "السعر الابتدائي",
+    "currentPrice": "السعر الحالي",
+    "reservePrice": "السعر المستهدف",
+    "yourOffer": "عرضك",
+    "updatePrice": "تعديل السعر",
+    "removeProduct": "حذف المنتج",
+    "makeOffer": "تقديم عرض",
+    "cannotEditOpen": "لا يمكن تعديل السعر بعد فتح المزاد",
+    "productRemoved": "تم حذف المنتج من المزاد بنجاح",
+    "priceUpdated": "تم تحديث السعر بنجاح",
+    "offerSubmitted": "تم تقديم العرض بنجاح",
+    "enterNewPrice": "أدخل السعر الجديد",
+    "enterOfferPrice": "أدخل سعر العرض",
+    "filter": {
+      "all": "الكل",
+      "upcoming": "القادمة",
+      "past": "السابقة",
+      "allCategories": "كل التصنيفات"
+    },
+    "status": {
+      "upcoming": "قادم",
+      "open": "مفتوح",
+      "closed": "مغلق"
+    },
+    "reserveAuction": "جدد حجز لتتمكن من دخول المزاد القادم",
+    "bookNow": "احجز الآن",
+    "auctionDetails": "تفاصيل المزاد",
+    "timeRemaining": "الوقت المتبقي",
+    "bids": "العروض",
+    "highestBid": "أعلى عرض",
+    "category": "الفئة",
+    "seller": "البائع",
+    "loading": "جاري التحميل...",
+    "error": "حدث خطأ في تحميل البيانات",
+    "retry": "إعادة المحاولة",
+    "confirmRemove": "هل أنت متأكد من حذف المنتج من المزاد؟",
+    "yes": "نعم",
+    "no": "لا"
+  },
+  "dashboard": {
     "sidebar": {
       "accounts": "الحسابات",
       "posts": "المنشورات",
@@ -281,30 +334,29 @@
       "logout": "تسجيل الخروج",
       "Egypt": "مصر"
     },
-
-  "additions": {
-    "title": "الإضافات",
-    "addProduct": "إضافة منتج",
-    "addProductTitle": "إضافة منتج",
-    "productName": "اسم المنتج",
-    "productNamePlaceholder": "أدخل اسم المنتج",
-    "productImage": "صورة المنتج",
-    "chooseImage": "اختر صورة",
-    "stop": "إيقاف",
-    "confirmStop": "هل أنت متأكد من إيقاف العنصر؟",
-    "yes": "نعم",
-    "no": "لا",
-    "successMessage": "تم إيقاف العنصر بنجاح",
-    "productAdded": "تم إضافة المنتج بنجاح",
-    "productNameAr": "اسم المنتج بالعربي",
-    "productNameEn": "اسم المنتج بالإنجليزي",
-    "addSubCategory": "إضافة فئة فرعية",
-    "addSubCategoryTitle": "إضافة فئة فرعية جديدة",
-    "subCategoryNameAr": "اسم الفئة الفرعية بالعربي",
-    "subCategoryNameEn": "اسم الفئة الفرعية بالإنجليزي",
-    "subCategoryAdded": "تم إضافة الفئة الفرعية بنجاح",
-    "categoryAdded": "تم إضافة الصنف بنجاح"
-},
+    "additions": {
+      "title": "الإضافات",
+      "addProduct": "إضافة منتج",
+      "addProductTitle": "إضافة منتج",
+      "productName": "اسم المنتج",
+      "productNamePlaceholder": "أدخل اسم المنتج",
+      "productImage": "صورة المنتج",
+      "chooseImage": "اختر صورة",
+      "stop": "إيقاف",
+      "confirmStop": "هل أنت متأكد من إيقاف العنصر؟",
+      "yes": "نعم",
+      "no": "لا",
+      "successMessage": "تم إيقاف العنصر بنجاح",
+      "productAdded": "تم إضافة المنتج بنجاح",
+      "productNameAr": "اسم المنتج بالعربي",
+      "productNameEn": "اسم المنتج بالإنجليزي",
+      "addSubCategory": "إضافة فئة فرعية",
+      "addSubCategoryTitle": "إضافة فئة فرعية جديدة",
+      "subCategoryNameAr": "اسم الفئة الفرعية بالعربي",
+      "subCategoryNameEn": "اسم الفئة الفرعية بالإنجليزي",
+      "subCategoryAdded": "تم إضافة الفئة الفرعية بنجاح",
+      "categoryAdded": "تم إضافة الصنف بنجاح"
+    },
     "accounts": {
       "title": "الحسابات",
       "export": "تصدير",
@@ -361,12 +413,10 @@
       "noInvoices": "لا توجد فواتير",
       "noFilterResults": "لا توجد نتائج تطابق الفلتر",
       "currency": "جنيه",
-
       "stats": {
         "totalInvoices": "عدد الفواتير",
         "totalAmount": "الإجمالي"
       },
-
       "table": {
         "invoiceNumber": "رقم الفاتورة",
         "date": "تاريخ الدفع",
@@ -376,22 +426,18 @@
         "requestInvoice": "طلب فاتورة",
         "status": "قيمة الفاتورة"
       },
-
       "status": {
         "paid": "مدفوع",
         "pending": "معلق",
         "cancelled": "ملغي"
       },
-
       "paymentMethods": {
         "credit_card": "بطاقة ائتمان",
         "bank_transfer": "تحويل بنكي",
         "cash": "نقدي",
         "wallet": "محفظة إلكترونية"
       },
-
       "filterTitle": "تصفية الفواتير",
-
       "filter": {
         "status": "الحالة",
         "dateFrom": "من تاريخ",
@@ -400,47 +446,41 @@
         "reset": "إعادة تعيين",
         "apply": "تطبيق"
       },
-
       "errors": {
         "missingId": "خطأ: معرف الفاتورة غير موجود"
       }
     },
-  "products": {
-    "title": "مراجعة المنتجات",
-    "export": "تصدير",
-    "noProducts": "لا توجد منتجات",
-    
-    "stats": {
-      "totalProducts": "إجمالي المنتجات",
-      "pending": "قيد المراجعة",
-      "accepted": "مقبول",
-      "rejected": "مرفوض"
-    },
-
-    "table": {
-      "seller": "البائع"
-    },
-
-    "details": {
-      "category": "الفئة",
-      "governorate": "المحافظة"
-    },
-
-    "actions": {
-      "accept": "قبول",
-      "reject": "رفض",
-      "delete": "حذف"
-    },
-
-    "messages": {
-      "loadError": "حدث خطأ في تحميل المنتجات",
-      "acceptSuccess": "تم قبول المنتج بنجاح",
-      "rejectSuccess": "تم رفض المنتج بنجاح",
-      "deleteSuccess": "تم حذف المنتج بنجاح",
-      "deleteError": "حدث خطأ في حذف المنتج",
-      "updateError": "حدث خطأ في تحديث الحالة",
-      "exportSuccess": "تم التصدير بنجاح"
+    "products": {
+      "title": "مراجعة المنتجات",
+      "export": "تصدير",
+      "noProducts": "لا توجد منتجات",
+      "stats": {
+        "totalProducts": "إجمالي المنتجات",
+        "pending": "قيد المراجعة",
+        "accepted": "مقبول",
+        "rejected": "مرفوض"
+      },
+      "table": {
+        "seller": "البائع"
+      },
+      "details": {
+        "category": "الفئة",
+        "governorate": "المحافظة"
+      },
+      "actions": {
+        "accept": "قبول",
+        "reject": "رفض",
+        "delete": "حذف"
+      },
+      "messages": {
+        "loadError": "حدث خطأ في تحميل المنتجات",
+        "acceptSuccess": "تم قبول المنتج بنجاح",
+        "rejectSuccess": "تم رفض المنتج بنجاح",
+        "deleteSuccess": "تم حذف المنتج بنجاح",
+        "deleteError": "حدث خطأ في حذف المنتج",
+        "updateError": "حدث خطأ في تحديث الحالة",
+        "exportSuccess": "تم التصدير بنجاح"
+      }
     }
-  }
   }
 }

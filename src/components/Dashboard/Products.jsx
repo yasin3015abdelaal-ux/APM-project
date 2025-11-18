@@ -55,10 +55,12 @@ const ProductsReview = () => {
     const handleAcceptProduct = async (productId) => {
         try {
             setActionLoading(productId);
-            await adminAPI.patch(`/products/${productId}/toggle-status`, { status: 'accepted' });
+            await adminAPI.put(`/products/${productId}/update-status`, { 
+                status: 'active' 
+            });
 
             setProducts(products.map(p =>
-                p.id === productId ? { ...p, status: 'accepted' } : p
+                p.id === productId ? { ...p, status: 'active' } : p
             ));
 
             showToast(t('dashboard.products.messages.acceptSuccess'));
@@ -73,7 +75,9 @@ const ProductsReview = () => {
     const handleRejectProduct = async (productId) => {
         try {
             setActionLoading(productId);
-            await adminAPI.patch(`/products/${productId}/toggle-status`, { status: 'rejected' });
+            await adminAPI.put(`/products/${productId}/update-status`, { 
+                status: 'rejected' 
+            });
 
             setProducts(products.map(p =>
                 p.id === productId ? { ...p, status: 'rejected' } : p
@@ -92,7 +96,7 @@ const ProductsReview = () => {
         const getStatusLabel = (status) => {
             const labels = {
                 'pending': isRTL ? 'قيد المراجعة' : 'Pending',
-                'accepted': isRTL ? 'مقبول' : 'Accepted',
+                'active': isRTL ? 'مقبول' : 'Accepted',
                 'rejected': isRTL ? 'مرفوض' : 'Rejected'
             };
             return labels[status] || status;
@@ -123,7 +127,7 @@ const ProductsReview = () => {
 
     const getStatusBadge = (status) => {
         const statusConfig = {
-            'accepted': { bg: 'bg-green-100', text: 'text-green-800', label: isRTL ? 'مقبول' : 'Accepted' },
+            'active': { bg: 'bg-green-100', text: 'text-green-800', label: isRTL ? 'مقبول' : 'Accepted' },
             'rejected': { bg: 'bg-red-100', text: 'text-red-800', label: isRTL ? 'مرفوض' : 'Rejected' },
             'pending': { bg: 'bg-yellow-100', text: 'text-yellow-800', label: isRTL ? 'قيد المراجعة' : 'Pending' },
         };
@@ -137,12 +141,10 @@ const ProductsReview = () => {
         );
     };
 
-
-    // حساب عدد المنتجات حسب الحالة
     const stats = {
         total: products.length,
         pending: products.filter(p => p.status === 'pending').length,
-        accepted: products.filter(p => p.status === 'accepted').length,
+        active: products.filter(p => p.status === 'active').length,
         rejected: products.filter(p => p.status === 'rejected').length,
     };
 
@@ -153,7 +155,6 @@ const ProductsReview = () => {
     return (
         <div className="min-h-screen bg-gray-50 py-6" dir={isRTL ? 'rtl' : 'ltr'}>
             <div className="container mx-auto px-4">
-                {/* Toast Notification */}
                 {toast && (
                     <div className={`fixed top-4 sm:top-5 ${isRTL ? "left-4 sm:left-5" : "right-4 sm:right-5"} z-50 animate-slide-in max-w-[90%] sm:max-w-md`}>
                         <div className={`px-4 py-3 sm:px-6 sm:py-4 rounded-lg sm:rounded-xl shadow-lg flex items-center gap-2 sm:gap-3 ${toast.type === "success" ? "bg-main text-white" : "bg-red-500 text-white"}`}>
@@ -171,12 +172,10 @@ const ProductsReview = () => {
                     </div>
                 )}
 
-                {/* Header */}
                 <h3 className="text-2xl text-center font-bold text-main mb-6">
                     {t('dashboard.products.title')}
                 </h3>
 
-                {/* Export Button */}
                 <div className="flex justify-end mb-4">
                     <button
                         onClick={exportToCSV}
@@ -187,9 +186,7 @@ const ProductsReview = () => {
                     </button>
                 </div>
 
-                {/* Stats Cards - Interactive Filters */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-                    {/* All Products */}
                     <div 
                         onClick={() => setStatusFilter('all')}
                         className={`p-4 rounded-lg shadow-sm border-2 cursor-pointer transition-all ${
@@ -204,7 +201,6 @@ const ProductsReview = () => {
                         <p className="text-2xl font-bold text-main">{stats.total}</p>
                     </div>
 
-                    {/* Pending */}
                     <div 
                         onClick={() => setStatusFilter('pending')}
                         className={`p-4 rounded-lg shadow-sm border-2 cursor-pointer transition-all ${
@@ -219,11 +215,10 @@ const ProductsReview = () => {
                         <p className="text-2xl font-bold text-yellow-600">{stats.pending}</p>
                     </div>
 
-                    {/* Accepted */}
                     <div 
-                        onClick={() => setStatusFilter('accepted')}
+                        onClick={() => setStatusFilter('active')}
                         className={`p-4 rounded-lg shadow-sm border-2 cursor-pointer transition-all ${
-                            statusFilter === 'accepted' 
+                            statusFilter === 'active' 
                             ? 'border-green-600 bg-green-50 shadow-md' 
                             : 'border-gray-200 bg-white hover:border-green-600 hover:shadow-md'
                         }`}
@@ -231,10 +226,9 @@ const ProductsReview = () => {
                         <p className="text-gray-600 text-xs mb-1 font-medium">
                             {t('dashboard.products.stats.accepted')}
                         </p>
-                        <p className="text-2xl font-bold text-green-600">{stats.accepted}</p>
+                        <p className="text-2xl font-bold text-green-600">{stats.active}</p>
                     </div>
 
-                    {/* Rejected */}
                     <div 
                         onClick={() => setStatusFilter('rejected')}
                         className={`p-4 rounded-lg shadow-sm border-2 cursor-pointer transition-all ${
@@ -250,7 +244,6 @@ const ProductsReview = () => {
                     </div>
                 </div>
 
-                {/* Products Grid */}
                 <div className="grid grid-cols-1 gap-4">
                     {filteredProducts.length === 0 ? (
                         <p className="text-center text-xl md:text-2xl font-bold min-h-96 flex items-center justify-center text-gray-500">
@@ -262,7 +255,6 @@ const ProductsReview = () => {
                                 key={product.id}
                                 className="flex rounded-lg border border-gray-200 gap-3 flex-col md:flex-row bg-white shadow-sm hover:shadow-md transition-shadow"
                             >
-                                {/* Image */}
                                 <div className="border-b border-l-0 border-gray-200 p-2 md:border-l md:border-b-0 bg-gray-50">
                                     {product.image ? (
                                         <img
@@ -283,7 +275,6 @@ const ProductsReview = () => {
                                     </div>
                                 </div>
 
-                                {/* Content */}
                                 <div className="flex flex-col flex-1 p-3">
                                     <div className="flex items-start justify-between mb-2 gap-2">
                                         <h3 className="font-bold text-lg md:text-xl flex-1">
@@ -331,13 +322,12 @@ const ProductsReview = () => {
                                             {product.price} {product.country?.currency || (isRTL ? 'جنيه' : 'EGP')}
                                         </h6>
 
-                                        {/* Action Buttons */}
                                         <div className="flex items-center gap-2">
                                             <button
                                                 onClick={() => handleAcceptProduct(product.id)}
-                                                disabled={actionLoading === product.id || product.status === 'accepted'}
+                                                disabled={actionLoading === product.id || product.status === 'active'}
                                                 className={`p-2 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed ${
-                                                    product.status === 'accepted'
+                                                    product.status === 'active'
                                                     ? 'bg-green-400 text-white cursor-not-allowed'
                                                     : 'bg-green-600 hover:bg-green-700 text-white cursor-pointer'
                                                 }`}

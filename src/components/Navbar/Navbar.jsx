@@ -79,8 +79,10 @@ const Navbar = ({ onMenuClick, onSearchClick, showProfileHover, setShowProfileHo
 
                 {/* Desktop Menu Items */}
                 <div className="hidden lg:flex items-center gap-2 flex-shrink-0">
-                    <button className="px-3 py-1.5 border-2 cursor-pointer border-main rounded-lg text-main hover:bg-green-50 transition whitespace-nowrap text-sm">
-                        {t("auction")}
+                    <button 
+                    onClick={() => navigate("/auction")}
+                    className="px-3 py-1.5 border-2 cursor-pointer border-main rounded-lg text-main hover:bg-green-50 transition whitespace-nowrap text-sm">
+                        {t("auctions")}
                     </button>
                     <button 
                         onClick={() => navigate("/ads")}

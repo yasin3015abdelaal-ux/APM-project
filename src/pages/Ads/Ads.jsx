@@ -111,11 +111,8 @@ function AdsItem({ item }) {
         {/* Sub Category (Type) */}
         {item.sub_category && (
           <div className="flex items-center gap-1 mb-1.5">
-            <span className="font-semibold text-xs md:text-sm text-gray-600">
-              {t("ads.type")}:
-            </span>
-            <p className="font-medium text-xs md:text-sm text-gray-700">
               <BiCategoryAlt className="text-main" size={16} />
+            <p className="font-medium text-xs md:text-sm text-gray-700">
               {isRTL ? item.sub_category.name_ar : item.sub_category.name_en}
             </p>
           </div>
@@ -123,12 +120,9 @@ function AdsItem({ item }) {
         
         {/* Description */}
         {(item.description || item.description_ar || item.description_en) && (
-          <div className="flex flex-col gap-1 mb-2">
-            <span className="font-semibold text-xs md:text-sm text-gray-600">
-              {t("ads.description")}:
-            </span>
-            <p className="font-medium text-xs md:text-sm text-gray-700 line-clamp-2">
+          <div className="flex items-center gap-1 mb-1.5">
               <TbListDetails className="text-main" size={16}/>
+            <p className="font-medium text-xs md:text-sm text-gray-700">
               {isRTL ? (item.description_ar || item.description) : (item.description_en || item.description)}
             </p>
           </div>

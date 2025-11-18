@@ -199,10 +199,11 @@ const Sidebar = ({ isOpen, onClose }) => {
                     {/* Quick Actions */}
                     <div className="p-4 border-b border-gray-200 space-y-2">
                         <button
+                        onClick={() => navigate("/auction")}
                             className={`w-full px-4 py-3 border-2 border-main rounded-lg text-main hover:bg-green-50 transition font-medium
                 ${i18n.language === "ar" ? "text-lg" : "text-sm"}`}
                         >
-                            {t("auction")}
+                            {t("auctions")}
                         </button>
                         <button
                             onClick={() => {

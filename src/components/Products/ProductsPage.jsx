@@ -1,31 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { Heart, MapPin } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { userAPI } from '../../api';
 import Loader from '../Ui/Loader/Loader';
-
-const PlaceholderSVG = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" className="w-full h-full">
-        <rect width="400" height="300" fill="#f0fdf4"/>
-        <circle cx="200" cy="150" r="60" fill="#86efac" opacity="0.3"/>
-        <g transform="translate(200, 150)">
-            <path d="M-40,20 L-20,-10 L0,10 L20,-20 L40,20 Z" fill="#22c55e" opacity="0.6"/>
-            <circle cx="-25" cy="-15" r="8" fill="#16a34a"/>
-            <rect x="-45" y="-25" width="90" height="50" fill="none" stroke="#16a34a" strokeWidth="3" rx="4"/>
-        </g>
-        <text x="200" y="235" fontFamily="Arial, sans-serif" fontSize="14" fill="#16a34a" textAnchor="middle" fontWeight="600">
-            No Image Available
-        </text>
-        <text x="200" y="255" fontFamily="Arial, sans-serif" fontSize="12" fill="#16a34a" textAnchor="middle" opacity="0.7">
-            لا توجد صورة
-        </text>
-    </svg>
-);
+import PlaceholderSVG from '../../assets/PlaceholderSVG';
 
 const ProductsPage = () => {
     const { categoryId } = useParams();
     const navigate = useNavigate();
-    const [isRTL, setIsRTL] = useState(true);
+    const { t, i18n } = useTranslation();
+    const isRTL = i18n.language === 'ar';
+    
     const [products, setProducts] = useState([]);
     const [categories, setCategories] = useState([]);
     const [governorates, setGovernorates] = useState([]);
@@ -33,23 +19,19 @@ const ProductsPage = () => {
     const [favorites, setFavorites] = useState(new Set());
     const [toast, setToast] = useState(null);
 
-    // Filters
     const [selectedCategory, setSelectedCategory] = useState('');
     const [selectedGovernorate, setSelectedGovernorate] = useState('');
     const [minPrice, setMinPrice] = useState('');
     const [maxPrice, setMaxPrice] = useState('');
-    const [showDelivery, setShowDelivery] = useState(false);
-    const [freeDelivery, setFreeDelivery] = useState(false);
     const [genderMale, setGenderMale] = useState(false);
     const [genderFemale, setGenderFemale] = useState(false);
-    const [age0to6, setAge0to6] = useState(false);
-    const [age6to12, setAge6to12] = useState(false);
-    const [age12Plus, setAge12Plus] = useState(false);
-    const [typeLocal, setTypeLocal] = useState(false);
-    const [typeImported, setTypeImported] = useState(false);
-    const [vaccinations, setVaccinations] = useState(false);
+    const [deliveryAvailable, setDeliveryAvailable] = useState(false);
+    const [retailSaleAvailable, setRetailSaleAvailable] = useState(false);
+    const [priceNegotiable, setPriceNegotiable] = useState(false);
+    const [needsVaccinations, setNeedsVaccinations] = useState(false);
     const [contactPhone, setContactPhone] = useState(false);
-    const [contactWhatsapp, setContactWhatsapp] = useState(false);
+    const [contactChat, setContactChat] = useState(false);
+    const [contactBoth, setContactBoth] = useState(false);
 
     const showToast = (message, type = "success") => {
         setToast({ message, type });
@@ -68,11 +50,38 @@ const ProductsPage = () => {
     useEffect(() => {
         fetchCategories();
         fetchGovernorates();
+        fetchFavorites();
     }, []);
 
     useEffect(() => {
         fetchProducts();
-    }, [selectedCategory, selectedGovernorate, minPrice, maxPrice]);
+    }, [selectedCategory, selectedGovernorate]);
+
+    const fetchFavorites = async () => {
+        try {
+            const response = await userAPI.get('/favorites');
+            let favoritesArray = [];
+            
+            if (Array.isArray(response.data)) {
+                favoritesArray = response.data;
+            } else if (response.data.data && Array.isArray(response.data.data)) {
+                favoritesArray = response.data.data;
+            } else if (response.data.favorites && Array.isArray(response.data.favorites)) {
+                favoritesArray = response.data.favorites;
+            }
+
+            const favoriteIds = new Set(
+                favoritesArray.map(fav => {
+                    const product = fav.product || fav;
+                    return product.id;
+                })
+            );
+            
+            setFavorites(favoriteIds);
+        } catch (error) {
+            console.error('Error fetching favorites:', error);
+        }
+    };
 
     const fetchCategories = async () => {
         try {
@@ -104,8 +113,6 @@ const ProductsPage = () => {
             const params = new URLSearchParams();
             if (selectedCategory) params.append('category', selectedCategory);
             if (selectedGovernorate) params.append('governorate_id', selectedGovernorate);
-            if (minPrice) params.append('min_price', minPrice);
-            if (maxPrice) params.append('max_price', maxPrice);
 
             const url = `/products${params.toString() ? '?' + params.toString() : ''}`;
             const response = await userAPI.get(url);
@@ -116,29 +123,36 @@ const ProductsPage = () => {
         } catch (error) {
             console.error('Error fetching products:', error);
             setProducts([]);
-            showToast(isRTL ? 'حدث خطأ في تحميل المنتجات' : 'Error loading products', 'error');
+            showToast(t('common.error'), 'error');
         } finally {
             setLoading(false);
         }
     };
 
     const toggleFavorite = async (productId) => {
+        const isFavorite = favorites.has(productId);
+        
         try {
-            await userAPI.post(`/favorites/${productId}`);
-            setFavorites(prev => {
-                const newFavorites = new Set(prev);
-                if (newFavorites.has(productId)) {
+            if (isFavorite) {
+                await userAPI.delete(`/favorites/${productId}`);
+                setFavorites(prev => {
+                    const newFavorites = new Set(prev);
                     newFavorites.delete(productId);
-                    showToast(isRTL ? 'تم إزالة المنتج من المفضلة' : 'Product removed from favorites');
-                } else {
+                    return newFavorites;
+                });
+                showToast(isRTL ? 'تم إزالة المنتج من المفضلة' : 'Product removed from favorites');
+            } else {
+                await userAPI.post(`/favorites/${productId}`);
+                setFavorites(prev => {
+                    const newFavorites = new Set(prev);
                     newFavorites.add(productId);
-                    showToast(isRTL ? 'تم إضافة المنتج للمفضلة' : 'Product added to favorites');
-                }
-                return newFavorites;
-            });
+                    return newFavorites;
+                });
+                showToast(isRTL ? 'تم إضافة المنتج للمفضلة' : 'Product added to favorites');
+            }
         } catch (error) {
             console.error('Error toggling favorite:', error);
-            showToast(isRTL ? 'حدث خطأ' : 'Error', 'error');
+            showToast(t('common.error'), 'error');
         }
     };
 
@@ -148,11 +162,6 @@ const ProductsPage = () => {
 
     const handleCategoryChange = (categoryId) => {
         setSelectedCategory(categoryId);
-        if (categoryId) {
-            navigate(`/products/${categoryId}`);
-        } else {
-            navigate('/products');
-        }
     };
 
     const filteredProducts = products.filter(product => {
@@ -172,37 +181,22 @@ const ProductsPage = () => {
             return false;
         })();
 
-        const matchesAge = (() => {
-            if (!age0to6 && !age6to12 && !age12Plus) return true;
-            const age = parseInt(product.age);
-            if (age0to6 && age >= 0 && age <= 6) return true;
-            if (age6to12 && age > 6 && age <= 12) return true;
-            if (age12Plus && age > 12) return true;
-            return false;
-        })();
-
-        const matchesType = (() => {
-            if (!typeLocal && !typeImported) return true;
-            if (typeLocal && product.type === 'بلدي') return true;
-            if (typeImported && product.type === 'مستورد') return true;
-            return false;
-        })();
-
-        const matchesVaccinations = !vaccinations || product.needs_vaccinations === true;
+        const matchesDelivery = !deliveryAvailable || product.delivery_available === true;
+        const matchesRetailSale = !retailSaleAvailable || product.retail_sale_available === true;
+        const matchesPriceNegotiable = !priceNegotiable || product.price_negotiable === true;
+        const matchesVaccinations = !needsVaccinations || product.needs_vaccinations === true;
 
         const matchesContactMethod = (() => {
-            if (!contactPhone && !contactWhatsapp) return true;
-            if (contactPhone && (product.contact_method === 'phone' || product.contact_method === 'both')) return true;
-            if (contactWhatsapp && (product.contact_method === 'whatsapp' || product.contact_method === 'both')) return true;
+            if (!contactPhone && !contactChat && !contactBoth) return true;
+            if (contactPhone && product.contact_method === 'phone') return true;
+            if (contactChat && product.contact_method === 'chat') return true;
+            if (contactBoth && product.contact_method === 'both') return true;
             return false;
         })();
 
-        const matchesDelivery = !showDelivery || product.delivery_available === true;
-        const matchesFreeDelivery = !freeDelivery || product.free_delivery === true;
-
         return matchesCategory && matchesGovernorate && matchesMinPrice && matchesMaxPrice &&
-            matchesGender && matchesAge && matchesType && matchesVaccinations &&
-            matchesContactMethod && matchesDelivery && matchesFreeDelivery;
+            matchesGender && matchesDelivery && matchesRetailSale && matchesPriceNegotiable &&
+            matchesVaccinations && matchesContactMethod;
     });
 
     const clearFilters = () => {
@@ -212,17 +206,18 @@ const ProductsPage = () => {
         setMaxPrice('');
         setGenderMale(false);
         setGenderFemale(false);
-        setAge0to6(false);
-        setAge6to12(false);
-        setAge12Plus(false);
-        setTypeLocal(false);
-        setTypeImported(false);
-        setVaccinations(false);
+        setDeliveryAvailable(false);
+        setRetailSaleAvailable(false);
+        setPriceNegotiable(false);
+        setNeedsVaccinations(false);
         setContactPhone(false);
-        setContactWhatsapp(false);
-        setShowDelivery(false);
-        setFreeDelivery(false);
+        setContactChat(false);
+        setContactBoth(false);
         navigate('/products');
+    };
+
+    const applyFilters = () => {
+        showToast(isRTL ? 'تم تطبيق الفلاتر' : 'Filters applied', 'success');
     };
 
     const currentCategory = categories.find(c => c?.id && String(c.id) === String(selectedCategory)) || null;
@@ -251,13 +246,14 @@ const ProductsPage = () => {
             )}
 
             <div className="flex">
-                {/* Sidebar Filters */}
                 <div className="w-64 bg-white min-h-screen shadow-sm p-6 sticky top-0 overflow-y-auto max-h-screen">
                     <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-xl font-bold text-green-700">
+                        <h2 className="text-xl font-bold text-main">
                             {isRTL ? 'الفلاتر' : 'Filters'}
                         </h2>
-                        {(selectedCategory || selectedGovernorate || minPrice || maxPrice || genderMale || genderFemale || age0to6 || age6to12 || age12Plus || typeLocal || typeImported || vaccinations || contactPhone || contactWhatsapp) && (
+                        {(selectedCategory || selectedGovernorate || minPrice || maxPrice || genderMale || genderFemale || 
+                          deliveryAvailable || retailSaleAvailable || priceNegotiable || needsVaccinations || 
+                          contactPhone || contactChat || contactBoth) && (
                             <button
                                 onClick={clearFilters}
                                 className="text-sm text-red-600 hover:text-red-700 cursor-pointer"
@@ -267,7 +263,6 @@ const ProductsPage = () => {
                         )}
                     </div>
 
-                    {/* Categories */}
                     <div className="mb-6">
                         <h3 className="font-bold text-gray-800 mb-3">
                             {isRTL ? 'الفئات' : 'Categories'}
@@ -280,7 +275,7 @@ const ProductsPage = () => {
                                         name="category"
                                         checked={String(selectedCategory) === String(category.id)}
                                         onChange={() => handleCategoryChange(String(category.id))}
-                                        className="w-4 h-4 text-green-700 border-gray-300 focus:ring-green-500 cursor-pointer"
+                                        className="w-4 h-4 text-main border-gray-300 focus:ring-green-500 cursor-pointer"
                                     />
                                     <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm text-gray-700`}>
                                         {isRTL ? category.name_ar : category.name_en}
@@ -290,7 +285,6 @@ const ProductsPage = () => {
                         </div>
                     </div>
 
-                    {/* Governorates */}
                     <div className="mb-6">
                         <h3 className="font-bold text-gray-800 mb-3">
                             {isRTL ? 'المحافظات' : 'Governorates'}
@@ -304,7 +298,7 @@ const ProductsPage = () => {
                                         onChange={() => setSelectedGovernorate(
                                             String(selectedGovernorate) === String(gov.id) ? '' : String(gov.id)
                                         )}
-                                        className="w-4 h-4 text-green-700 border-gray-300 rounded focus:ring-green-500 cursor-pointer"
+                                        className="w-4 h-4 text-main border-gray-300 rounded focus:ring-green-500 cursor-pointer"
                                     />
                                     <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm text-gray-700`}>
                                         {isRTL ? gov.name_ar : gov.name_en}
@@ -314,10 +308,9 @@ const ProductsPage = () => {
                         </div>
                     </div>
 
-                    {/* Price Range */}
                     <div className="mb-6">
                         <h3 className="font-bold text-gray-800 mb-3">
-                            {isRTL ? 'السعر' : 'Price'}
+                            {t('ads.price')}
                         </h3>
                         <div className="space-y-2">
                             <input
@@ -337,10 +330,9 @@ const ProductsPage = () => {
                         </div>
                     </div>
 
-                    {/* Gender Filter */}
                     <div className="mb-6">
                         <h3 className="font-bold text-gray-800 mb-3">
-                            {isRTL ? 'الجنس' : 'Gender'}
+                            {t('ads.gender')}
                         </h3>
                         <div className="space-y-2">
                             <label className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
@@ -348,10 +340,10 @@ const ProductsPage = () => {
                                     type="checkbox"
                                     checked={genderMale}
                                     onChange={() => setGenderMale(!genderMale)}
-                                    className="w-4 h-4 text-green-700 border-gray-300 rounded focus:ring-green-500 cursor-pointer"
+                                    className="w-4 h-4 text-main border-gray-300 rounded focus:ring-green-500 cursor-pointer"
                                 />
                                 <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm text-gray-700`}>
-                                    {isRTL ? 'ذكر' : 'Male'}
+                                    {t('ads.male')}
                                 </span>
                             </label>
                             <label className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
@@ -359,110 +351,70 @@ const ProductsPage = () => {
                                     type="checkbox"
                                     checked={genderFemale}
                                     onChange={() => setGenderFemale(!genderFemale)}
-                                    className="w-4 h-4 text-green-700 border-gray-300 rounded focus:ring-green-500 cursor-pointer"
+                                    className="w-4 h-4 text-main border-gray-300 rounded focus:ring-green-500 cursor-pointer"
                                 />
                                 <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm text-gray-700`}>
-                                    {isRTL ? 'أنثى' : 'Female'}
+                                    {t('ads.female')}
                                 </span>
                             </label>
                         </div>
                     </div>
 
-                    {/* Age Range Filter */}
                     <div className="mb-6">
                         <h3 className="font-bold text-gray-800 mb-3">
-                            {isRTL ? 'العمر' : 'Age'}
+                            {isRTL ? 'خيارات البيع' : 'Sale Options'}
                         </h3>
                         <div className="space-y-2">
                             <label className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
                                 <input
                                     type="checkbox"
-                                    checked={age0to6}
-                                    onChange={() => setAge0to6(!age0to6)}
-                                    className="w-4 h-4 text-green-700 border-gray-300 rounded focus:ring-green-500 cursor-pointer"
+                                    checked={deliveryAvailable}
+                                    onChange={() => setDeliveryAvailable(!deliveryAvailable)}
+                                    className="w-4 h-4 text-main border-gray-300 rounded focus:ring-green-500 cursor-pointer"
                                 />
                                 <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm text-gray-700`}>
-                                    {isRTL ? 'من 0 إلى 6 أشهر' : '0-6 months'}
+                                    {t('ads.deliveryAvailable')}
                                 </span>
                             </label>
                             <label className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
                                 <input
                                     type="checkbox"
-                                    checked={age6to12}
-                                    onChange={() => setAge6to12(!age6to12)}
-                                    className="w-4 h-4 text-green-700 border-gray-300 rounded focus:ring-green-500 cursor-pointer"
+                                    checked={retailSaleAvailable}
+                                    onChange={() => setRetailSaleAvailable(!retailSaleAvailable)}
+                                    className="w-4 h-4 text-main border-gray-300 rounded focus:ring-green-500 cursor-pointer"
                                 />
                                 <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm text-gray-700`}>
-                                    {isRTL ? 'من 6 إلى 12 شهر' : '6-12 months'}
+                                    {t('ads.retailSaleAvailable')}
                                 </span>
                             </label>
                             <label className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
                                 <input
                                     type="checkbox"
-                                    checked={age12Plus}
-                                    onChange={() => setAge12Plus(!age12Plus)}
-                                    className="w-4 h-4 text-green-700 border-gray-300 rounded focus:ring-green-500 cursor-pointer"
+                                    checked={priceNegotiable}
+                                    onChange={() => setPriceNegotiable(!priceNegotiable)}
+                                    className="w-4 h-4 text-main border-gray-300 rounded focus:ring-green-500 cursor-pointer"
                                 />
                                 <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm text-gray-700`}>
-                                    {isRTL ? 'أكثر من 12 شهر' : 'More than 12 months'}
+                                    {t('ads.priceNegotiable')}
+                                </span>
+                            </label>
+                            <label className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
+                                <input
+                                    type="checkbox"
+                                    checked={needsVaccinations}
+                                    onChange={() => setNeedsVaccinations(!needsVaccinations)}
+                                    className="w-4 h-4 text-main border-gray-300 rounded focus:ring-green-500 cursor-pointer"
+                                />
+                                <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm text-gray-700`}>
+                                    {t('ads.needsVaccinations')}
                                 </span>
                             </label>
                         </div>
                     </div>
 
-                    {/* Type Filter */}
                     <div className="mb-6">
                         <h3 className="font-bold text-gray-800 mb-3">
-                            {isRTL ? 'النوع' : 'Type'}
-                        </h3>
-                        <div className="space-y-2">
-                            <label className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
-                                <input
-                                    type="checkbox"
-                                    checked={typeLocal}
-                                    onChange={() => setTypeLocal(!typeLocal)}
-                                    className="w-4 h-4 text-green-700 border-gray-300 rounded focus:ring-green-500 cursor-pointer"
-                                />
-                                <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm text-gray-700`}>
-                                    {isRTL ? 'بلدي' : 'Local'}
-                                </span>
-                            </label>
-                            <label className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
-                                <input
-                                    type="checkbox"
-                                    checked={typeImported}
-                                    onChange={() => setTypeImported(!typeImported)}
-                                    className="w-4 h-4 text-green-700 border-gray-300 rounded focus:ring-green-500 cursor-pointer"
-                                />
-                                <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm text-gray-700`}>
-                                    {isRTL ? 'مستورد' : 'Imported'}
-                                </span>
-                            </label>
-                        </div>
-                    </div>
-
-                    {/* Vaccinations Filter */}
-                    <div className="mb-6">
-                        <h3 className="font-bold text-gray-800 mb-3">
-                            {isRTL ? 'التطعيمات' : 'Vaccinations'}
-                        </h3>
-                        <label className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
-                            <input
-                                type="checkbox"
-                                checked={vaccinations}
-                                onChange={() => setVaccinations(!vaccinations)}
-                                className="w-4 h-4 text-green-700 border-gray-300 rounded focus:ring-green-500 cursor-pointer"
-                            />
-                            <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm text-gray-700`}>
-                                {isRTL ? 'مطعم' : 'Vaccinated'}
-                            </span>
-                        </label>
-                    </div>
-
-                    {/* Contact Method Filter */}
-                    <div className="mb-6">
-                        <h3 className="font-bold text-gray-800 mb-3">
-                            {isRTL ? 'طرق التواصل' : 'Contact Method'}
+                            {t('ads.contactMethod')}
                         </h3>
                         <div className="space-y-2">
                             <label className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
@@ -470,71 +422,48 @@ const ProductsPage = () => {
                                     type="checkbox"
                                     checked={contactPhone}
                                     onChange={() => setContactPhone(!contactPhone)}
-                                    className="w-4 h-4 text-green-700 border-gray-300 rounded focus:ring-green-500 cursor-pointer"
+                                    className="w-4 h-4 text-main border-gray-300 rounded focus:ring-green-500 cursor-pointer"
                                 />
                                 <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm text-gray-700`}>
-                                    {isRTL ? 'هاتف' : 'Phone'}
+                                    {t('ads.call')}
                                 </span>
                             </label>
                             <label className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
                                 <input
                                     type="checkbox"
-                                    checked={contactWhatsapp}
-                                    onChange={() => setContactWhatsapp(!contactWhatsapp)}
-                                    className="w-4 h-4 text-green-700 border-gray-300 rounded focus:ring-green-500 cursor-pointer"
+                                    checked={contactChat}
+                                    onChange={() => setContactChat(!contactChat)}
+                                    className="w-4 h-4 text-main border-gray-300 rounded focus:ring-green-500 cursor-pointer"
                                 />
                                 <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm text-gray-700`}>
-                                    {isRTL ? 'واتساب' : 'WhatsApp'}
+                                    {t('ads.chat')}
+                                </span>
+                            </label>
+                            <label className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
+                                <input
+                                    type="checkbox"
+                                    checked={contactBoth}
+                                    onChange={() => setContactBoth(!contactBoth)}
+                                    className="w-4 h-4 text-main border-gray-300 rounded focus:ring-green-500 cursor-pointer"
+                                />
+                                <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm text-gray-700`}>
+                                    {t('ads.both')}
                                 </span>
                             </label>
                         </div>
                     </div>
 
-                    {/* Delivery Options */}
-                    <div className="mb-6">
-                        <h3 className="font-bold text-gray-800 mb-3">
-                            {isRTL ? 'التوصيل' : 'Delivery'}
-                        </h3>
-                        <div className="space-y-2">
-                            <label className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
-                                <input
-                                    type="checkbox"
-                                    checked={showDelivery}
-                                    onChange={() => setShowDelivery(!showDelivery)}
-                                    className="w-4 h-4 text-green-700 border-gray-300 rounded cursor-pointer"
-                                />
-                                <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm text-gray-700`}>
-                                    {isRTL ? 'يتوفر توصيل' : 'Delivery Available'}
-                                </span>
-                            </label>
-                            <label className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
-                                <input
-                                    type="checkbox"
-                                    checked={freeDelivery}
-                                    onChange={() => setFreeDelivery(!freeDelivery)}
-                                    className="w-4 h-4 text-green-700 border-gray-300 rounded cursor-pointer"
-                                />
-                                <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm text-gray-700`}>
-                                    {isRTL ? 'توصيل مجاني' : 'Free Delivery'}
-                                </span>
-                            </label>
-                        </div>
-                    </div>
-
-                    {/* Apply Button */}
                     <button
-                        onClick={fetchProducts}
-                        className="w-full bg-green-700 hover:bg-green-800 text-white py-2.5 rounded-lg font-medium transition cursor-pointer"
+                        onClick={applyFilters}
+                        className="w-full bg-main hover:bg-green-800 text-white py-2.5 rounded-lg font-medium transition cursor-pointer"
                     >
                         {isRTL ? 'تطبيق' : 'Apply'}
                     </button>
                 </div>
 
-                {/* Main Content */}
                 <div className="flex-1 p-6">
-                    {/* Header */}
                     <div className="mb-6">
-                        <h1 className="text-3xl font-bold text-green-700">
+                        <h1 className="text-3xl font-bold text-main">
                             {currentCategory
                                 ? (isRTL ? currentCategory.name_ar : currentCategory.name_en)
                                 : (isRTL ? 'جميع المنتجات' : 'All Products')
@@ -545,7 +474,6 @@ const ProductsPage = () => {
                         </p>
                     </div>
 
-                    {/* Products Grid */}
                     {filteredProducts.length === 0 ? (
                         <div className="text-center py-12">
                             <div className="text-gray-400 mb-4">
@@ -564,6 +492,7 @@ const ProductsPage = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {filteredProducts.map((product) => {
                                 const imageUrl = product.image || product.images?.[0];
+                                const isFavorite = favorites.has(product.id);
                                 
                                 return (
                                     <div
@@ -597,25 +526,29 @@ const ProductsPage = () => {
                                                     e.stopPropagation();
                                                     toggleFavorite(product.id);
                                                 }}
-                                                className="absolute top-3 left-3 cursor-pointer bg-white rounded-full p-2 shadow-md hover:scale-110 transition-transform z-10"
+                                                className={`absolute top-3 right-3 cursor-pointer rounded-full p-2 shadow-md hover:scale-110 transition-all z-10 ${
+                                                    isFavorite 
+                                                        ? 'bg-red-500 hover:bg-red-600' 
+                                                        : 'bg-white hover:bg-gray-50'
+                                                }`}
                                             >
                                                 <Heart
                                                     size={20}
-                                                    className={favorites.has(product.id) ? 'fill-red-500 text-red-500' : 'text-gray-400'}
+                                                    className={isFavorite ? 'fill-white text-white' : 'text-gray-400'}
                                                 />
                                             </button>
                                         </div>
 
                                         <div className="p-4">
                                             <h3
-                                                className="text-lg font-bold text-gray-800 mb-2 cursor-pointer hover:text-green-700 transition line-clamp-2 min-h-[3.5rem]"
+                                                className="text-lg font-bold text-gray-800 mb-2 cursor-pointer hover:text-main transition line-clamp-2 min-h-[3.5rem]"
                                                 onClick={() => handleProductClick(product.id)}
                                             >
                                                 {isRTL ? product.name_ar : product.name_en}
                                             </h3>
 
                                             {product.governorate && (
-                                                <div className="flex items-center text-sm text-green-700 mb-3">
+                                                <div className="flex items-center text-sm text-main mb-3">
                                                     <MapPin size={16} className={isRTL ? 'ml-1' : 'mr-1'} />
                                                     <span className="font-medium">
                                                         {isRTL ? product.governorate.name_ar : product.governorate.name_en}
@@ -630,12 +563,12 @@ const ProductsPage = () => {
                                             )}
 
                                             <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-                                                <div className="text-2xl font-bold text-green-700">
-                                                    {product.price} <span className="text-sm">{isRTL ? 'جنيه' : 'EGP'}</span>
+                                                <div className="text-2xl font-bold text-main">
+                                                    {product.price} <span className="text-sm">{t('ads.concurrency')}</span>
                                                 </div>
                                                 <button
                                                     onClick={() => handleProductClick(product.id)}
-                                                    className="bg-green-700 hover:bg-green-800 text-white px-5 py-2 rounded-lg text-sm font-medium transition shadow-sm hover:shadow-md cursor-pointer"
+                                                    className="bg-main hover:bg-green-800 text-white px-5 py-2 rounded-lg text-sm font-medium transition shadow-sm hover:shadow-md cursor-pointer"
                                                 >
                                                     {isRTL ? 'اطلب الان' : 'Order Now'}
                                                 </button>

@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Heart, MapPin, Trash2, ShoppingCart } from 'lucide-react';
+import { Heart, MapPin, ShoppingCart } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { userAPI } from '../../api';
 import Loader from '../../components/Ui/Loader/Loader';
 import PlaceholderSVG from '../../assets/PlaceholderSVG';
 
-
-
 const FavoritesPage = () => {
     const navigate = useNavigate();
-    const [isRTL, setIsRTL] = useState(true);
+    const { t, i18n } = useTranslation();
+    const isRTL = i18n.language === 'ar';
+    
     const [favorites, setFavorites] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -43,8 +44,8 @@ const FavoritesPage = () => {
             setFavorites(favoritesArray);
         } catch (error) {
             console.error('Error fetching favorites:', error);
-            setError(isRTL ? 'حدث خطأ في تحميل المفضلات' : 'Error loading favorites');
-            showToast(isRTL ? 'حدث خطأ في تحميل المفضلات' : 'Error loading favorites', 'error');
+            setError(t('common.error'));
+            showToast(t('common.error'), 'error');
         } finally {
             setLoading(false);
         }
@@ -62,7 +63,7 @@ const FavoritesPage = () => {
             showToast(isRTL ? 'تم إزالة المنتج من المفضلة بنجاح' : 'Product removed from favorites successfully');
         } catch (error) {
             console.error('Error removing favorite:', error);
-            showToast(isRTL ? 'حدث خطأ في إزالة المنتج' : 'Error removing product', 'error');
+            showToast(t('common.error'), 'error');
         }
     };
 
@@ -83,7 +84,7 @@ const FavoritesPage = () => {
                         onClick={fetchFavorites}
                         className="bg-main hover:bg-green-800 cursor-pointer text-white px-6 py-2 rounded-lg transition"
                     >
-                        {isRTL ? 'إعادة المحاولة' : 'Retry'}
+                        {t('common.retry')}
                     </button>
                 </div>
             </div>
@@ -110,7 +111,6 @@ const FavoritesPage = () => {
             )}
             
             <div className="max-w-7xl mx-auto px-4 py-8">
-                {/* Header */}
                 <div className="mb-8">
                     <h1 className="text-3xl font-bold text-main mb-2">
                         {isRTL ? 'الإعلانات المفضلة' : 'Favorite Ads'}
@@ -122,7 +122,6 @@ const FavoritesPage = () => {
                     </p>
                 </div>
 
-                {/* Empty State */}
                 {favorites.length === 0 ? (
                     <div className="bg-white rounded-xl shadow-sm p-12 text-center">
                         <div className="text-gray-400 mb-6">
@@ -145,7 +144,6 @@ const FavoritesPage = () => {
                         </button>
                     </div>
                 ) : (
-                    /* Products Grid */
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                         {favorites.map((favorite) => {
                             const product = favorite.product || favorite;
@@ -157,7 +155,6 @@ const FavoritesPage = () => {
                                     key={productId}
                                     className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all overflow-hidden border border-gray-100 group"
                                 >
-                                    {/* Image Container */}
                                     <div
                                         className="relative h-56 bg-gray-100 cursor-pointer"
                                         onClick={() => handleProductClick(productId)}
@@ -180,31 +177,21 @@ const FavoritesPage = () => {
                                             <PlaceholderSVG />
                                         </div>
 
-                                        {/* Remove Button */}
                                         <button
                                             onClick={(e) => {
                                                 e.stopPropagation();
-                                                if (window.confirm(isRTL ? 'هل تريد إزالة هذا المنتج من المفضلة؟' : 'Remove this product from favorites?')) {
-                                                    removeFavorite(productId);
-                                                }
+                                                removeFavorite(productId);
                                             }}
-                                            className="absolute top-3 left-3 cursor-pointer bg-white rounded-full p-2 shadow-md hover:bg-red-50 transition-all z-10 group/btn"
+                                            className="absolute top-3 right-3 cursor-pointer bg-red-500 hover:bg-red-600 text-white rounded-full p-2 shadow-md transition-all z-10 group/btn"
                                         >
-                                            <Trash2
+                                            <Heart
                                                 size={20}
-                                                className="text-red-500 group-hover/btn:scale-110 transition-transform"
+                                                className="fill-white group-hover/btn:scale-110 transition-transform"
                                             />
                                         </button>
-
-                                        {/* Favorite Badge */}
-                                        <div className="absolute top-3 right-3 cursor-pointer bg-red-500 text-white rounded-full p-2 shadow-md">
-                                            <Heart size={20} className="fill-white" />
-                                        </div>
                                     </div>
 
-                                    {/* Product Info */}
                                     <div className="p-4">
-                                        {/* Product Name */}
                                         <h3
                                             className="text-lg font-bold text-gray-800 mb-2 cursor-pointer hover:text-main transition line-clamp-2 min-h-[3.5rem]"
                                             onClick={() => handleProductClick(productId)}
@@ -212,7 +199,6 @@ const FavoritesPage = () => {
                                             {isRTL ? product.name_ar : product.name_en}
                                         </h3>
 
-                                        {/* Location */}
                                         {product.governorate && (
                                             <div className="flex items-center text-sm text-main mb-3">
                                                 <MapPin size={16} className={isRTL ? 'ml-1' : 'mr-1'} />
@@ -222,7 +208,6 @@ const FavoritesPage = () => {
                                             </div>
                                         )}
 
-                                        {/* Description */}
                                         {(product.description || product.description_ar || product.description_en) && (
                                             <p className="text-xs text-gray-600 mb-3 line-clamp-2">
                                                 {isRTL 
@@ -231,10 +216,9 @@ const FavoritesPage = () => {
                                             </p>
                                         )}
 
-                                        {/* Price and Button */}
                                         <div className="flex items-center justify-between pt-3 border-t border-gray-100">
                                             <div className="text-2xl font-bold text-main">
-                                                {product.price} <span className="text-sm">{isRTL ? 'جنيه' : 'EGP'}</span>
+                                                {product.price} <span className="text-sm">{t('ads.concurrency')}</span>
                                             </div>
                                             <button
                                                 onClick={() => handleProductClick(productId)}

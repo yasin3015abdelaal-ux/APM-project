@@ -86,3 +86,12 @@ export const dataAPI = {
     getGovernorates: (country_id) => userAPI.get(`/governorates?country_id=${country_id}`),
     getActivityTypes: () => userAPI.get(`/activity_types`),
 };
+
+// Auction endpoints
+export const auctionAPI = {
+    getAllAuctions: () => userAPI.get('/auctions'),
+    participate: (auctionId, role) => 
+        userAPI.post(`/auctions/${auctionId}/participate`, { role }),
+    getProducts: (auctionId) => 
+        userAPI.get(`/auctions/${auctionId}/products`),
+};

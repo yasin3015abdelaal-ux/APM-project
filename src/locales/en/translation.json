@@ -1,7 +1,7 @@
 {
     "welcome": "welcome to our website",
     "language": "language",
-    "auction": "auction",
+    "auctions": "auction",
     "menu": "Menu",
     "shareAdv": "post your ad",
     "search": "search",
@@ -153,7 +153,7 @@
         "adNameAr": "Add Name (In English)",
         "adNamePlaceholderAr": "Enter ad name in Arabic",
         "adNamePlaceholderEn": "Enter ad name in English",
-        "description":"Description",
+        "description": "Description",
         "descriptionAr": "Description (In Arabic)",
         "descriptionEn": "Description (In English)",
         "descriptionPlaceholderAr": "Write a detailed description (In Arabic)",
@@ -263,6 +263,57 @@
             "unread": "Unread",
             "read": "Read"
         }
+    },
+    "auction": {
+        "myAuctions": "My Auctions",
+        "auctionProducts": "Auction Products",
+        "upcomingAuctions": "Upcoming Auctions",
+        "pastAuctions": "Past Auctions",
+        "currentAuction": "Current Auction",
+        "noAuctions": "No auctions available",
+        "noProducts": "No products in the auction",
+        "auctionClosed": "Auction Closed",
+        "auctionOpen": "Auction Open",
+        "startDate": "Start Date",
+        "endDate": "End Date",
+        "startingPrice": "Starting Price",
+        "currentPrice": "Current Price",
+        "reservePrice": "Reserve Price",
+        "yourOffer": "Your Offer",
+        "updatePrice": "Update Price",
+        "removeProduct": "Remove Product",
+        "makeOffer": "Make Offer",
+        "cannotEditOpen": "Cannot edit price after auction opens",
+        "productRemoved": "Product removed from auction successfully",
+        "priceUpdated": "Price updated successfully",
+        "offerSubmitted": "Offer submitted successfully",
+        "enterNewPrice": "Enter new price",
+        "enterOfferPrice": "Enter offer price",
+        "filter": {
+            "all": "All",
+            "upcoming": "Upcoming",
+            "past": "Past",
+            "allCategories": "All Categories"
+        },
+        "status": {
+            "upcoming": "Upcoming",
+            "open": "Open",
+            "closed": "Closed"
+        },
+        "reserveAuction": "Reserve now to participate in the upcoming auction",
+        "bookNow": "Book Now",
+        "auctionDetails": "Auction Details",
+        "timeRemaining": "Time Remaining",
+        "bids": "Bids",
+        "highestBid": "Highest Bid",
+        "category": "Category",
+        "seller": "Seller",
+        "loading": "Loading...",
+        "error": "Error loading data",
+        "retry": "Retry",
+        "confirmRemove": "Are you sure you want to remove this product from the auction?",
+        "yes": "Yes",
+        "no": "No"
     },
     "dashboard": {
         "sidebar": {
@@ -399,42 +450,37 @@
                 "missingId": "Error: Invoice ID is missing"
             }
         },
- "products": {
-    "title": "Products Review",
-    "export": "Export",
-    "noProducts": "No products found",
-    
-    "stats": {
-      "totalProducts": "Total Products",
-      "pending": "Pending Review",
-      "accepted": "Accepted",
-      "rejected": "Rejected"
-    },
-
-    "table": {
-      "seller": "Seller"
-    },
-
-    "details": {
-      "category": "Category",
-      "governorate": "Governorate"
-    },
-
-    "actions": {
-      "accept": "Accept",
-      "reject": "Reject",
-      "delete": "Delete"
-    },
-
-    "messages": {
-      "loadError": "Error loading products",
-      "acceptSuccess": "Product accepted successfully",
-      "rejectSuccess": "Product rejected successfully",
-      "deleteSuccess": "Product deleted successfully",
-      "deleteError": "Error deleting product",
-      "updateError": "Error updating status",
-      "exportSuccess": "Exported successfully"
-    }
-  }
+        "products": {
+            "title": "Products Review",
+            "export": "Export",
+            "noProducts": "No products found",
+            "stats": {
+                "totalProducts": "Total Products",
+                "pending": "Pending Review",
+                "accepted": "Accepted",
+                "rejected": "Rejected"
+            },
+            "table": {
+                "seller": "Seller"
+            },
+            "details": {
+                "category": "Category",
+                "governorate": "Governorate"
+            },
+            "actions": {
+                "accept": "Accept",
+                "reject": "Reject",
+                "delete": "Delete"
+            },
+            "messages": {
+                "loadError": "Error loading products",
+                "acceptSuccess": "Product accepted successfully",
+                "rejectSuccess": "Product rejected successfully",
+                "deleteSuccess": "Product deleted successfully",
+                "deleteError": "Error deleting product",
+                "updateError": "Error updating status",
+                "exportSuccess": "Exported successfully"
+            }
+        }
     }
 }
