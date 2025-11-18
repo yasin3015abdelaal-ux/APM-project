@@ -1,0 +1,9 @@
+version: "3.8"
+
+services:
+  web:
+    build: .
+    image: apm-project:latest
+    ports:
+      - "80:80"
+    restart: unless-stopped
