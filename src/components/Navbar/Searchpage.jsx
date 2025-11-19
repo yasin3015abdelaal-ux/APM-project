@@ -8,6 +8,7 @@ const SearchPage = ({ isOpen, onClose }) => {
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
+      console.log("Opened")
     } else {
       document.body.style.overflow = 'unset';
     }
