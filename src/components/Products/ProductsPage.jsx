@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Heart, MapPin } from 'lucide-react';
+import { Heart, MapPin, Filter, X } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { userAPI } from '../../api';
+import { adminAPI, userAPI } from '../../api';
 import Loader from '../Ui/Loader/Loader';
 import PlaceholderSVG from '../../assets/PlaceholderSVG';
 
@@ -18,6 +18,7 @@ const ProductsPage = () => {
     const [loading, setLoading] = useState(true);
     const [favorites, setFavorites] = useState(new Set());
     const [toast, setToast] = useState(null);
+    const [isFilterOpen, setIsFilterOpen] = useState(false);
 
     const [selectedCategory, setSelectedCategory] = useState('');
     const [selectedGovernorate, setSelectedGovernorate] = useState('');
@@ -57,6 +58,17 @@ const ProductsPage = () => {
         fetchProducts();
     }, [selectedCategory, selectedGovernorate]);
 
+    // إغلاق الفيلتر عند الضغط على Escape
+    useEffect(() => {
+        const handleEscape = (e) => {
+            if (e.key === 'Escape') {
+                setIsFilterOpen(false);
+            }
+        };
+        window.addEventListener('keydown', handleEscape);
+        return () => window.removeEventListener('keydown', handleEscape);
+    }, []);
+
     const fetchFavorites = async () => {
         try {
             const response = await userAPI.get('/favorites');
@@ -85,7 +97,7 @@ const ProductsPage = () => {
 
     const fetchCategories = async () => {
         try {
-            const response = await userAPI.get('/categories');
+            const response = await adminAPI.get(`/subcategories?category_id=${categoryId}`);
             const data = response.data;
             let categoriesArray = Array.isArray(data) ? data : (data.data && Array.isArray(data.data)) ? data.data : [];
             setCategories(categoriesArray);
@@ -111,14 +123,18 @@ const ProductsPage = () => {
         try {
             setLoading(true);
             const params = new URLSearchParams();
-            if (selectedCategory) params.append('category', selectedCategory);
+            
+            if (selectedCategory) params.append('subcategory_id', selectedCategory);
             if (selectedGovernorate) params.append('governorate_id', selectedGovernorate);
-
+    
             const url = `/products${params.toString() ? '?' + params.toString() : ''}`;
+            console.log('Fetching products with URL:', url);
+            
             const response = await userAPI.get(url);
             const data = response.data;
-
+    
             let productsArray = Array.isArray(data) ? data : (data.data && Array.isArray(data.data)) ? data.data : [];
+            console.log('Products fetched:', productsArray.length);
             setProducts(productsArray);
         } catch (error) {
             console.error('Error fetching products:', error);
@@ -165,27 +181,27 @@ const ProductsPage = () => {
     };
 
     const filteredProducts = products.filter(product => {
-        const productCategoryId = product.category?.id || product.category_id;
-        const matchesCategory = !selectedCategory || String(productCategoryId) === String(selectedCategory);
-
+        const productSubCategoryId = product.sub_category?.id || product.subcategory_id || product.sub_category_id;
+        const matchesCategory = !selectedCategory || String(productSubCategoryId) === String(selectedCategory);
+    
         const productGovernorateId = product.governorate?.id || product.governorate_id;
         const matchesGovernorate = !selectedGovernorate || String(productGovernorateId) === String(selectedGovernorate);
-
+    
         const matchesMinPrice = !minPrice || (product.price && parseFloat(product.price) >= parseFloat(minPrice));
         const matchesMaxPrice = !maxPrice || (product.price && parseFloat(product.price) <= parseFloat(maxPrice));
-
+    
         const matchesGender = (() => {
             if (!genderMale && !genderFemale) return true;
             if (genderMale && product.gender === 'male') return true;
             if (genderFemale && product.gender === 'female') return true;
             return false;
         })();
-
+    
         const matchesDelivery = !deliveryAvailable || product.delivery_available === true;
         const matchesRetailSale = !retailSaleAvailable || product.retail_sale_available === true;
         const matchesPriceNegotiable = !priceNegotiable || product.price_negotiable === true;
         const matchesVaccinations = !needsVaccinations || product.needs_vaccinations === true;
-
+    
         const matchesContactMethod = (() => {
             if (!contactPhone && !contactChat && !contactBoth) return true;
             if (contactPhone && product.contact_method === 'phone') return true;
@@ -193,7 +209,7 @@ const ProductsPage = () => {
             if (contactBoth && product.contact_method === 'both') return true;
             return false;
         })();
-
+    
         return matchesCategory && matchesGovernorate && matchesMinPrice && matchesMaxPrice &&
             matchesGender && matchesDelivery && matchesRetailSale && matchesPriceNegotiable &&
             matchesVaccinations && matchesContactMethod;
@@ -218,13 +234,249 @@ const ProductsPage = () => {
 
     const applyFilters = () => {
         showToast(isRTL ? 'تم تطبيق الفلاتر' : 'Filters applied', 'success');
+        setIsFilterOpen(false);
     };
 
     const currentCategory = categories.find(c => c?.id && String(c.id) === String(selectedCategory)) || null;
 
+    const hasActiveFilters = selectedCategory || selectedGovernorate || minPrice || maxPrice || genderMale || genderFemale || 
+        deliveryAvailable || retailSaleAvailable || priceNegotiable || needsVaccinations || 
+        contactPhone || contactChat || contactBoth;
+
     if (loading) {
         return <Loader />;
     }
+
+    // مكون الفيلتر
+    const FilterSidebar = () => (
+        <div className="bg-white h-full shadow-sm p-6 overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold text-main">
+                    {isRTL ? 'الفلاتر' : 'Filters'}
+                </h2>
+                <div className="flex items-center gap-2">
+                    {hasActiveFilters && (
+                        <button
+                            onClick={clearFilters}
+                            className="text-sm text-red-600 hover:text-red-700 cursor-pointer"
+                        >
+                            {isRTL ? 'مسح الكل' : 'Clear All'}
+                        </button>
+                    )}
+                    <button
+                        onClick={() => setIsFilterOpen(false)}
+                        className="lg:hidden p-1 hover:bg-gray-100 rounded-full cursor-pointer"
+                    >
+                        <X size={24} className="text-gray-600" />
+                    </button>
+                </div>
+            </div>
+
+            <div className="mb-6">
+                <h3 className="font-bold text-gray-800 mb-3">
+                    {isRTL ? 'الفئات' : 'Categories'}
+                </h3>
+                <div className="space-y-2">
+                    {categories.map(category => (
+                        <label 
+                            key={category.id} 
+                            className={`flex items-center cursor-pointer p-3 rounded-lg transition-all ${
+                                String(selectedCategory) === String(category.id)
+                                    ? 'bg-main text-white shadow-md scale-[1.02]' 
+                                    : 'hover:bg-gray-50 border border-gray-200'
+                            }`}
+                        >
+                            <input
+                                type="radio"
+                                name="category"
+                                checked={String(selectedCategory) === String(category.id)}
+                                onChange={() => handleCategoryChange(String(category.id))}
+                                className="w-4 h-4 cursor-pointer accent-white"
+                            />
+                            <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm font-medium`}>
+                                {isRTL ? category.name_ar : category.name_en}
+                            </span>
+                        </label>
+                    ))}
+                </div>
+            </div>
+
+            <div className="mb-6">
+                <h3 className="font-bold text-gray-800 mb-3">
+                    {isRTL ? 'المحافظات' : 'Governorates'}
+                </h3>
+                <div className="space-y-2 max-h-48 overflow-y-auto">
+                    {governorates.map(gov => (
+                        <label key={gov.id} className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
+                            <input
+                                type="checkbox"
+                                checked={String(selectedGovernorate) === String(gov.id)}
+                                onChange={() => setSelectedGovernorate(
+                                    String(selectedGovernorate) === String(gov.id) ? '' : String(gov.id)
+                                )}
+                                className="w-4 h-4 text-main border-gray-300 rounded focus:ring-green-500 cursor-pointer"
+                            />
+                            <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm text-gray-700`}>
+                                {isRTL ? gov.name_ar : gov.name_en}
+                            </span>
+                        </label>
+                    ))}
+                </div>
+            </div>
+
+            <div className="mb-6">
+                <h3 className="font-bold text-gray-800 mb-3">
+                    {t('ads.price')}
+                </h3>
+                <div className="space-y-2">
+                    <input
+                        type="number"
+                        value={minPrice}
+                        onChange={(e) => setMinPrice(e.target.value)}
+                        placeholder={isRTL ? 'من' : 'Min'}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    />
+                    <input
+                        type="number"
+                        value={maxPrice}
+                        onChange={(e) => setMaxPrice(e.target.value)}
+                        placeholder={isRTL ? 'إلى' : 'Max'}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    />
+                </div>
+            </div>
+
+            <div className="mb-6">
+                <h3 className="font-bold text-gray-800 mb-3">
+                    {t('ads.gender')}
+                </h3>
+                <div className="space-y-2">
+                    <label className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
+                        <input
+                            type="checkbox"
+                            checked={genderMale}
+                            onChange={() => setGenderMale(!genderMale)}
+                            className="w-4 h-4 text-main border-gray-300 rounded focus:ring-green-500 cursor-pointer"
+                        />
+                        <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm text-gray-700`}>
+                            {t('ads.male')}
+                        </span>
+                    </label>
+                    <label className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
+                        <input
+                            type="checkbox"
+                            checked={genderFemale}
+                            onChange={() => setGenderFemale(!genderFemale)}
+                            className="w-4 h-4 text-main border-gray-300 rounded focus:ring-green-500 cursor-pointer"
+                        />
+                        <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm text-gray-700`}>
+                            {t('ads.female')}
+                        </span>
+                    </label>
+                </div>
+            </div>
+
+            <div className="mb-6">
+                <h3 className="font-bold text-gray-800 mb-3">
+                    {isRTL ? 'خيارات البيع' : 'Sale Options'}
+                </h3>
+                <div className="space-y-2">
+                    <label className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
+                        <input
+                            type="checkbox"
+                            checked={deliveryAvailable}
+                            onChange={() => setDeliveryAvailable(!deliveryAvailable)}
+                            className="w-4 h-4 text-main border-gray-300 rounded focus:ring-green-500 cursor-pointer"
+                        />
+                        <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm text-gray-700`}>
+                            {t('ads.deliveryAvailable')}
+                        </span>
+                    </label>
+                    <label className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
+                        <input
+                            type="checkbox"
+                            checked={retailSaleAvailable}
+                            onChange={() => setRetailSaleAvailable(!retailSaleAvailable)}
+                            className="w-4 h-4 text-main border-gray-300 rounded focus:ring-green-500 cursor-pointer"
+                        />
+                        <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm text-gray-700`}>
+                            {t('ads.retailSaleAvailable')}
+                        </span>
+                    </label>
+                    <label className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
+                        <input
+                            type="checkbox"
+                            checked={priceNegotiable}
+                            onChange={() => setPriceNegotiable(!priceNegotiable)}
+                            className="w-4 h-4 text-main border-gray-300 rounded focus:ring-green-500 cursor-pointer"
+                        />
+                        <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm text-gray-700`}>
+                            {t('ads.priceNegotiable')}
+                        </span>
+                    </label>
+                    <label className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
+                        <input
+                            type="checkbox"
+                            checked={needsVaccinations}
+                            onChange={() => setNeedsVaccinations(!needsVaccinations)}
+                            className="w-4 h-4 text-main border-gray-300 rounded focus:ring-green-500 cursor-pointer"
+                        />
+                        <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm text-gray-700`}>
+                            {t('ads.needsVaccinations')}
+                        </span>
+                    </label>
+                </div>
+            </div>
+
+            <div className="mb-6">
+                <h3 className="font-bold text-gray-800 mb-3">
+                    {t('ads.contactMethod')}
+                </h3>
+                <div className="space-y-2">
+                    <label className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
+                        <input
+                            type="checkbox"
+                            checked={contactPhone}
+                            onChange={() => setContactPhone(!contactPhone)}
+                            className="w-4 h-4 text-main border-gray-300 rounded focus:ring-green-500 cursor-pointer"
+                        />
+                        <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm text-gray-700`}>
+                            {t('ads.call')}
+                        </span>
+                    </label>
+                    <label className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
+                        <input
+                            type="checkbox"
+                            checked={contactChat}
+                            onChange={() => setContactChat(!contactChat)}
+                            className="w-4 h-4 text-main border-gray-300 rounded focus:ring-green-500 cursor-pointer"
+                        />
+                        <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm text-gray-700`}>
+                            {t('ads.chat')}
+                        </span>
+                    </label>
+                    <label className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
+                        <input
+                            type="checkbox"
+                            checked={contactBoth}
+                            onChange={() => setContactBoth(!contactBoth)}
+                            className="w-4 h-4 text-main border-gray-300 rounded focus:ring-green-500 cursor-pointer"
+                        />
+                        <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm text-gray-700`}>
+                            {t('ads.both')}
+                        </span>
+                    </label>
+                </div>
+            </div>
+
+            <button
+                onClick={applyFilters}
+                className="w-full bg-main hover:bg-green-800 text-white py-2.5 rounded-lg font-medium transition cursor-pointer"
+            >
+                {isRTL ? 'تطبيق' : 'Apply'}
+            </button>
+        </div>
+    );
 
     return (
         <div className="min-h-screen bg-gray-50" dir={isRTL ? 'rtl' : 'ltr'}>
@@ -245,225 +497,51 @@ const ProductsPage = () => {
                 </div>
             )}
 
-            <div className="flex">
-                <div className="w-64 bg-white min-h-screen shadow-sm p-6 sticky top-0 overflow-y-auto max-h-screen">
-                    <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-xl font-bold text-main">
-                            {isRTL ? 'الفلاتر' : 'Filters'}
-                        </h2>
-                        {(selectedCategory || selectedGovernorate || minPrice || maxPrice || genderMale || genderFemale || 
-                          deliveryAvailable || retailSaleAvailable || priceNegotiable || needsVaccinations || 
-                          contactPhone || contactChat || contactBoth) && (
-                            <button
-                                onClick={clearFilters}
-                                className="text-sm text-red-600 hover:text-red-700 cursor-pointer"
-                            >
-                                {isRTL ? 'مسح الكل' : 'Clear All'}
-                            </button>
-                        )}
-                    </div>
-
-                    <div className="mb-6">
-                        <h3 className="font-bold text-gray-800 mb-3">
-                            {isRTL ? 'الفئات' : 'Categories'}
-                        </h3>
-                        <div className="space-y-2">
-                            {categories.filter(cat => cat?.is_active).map(category => (
-                                <label key={category.id} className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
-                                    <input
-                                        type="radio"
-                                        name="category"
-                                        checked={String(selectedCategory) === String(category.id)}
-                                        onChange={() => handleCategoryChange(String(category.id))}
-                                        className="w-4 h-4 text-main border-gray-300 focus:ring-green-500 cursor-pointer"
-                                    />
-                                    <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm text-gray-700`}>
-                                        {isRTL ? category.name_ar : category.name_en}
-                                    </span>
-                                </label>
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className="mb-6">
-                        <h3 className="font-bold text-gray-800 mb-3">
-                            {isRTL ? 'المحافظات' : 'Governorates'}
-                        </h3>
-                        <div className="space-y-2 max-h-48 overflow-y-auto">
-                            {governorates.map(gov => (
-                                <label key={gov.id} className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
-                                    <input
-                                        type="checkbox"
-                                        checked={String(selectedGovernorate) === String(gov.id)}
-                                        onChange={() => setSelectedGovernorate(
-                                            String(selectedGovernorate) === String(gov.id) ? '' : String(gov.id)
-                                        )}
-                                        className="w-4 h-4 text-main border-gray-300 rounded focus:ring-green-500 cursor-pointer"
-                                    />
-                                    <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm text-gray-700`}>
-                                        {isRTL ? gov.name_ar : gov.name_en}
-                                    </span>
-                                </label>
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className="mb-6">
-                        <h3 className="font-bold text-gray-800 mb-3">
-                            {t('ads.price')}
-                        </h3>
-                        <div className="space-y-2">
-                            <input
-                                type="number"
-                                value={minPrice}
-                                onChange={(e) => setMinPrice(e.target.value)}
-                                placeholder={isRTL ? 'من' : 'Min'}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                            />
-                            <input
-                                type="number"
-                                value={maxPrice}
-                                onChange={(e) => setMaxPrice(e.target.value)}
-                                placeholder={isRTL ? 'إلى' : 'Max'}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                            />
-                        </div>
-                    </div>
-
-                    <div className="mb-6">
-                        <h3 className="font-bold text-gray-800 mb-3">
-                            {t('ads.gender')}
-                        </h3>
-                        <div className="space-y-2">
-                            <label className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
-                                <input
-                                    type="checkbox"
-                                    checked={genderMale}
-                                    onChange={() => setGenderMale(!genderMale)}
-                                    className="w-4 h-4 text-main border-gray-300 rounded focus:ring-green-500 cursor-pointer"
-                                />
-                                <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm text-gray-700`}>
-                                    {t('ads.male')}
-                                </span>
-                            </label>
-                            <label className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
-                                <input
-                                    type="checkbox"
-                                    checked={genderFemale}
-                                    onChange={() => setGenderFemale(!genderFemale)}
-                                    className="w-4 h-4 text-main border-gray-300 rounded focus:ring-green-500 cursor-pointer"
-                                />
-                                <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm text-gray-700`}>
-                                    {t('ads.female')}
-                                </span>
-                            </label>
-                        </div>
-                    </div>
-
-                    <div className="mb-6">
-                        <h3 className="font-bold text-gray-800 mb-3">
-                            {isRTL ? 'خيارات البيع' : 'Sale Options'}
-                        </h3>
-                        <div className="space-y-2">
-                            <label className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
-                                <input
-                                    type="checkbox"
-                                    checked={deliveryAvailable}
-                                    onChange={() => setDeliveryAvailable(!deliveryAvailable)}
-                                    className="w-4 h-4 text-main border-gray-300 rounded focus:ring-green-500 cursor-pointer"
-                                />
-                                <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm text-gray-700`}>
-                                    {t('ads.deliveryAvailable')}
-                                </span>
-                            </label>
-                            <label className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
-                                <input
-                                    type="checkbox"
-                                    checked={retailSaleAvailable}
-                                    onChange={() => setRetailSaleAvailable(!retailSaleAvailable)}
-                                    className="w-4 h-4 text-main border-gray-300 rounded focus:ring-green-500 cursor-pointer"
-                                />
-                                <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm text-gray-700`}>
-                                    {t('ads.retailSaleAvailable')}
-                                </span>
-                            </label>
-                            <label className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
-                                <input
-                                    type="checkbox"
-                                    checked={priceNegotiable}
-                                    onChange={() => setPriceNegotiable(!priceNegotiable)}
-                                    className="w-4 h-4 text-main border-gray-300 rounded focus:ring-green-500 cursor-pointer"
-                                />
-                                <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm text-gray-700`}>
-                                    {t('ads.priceNegotiable')}
-                                </span>
-                            </label>
-                            <label className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
-                                <input
-                                    type="checkbox"
-                                    checked={needsVaccinations}
-                                    onChange={() => setNeedsVaccinations(!needsVaccinations)}
-                                    className="w-4 h-4 text-main border-gray-300 rounded focus:ring-green-500 cursor-pointer"
-                                />
-                                <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm text-gray-700`}>
-                                    {t('ads.needsVaccinations')}
-                                </span>
-                            </label>
-                        </div>
-                    </div>
-
-                    <div className="mb-6">
-                        <h3 className="font-bold text-gray-800 mb-3">
-                            {t('ads.contactMethod')}
-                        </h3>
-                        <div className="space-y-2">
-                            <label className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
-                                <input
-                                    type="checkbox"
-                                    checked={contactPhone}
-                                    onChange={() => setContactPhone(!contactPhone)}
-                                    className="w-4 h-4 text-main border-gray-300 rounded focus:ring-green-500 cursor-pointer"
-                                />
-                                <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm text-gray-700`}>
-                                    {t('ads.call')}
-                                </span>
-                            </label>
-                            <label className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
-                                <input
-                                    type="checkbox"
-                                    checked={contactChat}
-                                    onChange={() => setContactChat(!contactChat)}
-                                    className="w-4 h-4 text-main border-gray-300 rounded focus:ring-green-500 cursor-pointer"
-                                />
-                                <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm text-gray-700`}>
-                                    {t('ads.chat')}
-                                </span>
-                            </label>
-                            <label className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
-                                <input
-                                    type="checkbox"
-                                    checked={contactBoth}
-                                    onChange={() => setContactBoth(!contactBoth)}
-                                    className="w-4 h-4 text-main border-gray-300 rounded focus:ring-green-500 cursor-pointer"
-                                />
-                                <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm text-gray-700`}>
-                                    {t('ads.both')}
-                                </span>
-                            </label>
-                        </div>
-                    </div>
-
-                    <button
-                        onClick={applyFilters}
-                        className="w-full bg-main hover:bg-green-800 text-white py-2.5 rounded-lg font-medium transition cursor-pointer"
-                    >
-                        {isRTL ? 'تطبيق' : 'Apply'}
-                    </button>
+            <div className="flex relative">
+                {/* Sidebar للشاشات الكبيرة */}
+                <div className="hidden lg:block w-64 min-h-screen sticky top-0 max-h-screen">
+                    <FilterSidebar />
                 </div>
 
-                <div className="flex-1 p-6">
+                {/* Overlay للشاشات الصغيرة */}
+                {isFilterOpen && (
+                    <div
+                        className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity duration-300"
+                        onClick={() => setIsFilterOpen(false)}
+                    />
+                )}
+
+                {/* Sidebar للشاشات الصغيرة (منبثق من الجانب) */}
+                <div
+                    className={`lg:hidden fixed top-0 ${isRTL ? 'right-0' : 'left-0'} h-full w-80 max-w-[85vw] bg-white z-50 transform transition-transform duration-300 ease-in-out ${
+                        isFilterOpen ? 'translate-x-0' : isRTL ? 'translate-x-full' : '-translate-x-full'
+                    }`}
+                >
+                    <FilterSidebar />
+                </div>
+
+                {/* المحتوى الرئيسي */}
+                <div className="flex-1 p-4 lg:p-6">
+                    {/* زر الفيلتر للشاشات الصغيرة */}
+                    <div className="lg:hidden mb-4">
+                        <button
+                            onClick={() => setIsFilterOpen(true)}
+                            className="flex items-center gap-2 bg-main hover:bg-green-800 text-white px-4 py-2.5 rounded-lg font-medium transition cursor-pointer shadow-md"
+                        >
+                            <Filter size={20} />
+                            <span>{isRTL ? 'الفلاتر' : 'Filters'}</span>
+                            {hasActiveFilters && (
+                                <span className="bg-white text-main rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">
+                                    {[selectedCategory, selectedGovernorate, minPrice, maxPrice, genderMale, genderFemale,
+                                        deliveryAvailable, retailSaleAvailable, priceNegotiable, needsVaccinations,
+                                        contactPhone, contactChat, contactBoth].filter(Boolean).length}
+                                </span>
+                            )}
+                        </button>
+                    </div>
+
                     <div className="mb-6">
-                        <h1 className="text-3xl font-bold text-main">
+                        <h1 className="text-2xl lg:text-3xl font-bold text-main">
                             {currentCategory
                                 ? (isRTL ? currentCategory.name_ar : currentCategory.name_en)
                                 : (isRTL ? 'جميع المنتجات' : 'All Products')
@@ -489,7 +567,7 @@ const ProductsPage = () => {
                             </p>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
                             {filteredProducts.map((product) => {
                                 const imageUrl = product.image || product.images?.[0];
                                 const isFavorite = favorites.has(product.id);

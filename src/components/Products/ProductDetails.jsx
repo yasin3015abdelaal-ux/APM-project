@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -12,6 +13,8 @@ const ProductDetails = () => {
     const { t, i18n } = useTranslation();
     const isRTL = i18n.language === 'ar';
     
+    console.log('Component rendered, ID from params:', id);
+    
     const [product, setProduct] = useState(null);
     const [loading, setLoading] = useState(true);
     const [isFavorite, setIsFavorite] = useState(false);
@@ -24,55 +27,89 @@ const ProductDetails = () => {
     };
 
     useEffect(() => {
-        if (id) {
-            fetchProductDetails();
-        }
+        console.log('useEffect triggered with id:', id);
+        
+        const fetchData = async () => {
+            console.log('fetchData function called');
+            
+            if (!id) {
+                console.error('No ID provided');
+                setLoading(false);
+                return;
+            }
+
+            try {
+                console.log('Starting API call for product:', id);
+                setLoading(true);
+                
+                const response = await userAPI.get(`/products/${id}`);
+                
+                console.log('===== API RESPONSE =====');
+                console.log('Status:', response.status);
+                console.log('Headers:', response.headers);
+                console.log('Data:', response.data);
+                console.log('Data type:', typeof response.data);
+                console.log('Data keys:', Object.keys(response.data || {}));
+                console.log('========================');
+                
+                const data = response.data;
+                let productData = null;
+                
+                // جرب كل الاحتمالات
+                if (data?.data) {
+                    console.log('Found in data.data');
+                    productData = data.data;
+                } else if (data?.product) {
+                    console.log('Found in data.product');
+                    productData = data.product;
+                } else if (data?.id) {
+                    console.log('Found directly in data');
+                    productData = data;
+                } else {
+                    console.error('Could not find product in response');
+                    console.error('Available keys:', Object.keys(data || {}));
+                }
+                
+                console.log('Final product data:', productData);
+                
+                if (productData) {
+                    setProduct(productData);
+                    
+                    // Check favorite status
+                    if (productData.is_favorited !== undefined) {
+                        setIsFavorite(!!productData.is_favorited);
+                    } else {
+                        checkIfFavorite();
+                    }
+                }
+                
+            } catch (error) {
+                console.error('===== API ERROR =====');
+                console.error('Error:', error);
+                console.error('Error message:', error.message);
+                console.error('Error response:', error.response);
+                console.error('Error status:', error.response?.status);
+                console.error('Error data:', error.response?.data);
+                console.error('=====================');
+                showToast(t('common.error'), 'error');
+            } finally {
+                console.log('Setting loading to false');
+                setLoading(false);
+            }
+        };
+        
+        fetchData();
     }, [id]);
 
-    const fetchProductDetails = async () => {
-        if (!id) {
-            console.error('Product ID is missing');
-            setLoading(false);
-            return;
-        }
-
-        try {
-            setLoading(true);
-            console.log('Fetching product with ID:', id);
-            const response = await userAPI.get(`/products/${id}`);
-            console.log('Product response:', response.data);
-            const data = response.data;
-            
-            let productData = null;
-            if (data.data) {
-                productData = data.data;
-            } else if (data.product) {
-                productData = data.product;
-            } else {
-                productData = data;
-            }
-            
-            console.log('Product data:', productData);
-            setProduct(productData);
-            
-            if (productData.is_favorited !== undefined) {
-                setIsFavorite(productData.is_favorited);
-            } else {
-                await checkIfFavorite();
-            }
-        } catch (error) {
-            console.error('Error fetching product details:', error);
-            showToast(t('common.error'), 'error');
-        } finally {
-            setLoading(false);
-        }
-    };
-
     const checkIfFavorite = async () => {
+        console.log('Checking favorite status for ID:', id);
+        
         if (!id) return;
         
         try {
             const response = await userAPI.get('/favorites');
+            console.log('Favorites response:', response.data);
+            
             let favoritesArray = [];
             
             if (Array.isArray(response.data)) {
@@ -88,9 +125,10 @@ const ProductDetails = () => {
                 return String(product.id) === String(id);
             });
             
+            console.log('Is favorite:', isFav);
             setIsFavorite(isFav);
         } catch (error) {
-            console.error('Error checking favorite status:', error);
+            console.error('Error checking favorites:', error);
         }
     };
 
@@ -111,19 +149,33 @@ const ProductDetails = () => {
         }
     };
 
+    console.log('Current state - loading:', loading, 'product:', product);
+
     if (loading) {
+        console.log('Rendering loader');
         return <Loader />;
     }
 
     if (!product) {
+        console.log('Rendering not found');
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                <div className="text-xl text-gray-600">
-                    {isRTL ? 'المنتج غير موجود' : 'Product not found'}
+                <div className="text-center">
+                    <div className="text-xl text-gray-600 mb-4">
+                        {isRTL ? 'المنتج غير موجود' : 'Product not found'}
+                    </div>
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="bg-main text-white px-6 py-2 rounded-lg cursor-pointer"
+                    >
+                        {isRTL ? 'رجوع' : 'Go Back'}
+                    </button>
                 </div>
             </div>
         );
     }
+
+    console.log('Rendering product details');
 
     const images = product.images || (product.image ? [product.image] : []);
 
@@ -234,7 +286,7 @@ const ProductDetails = () => {
                     </div>
 
                     <div className="bg-white rounded-xl shadow-sm p-5">
-                        <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center justify-between mb-3 gap-4">
                             <h1 className="text-2xl font-bold text-gray-800">
                                 {isRTL ? product.name_ar : product.name_en}
                             </h1>
