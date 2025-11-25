@@ -476,10 +476,10 @@ const AddAds = () => {
                             </select>
                         </div>
 
-                        <div className="flex items-center gap-6 rounded-lg">
+                        <div className="flex items-center gap-5 rounded-lg">
                             <h3 className="text-gray-700 font-medium whitespace-nowrap">{t("ads.contactMethod")}</h3>
-                            <div className="flex items-center gap-6">
-                                <label className="flex items-center gap-2 cursor-pointer">
+                            <div className="flex items-center flex-wrap gap-2">
+                                <label className="flex items-center gap-1 cursor-pointer">
                                     <input type="radio" name="contact_method" value="phone" checked={formData.contact_method === "phone"} onChange={handleChange} className="w-5 h-5 text-main border-gray-300 focus:ring-green-500" />
                                     <span className="text-gray-700">{t("ads.call")}</span>
                                 </label>

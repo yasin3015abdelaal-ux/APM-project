@@ -357,11 +357,12 @@ const Messages = () => {
     return (
         <div className="h-screen flex flex-col" dir={i18n.language === "ar" ? "rtl" : "ltr"}>
             <div className={`flex-1 flex ${selectedChat ? 'gap-0' : ''} overflow-hidden`}>
+                {/* Sidebar - Messages List */}
                 <div className={`${
                     selectedChat 
-                        ? 'hidden lg:flex lg:w-1/3 border-l-2 border-gray-200' 
-                        : 'w-full'
-                } bg-white flex flex-col`}>
+                        ? 'hidden lg:flex lg:w-[400px] xl:w-[450px] border-l-2 border-gray-200' 
+                        : 'w-full lg:w-[400px] xl:w-[450px] lg:border-l-2 border-gray-200'
+                } bg-white flex flex-col flex-shrink-0`}>
                     <div className="border-b-2 border-gray-200 p-4 bg-white">
                         <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2 mb-4">
                             <svg width="28" height="28" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -369,7 +370,7 @@ const Messages = () => {
                             </svg>
                             {t("messages.title")}
                         </h2>
-
+    
                         <div className="relative mb-4">
                             <input
                                 type="text"
@@ -383,7 +384,7 @@ const Messages = () => {
                             />
                             <i className="fas fa-search absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
                         </div>
-
+    
                         <div className="flex gap-4">
                             <label className="flex items-center gap-2 cursor-pointer">
                                 <input
@@ -426,7 +427,7 @@ const Messages = () => {
                             </label>
                         </div>
                     </div>
-
+    
                     <div className="flex-1 overflow-y-auto">
                         {filteredMessages.length === 0 ? (
                             <EmptyState />
@@ -442,9 +443,10 @@ const Messages = () => {
                         )}
                     </div>
                 </div>
-
+    
+                {/* Chat Area */}
                 {selectedChat ? (
-                    <div className={`${selectedChat ? 'flex-1 lg:w-2/3' : 'hidden'}`}>
+                    <div className="flex-1">
                         <ChatView />
                     </div>
                 ) : (
