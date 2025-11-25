@@ -39,6 +39,7 @@ const Categories = ({ mode = "products" }) => {
             const response = await userAPI.get("/categories");
             setCategories(response.data.data.product_categories|| []);
 
+            // setCategories(response.data.data.product_categories || []);
         } catch (error) {
             console.error("Error fetching categories:", error);
         } finally {

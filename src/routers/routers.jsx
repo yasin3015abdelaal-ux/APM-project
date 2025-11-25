@@ -38,13 +38,19 @@ import Messages from "../pages/Messages/Messages";
 import Notifications from "../pages/Notifications/Notifications";
 import FavoritesPage from "../pages/Favorites/FavoritesPage";
 import ProductsReview from "../components/Dashboard/Products";
+import AuctionProducts from "../pages/Auctions/AuctionsProducts";
+// import MyAuctions from "../pages/Auctions/MyAuctions";
+import AuctionPage from "../pages/Auctions/AuctionPage";
+import AuctionsManagement from "../components/Dashboard/Auctions/AuctionsManagement";
+// import AuctionsList from "../pages/Auctions/AuctionsList";
+import PreviousAuctions from "../pages/Auctions/PreviousAuctions";
 
 export const routers = createBrowserRouter([
   {
     path: "/",
     element: <App />,
     children: [
-      // Main Layout Routes 
+      // Main Layout Routes
       {
         element: <MainLayout />,
         children: [
@@ -107,6 +113,38 @@ export const routers = createBrowserRouter([
             ),
           },
           {
+            path: "auction",
+            element: (
+              <ProtectedRoute>
+                <AuctionPage />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "my-auctions",
+            element: (
+              <ProtectedRoute>
+                <AuctionsList />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "auction-products",
+            element: (
+              <ProtectedRoute>
+                <AuctionProducts  />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "previous-auctions",
+            element: (
+              <ProtectedRoute>
+                <PreviousAuctions  />
+              </ProtectedRoute>
+            ),
+          },
+          {
             path: "profile",
             element: (
               <ProtectedRoute>
@@ -130,42 +168,42 @@ export const routers = createBrowserRouter([
               </ProtectedRoute>
             ),
           },
-{
-  path: "products",
-  children: [
-    {
-      // Route for all products (no category selected)
-      index: true,
-      element: (
-        <ProtectedRoute>
-          <ProductsPage />
-        </ProtectedRoute>
-      ),
-    },
-    {
-      // Route for specific category
-      path: ":categoryId",
-      element: (
-        <ProtectedRoute>
-          <ProductsPage />
-        </ProtectedRoute>
-      ),
-    },
-  ],
-},
-{
-  // Route for product details
-  path: "product-details/:id",
-  element: (
-    <ProtectedRoute>
-      <ProductDetails />
-    </ProtectedRoute>
-  ),
-},
+          {
+            path: "products",
+            children: [
+              {
+                // Route for all products (no category selected)
+                index: true,
+                element: (
+                  <ProtectedRoute>
+                    <ProductsPage />
+                  </ProtectedRoute>
+                ),
+              },
+              {
+                // Route for specific category
+                path: ":categoryId",
+                element: (
+                  <ProtectedRoute>
+                    <ProductsPage />
+                  </ProtectedRoute>
+                ),
+              },
+            ],
+          },
+          {
+            // Route for product details
+            path: "product-details/:id",
+            element: (
+              <ProtectedRoute>
+                <ProductDetails />
+              </ProtectedRoute>
+            ),
+          },
         ],
       },
 
-      // Admin Login Route 
+      // Admin Login Route
       {
         path: "admin/login",
         element: <Login />,
@@ -186,7 +224,7 @@ export const routers = createBrowserRouter([
           // { path: "products", element: <Products /> },
           { path: "accounts", element: <Accounts /> },
           { path: "accounts/update-account/:userId", element: <UpdateAccount /> },
-          { path: "auctions", element: <AuctionsList /> },
+          // { path: "auctions", element: <AuctionsList /> },
           { path: "auctions/:id", element: <AuctionDetails /> },
           { path: "ads", element: <AdvertisementsPage /> },
           { path: "packages", element: <PackagesPage /> },
@@ -199,7 +237,13 @@ export const routers = createBrowserRouter([
           { path: "subscriptions", element: <SubscriptionsPage /> },
           { path: "invoices", element: <InvoicesPage /> },
           { path: "invoice/:id", element: <InvoiceDetailsPage /> },
+          {
+            path: "accounts/update-account/:userId",
+            element: <UpdateAccount />,
+          },
+          // { path: "invoices", element: <Invoices /> },
           { path: "products", element: <ProductsReview /> },
+          { path: "auctions", element: <AuctionsManagement /> },
           { path: "*", element: <Navigate to="/dashboard" replace /> },
         ],
       },

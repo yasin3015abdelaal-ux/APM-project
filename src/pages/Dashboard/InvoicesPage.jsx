@@ -48,7 +48,7 @@ const InvoicesPage = () => {
 
   const handleRowClick = (invoiceId) => {
     if (!invoiceId) return;
-    navigate(`/invoice/${invoiceId}`);
+    navigate(`/dashboard/invoice/${invoiceId}`);
   };
 
   if (loading) {

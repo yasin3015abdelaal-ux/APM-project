@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { adminAPI } from '../../../api';
 import Loader from '../../Ui/Loader/Loader';
@@ -47,17 +46,17 @@ const Additions = () => {
   const confirmToggleStatus = async () => {
     try {
       await adminAPI.patch(`/categories/${selectedCategory.id}/toggle-status`);
-      
+
       setCategories(categories.map(cat =>
-        cat.id === selectedCategory.id 
-          ? { ...cat, is_active: !cat.is_active } 
+        cat.id === selectedCategory.id
+          ? { ...cat, is_active: !cat.is_active }
           : cat
       ));
-      
+
       setShowConfirmModal(false);
       showToast(
-        isRTL 
-          ? `تم ${selectedCategory.is_active ? 'إيقاف' : 'تفعيل'} الصنف بنجاح` 
+        isRTL
+          ? `تم ${selectedCategory.is_active ? 'إيقاف' : 'تفعيل'} الصنف بنجاح`
           : `Category ${selectedCategory.is_active ? 'deactivated' : 'activated'} successfully`
       );
     } catch (error) {
@@ -66,8 +65,17 @@ const Additions = () => {
     }
   };
 
-  const handleCategoryClick = (categoryId) => {
-    navigate(`category/${categoryId}`);
+  const handleCategoryClick = (category) => {
+    if (!category.is_active) {
+      showToast(
+        isRTL
+          ? 'لا يمكن الدخول على صنف موقوف'
+          : 'Cannot access inactive category',
+        'error'
+      );
+      return;
+    }
+    navigate(`category/${category.id}`);
   };
 
   if (loading) {
@@ -115,25 +123,27 @@ const Additions = () => {
               key={item.id}
               onMouseEnter={() => setHoveredId(item.id)}
               onMouseLeave={() => setHoveredId(null)}
-              className={`rounded-lg p-3 md:p-4 shadow-sm border-2 transition-all cursor-pointer relative ${
-                isHovered
+              className={`rounded-lg p-3 md:p-4 shadow-sm border-2 transition-all relative ${isHovered
                   ? 'bg-main border-main text-white'
                   : 'bg-transparent border-main text-main'
-              } ${!item.is_active && 'opacity-50'}`}
+                } ${!item.is_active ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
             >
+              {/* Toggle Switch */}
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   handleToggleStatus(item);
                 }}
-                className={`absolute top-1.5 ${isRTL ? 'left-1.5' : 'right-1.5'} cursor-pointer p-1 rounded-full hover:bg-opacity-20 hover:bg-gray-500 transition`}
+                className={`absolute top-1.5 ${isRTL ? 'left-1.5' : 'right-1.5'} cursor-pointer transition z-10`}
               >
-                <X size={16} />
+                <div className={`w-7 h-4 sm:w-9 sm:h-5 rounded-full transition-colors ${item.is_active ? 'bg-main' : 'bg-gray-300'}`}>
+                  <div className={`w-3 h-3 sm:w-4 sm:h-4 bg-white rounded-full shadow-md transform transition-transform ${item.is_active ? (isRTL ? 'translate-x-[-14px] sm:translate-x-[-18px]' : 'translate-x-[14px] sm:translate-x-[18px]') : 'translate-x-[-2px]'} translate-y-[2px]`} />
+                </div>
               </button>
 
               <div
-                onClick={() => handleCategoryClick(item.id)}
-                className="cursor-pointer flex flex-col items-center text-center gap-2 md:gap-3"
+                onClick={() => handleCategoryClick(item)}
+                className={`flex flex-col items-center text-center gap-2 md:gap-3 ${item.is_active ? 'cursor-pointer' : 'cursor-not-allowed'}`}
               >
                 {item.image && (
                   <img
@@ -145,6 +155,11 @@ const Additions = () => {
                 <h3 className="font-semibold text-xs md:text-sm leading-tight line-clamp-2">
                   {isRTL ? item.name_ar : item.name_en}
                 </h3>
+                {!item.is_active && (
+                  <span className="text-xs font-medium text-red-500">
+                    {isRTL ? '(موقوف)' : '(Inactive)'}
+                  </span>
+                )}
               </div>
             </div>
           );
@@ -156,7 +171,7 @@ const Additions = () => {
         <div className="fixed inset-0 bg-[#00000062] flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl p-6 w-full max-w-sm shadow-xl">
             <h2 className="text-lg font-bold text-main mb-4 text-center">
-              {isRTL 
+              {isRTL
                 ? `هل أنت متأكد من ${selectedCategory?.is_active ? 'إيقاف' : 'تفعيل'} هذا الصنف؟`
                 : `Are you sure you want to ${selectedCategory?.is_active ? 'deactivate' : 'activate'} this category?`
               }

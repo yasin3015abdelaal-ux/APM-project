@@ -30,13 +30,13 @@ const Accounts = () => {
 
     useEffect(() => {
         fetchUsers();
-        
+
         const handleUserUpdate = () => {
             fetchUsers();
         };
-        
+
         window.addEventListener('userDataUpdated', handleUserUpdate);
-        
+
         return () => {
             window.removeEventListener('userDataUpdated', handleUserUpdate);
         };
@@ -61,7 +61,7 @@ const Accounts = () => {
             } else if (response.data) {
                 data = [response.data];
             }
-            
+
             setUsers(data);
         } catch (err) {
             console.error('Error fetching users:', err);
@@ -76,7 +76,7 @@ const Accounts = () => {
 
         // Filter by account type
         if (filters.accountType) {
-            filtered = filtered.filter(user => 
+            filtered = filtered.filter(user =>
                 (user.type || user.account_type || 'individual') === filters.accountType
             );
         }
@@ -91,12 +91,12 @@ const Accounts = () => {
 
         // Filter by date range
         if (filters.dateFrom) {
-            filtered = filtered.filter(user => 
+            filtered = filtered.filter(user =>
                 new Date(user.created_at) >= new Date(filters.dateFrom)
             );
         }
         if (filters.dateTo) {
-            filtered = filtered.filter(user => 
+            filtered = filtered.filter(user =>
                 new Date(user.created_at) <= new Date(filters.dateTo)
             );
         }
@@ -104,7 +104,7 @@ const Accounts = () => {
         // Filter by search text
         if (filters.searchText) {
             const searchLower = filters.searchText.toLowerCase();
-            filtered = filtered.filter(user => 
+            filtered = filtered.filter(user =>
                 (user.name || '').toLowerCase().includes(searchLower) ||
                 (user.email || '').toLowerCase().includes(searchLower) ||
                 (user.phone || '').toLowerCase().includes(searchLower) ||
@@ -145,7 +145,7 @@ const Accounts = () => {
 
             // Create worksheet
             const ws = XLSX.utils.json_to_sheet(exportData);
-            
+
             // Set column widths
             ws['!cols'] = [
                 { wch: 15 }, // Account Number
@@ -178,7 +178,7 @@ const Accounts = () => {
     const handleRowClick = (user) => {
         if (!user || !user.id) {
             console.error('User ID is missing:', user);
-            showToast(isRTL ? 'خطأ: معرف المستخدم غير موجود' : 'Error: User ID is missing','error');
+            showToast(isRTL ? 'خطأ: معرف المستخدم غير موجود' : 'Error: User ID is missing', 'error');
             return;
         }
         sessionStorage.setItem('selectedUser', JSON.stringify(user));
@@ -226,9 +226,8 @@ const Accounts = () => {
             {/* Toast */}
             {toast && (
                 <div className={`fixed top-4 ${isRTL ? "left-4" : "right-4"} z-50 animate-slide-in`}>
-                    <div className={`px-6 py-4 rounded-xl shadow-lg flex items-center gap-3 ${
-                        toast.type === "success" ? "bg-green-500 text-white" : "bg-red-500 text-white"
-                    }`}>
+                    <div className={`px-6 py-4 rounded-xl shadow-lg flex items-center gap-3 ${toast.type === "success" ? "bg-green-500 text-white" : "bg-red-500 text-white"
+                        }`}>
                         {toast.type === "success" ? (
                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -250,13 +249,13 @@ const Accounts = () => {
                         {t('dashboard.accounts.title')}
                     </h1>
                     <div className="flex gap-2">
-                        <button 
+                        <button
                             onClick={exportToExcel}
                             className="bg-main cursor-pointer text-white px-3 text-sm rounded hover:bg-green-700 transition-colors py-1.5"
                         >
                             {t('dashboard.accounts.export')}
                         </button>
-                        <button 
+                        <button
                             onClick={() => setShowFilterModal(true)}
                             className="bg-white cursor-pointer text-main px-3 py-1.5 text-sm rounded hover:bg-gray-100 transition-colors"
                         >
@@ -286,25 +285,28 @@ const Accounts = () => {
                     <table className="min-w-full">
                         <thead className="border-b border-main">
                             <tr>
-                                <th className={`px-2 py-2 text-xs font-bold text-gray-700 whitespace-nowrap ${isRTL ? 'text-right first:rounded-tr-lg' : 'text-left first:rounded-tl-lg'}`}>
+                                <th className={`px-2 py-2 text-xs font-bold text-gray-700 ${isRTL ? 'text-right first:rounded-tr-lg' : 'text-left first:rounded-tl-lg'}`}>
                                     {t('dashboard.accounts.accountNumber')}
                                 </th>
-                                <th className={`px-2 py-2 text-xs font-bold text-gray-700 whitespace-nowrap ${isRTL ? 'text-right last:rounded-tl-lg' : 'text-left last:rounded-tr-lg'}`}>
+                                {/* إخفاء التاريخ في الموبايل */}
+                                <th className={`hidden sm:table-cell px-2 py-2 text-xs font-bold text-gray-700 ${isRTL ? 'text-right' : 'text-left'}`}>
                                     {t('dashboard.accounts.registrationDate')}
                                 </th>
-                                <th className={`px-2 py-2 text-xs font-bold text-gray-700 whitespace-nowrap ${isRTL ? 'text-right' : 'text-left'}`}>
+                                {/* إخفاء نوع الحساب في الموبايل */}
+                                <th className={`hidden md:table-cell px-2 py-2 text-xs font-bold text-gray-700 ${isRTL ? 'text-right' : 'text-left'}`}>
                                     {t('dashboard.accounts.accountType')}
                                 </th>
-                                <th className={`px-2 py-2 text-xs font-bold text-gray-700 whitespace-nowrap ${isRTL ? 'text-right' : 'text-left'}`}>
+                                <th className={`px-2 py-2 text-xs font-bold text-gray-700 ${isRTL ? 'text-right' : 'text-left'}`}>
                                     {t('dashboard.accounts.name')}
                                 </th>
-                                <th className={`px-2 py-2 text-xs font-bold text-gray-700 whitespace-nowrap ${isRTL ? 'text-right' : 'text-left'}`}>
+                                <th className={`px-2 py-2 text-xs font-bold text-gray-700 ${isRTL ? 'text-right' : 'text-left'}`}>
                                     {t('dashboard.accounts.phone')}
                                 </th>
-                                <th className={`px-2 py-2 text-xs font-bold text-gray-700 whitespace-nowrap ${isRTL ? 'text-right' : 'text-left'}`}>
+                                {/* إخفاء الإيميل في الموبايل */}
+                                <th className={`hidden lg:table-cell px-2 py-2 text-xs font-bold text-gray-700 ${isRTL ? 'text-right' : 'text-left'}`}>
                                     {t('dashboard.accounts.email')}
                                 </th>
-                                <th className={`px-2 py-2 text-xs font-bold text-gray-700 whitespace-nowrap ${isRTL ? 'text-right' : 'text-left'}`}>
+                                <th className={`px-2 py-2 text-xs font-bold text-gray-700 ${isRTL ? 'text-right last:rounded-tl-lg' : 'text-left last:rounded-tr-lg'}`}>
                                     {t('dashboard.accounts.verification')}
                                 </th>
                             </tr>
@@ -329,10 +331,10 @@ const Accounts = () => {
                                         <td className="px-2 py-2.5 text-xs text-gray-900 font-mono">
                                             {user.code || user.id || '-'}
                                         </td>
-                                        <td className="px-2 py-2.5 text-xs text-gray-900">
+                                        <td className="hidden sm:table-cell px-2 py-2.5 text-xs text-gray-900">
                                             {formatDate(user.created_at)}
                                         </td>
-                                        <td className="px-2 py-2.5 text-xs text-gray-900">
+                                        <td className="hidden md:table-cell px-2 py-2.5 text-xs text-gray-900">
                                             {getAccountType(user)}
                                         </td>
                                         <td className="px-2 py-2.5 text-xs text-gray-900 font-medium">
@@ -341,12 +343,12 @@ const Accounts = () => {
                                         <td className="px-2 py-2.5 text-xs text-gray-900" dir="ltr" style={{ textAlign: isRTL ? 'right' : 'left' }}>
                                             {user.phone || '-'}
                                         </td>
-                                        <td className="px-2 py-2.5 text-xs text-gray-900">
+                                        <td className="hidden lg:table-cell px-2 py-2.5 text-xs text-gray-900 break-all">
                                             {user.email || '-'}
                                         </td>
-                                        <td className="px-4 py-2.5">
+                                        <td className="px-2 py-2.5">
                                             <span
-                                                className={`px-2 py-0.5 rounded-full text-xs font-medium ${user.verified_account === 1 || user.email_verified_at
+                                                className={`px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap ${user.verified_account === 1 || user.email_verified_at
                                                     ? 'bg-green-100 text-main'
                                                     : 'bg-red-100 text-red-800'
                                                     }`}
