@@ -35,9 +35,15 @@ userAPI.interceptors.response.use(
 
 // ADMIN API
 const ADMIN_BASE = "https://api.world-apm.com/admin";
+const ADMIN_CHAT_BASE = "https://api.world-apm.com/api/api/admin/chat";
 
 export const adminAPI = axios.create({
     baseURL: ADMIN_BASE,
+    headers: { "Content-Type": "application/json" },
+});
+
+export const adminChatAPI = axios.create({
+    baseURL: ADMIN_CHAT_BASE,
     headers: { "Content-Type": "application/json" },
 });
 
@@ -45,6 +51,18 @@ export const adminAPI = axios.create({
 adminAPI.interceptors.request.use((config) => {
     const token = localStorage.getItem("adminToken");
     if (token) config.headers.Authorization = `Bearer ${token}`;
+    if (config.data instanceof FormData) {
+        delete config.headers["Content-Type"];
+    }
+    return config;
+});
+
+adminChatAPI.interceptors.request.use((config) => {
+    const token = localStorage.getItem("adminToken");
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+    if (config.data instanceof FormData) {
+        delete config.headers["Content-Type"];
+    }
     return config;
 });
 
@@ -60,6 +78,18 @@ adminAPI.interceptors.response.use(
                 localStorage.removeItem("adminData");
                 window.location.href = "/admin/login";
             }
+        }
+        return Promise.reject(err);
+    }
+);
+
+adminChatAPI.interceptors.response.use(
+    (res) => res,
+    (err) => {
+        if (err.response?.status === 401) {
+            localStorage.removeItem("adminToken");
+            localStorage.removeItem("adminData");
+            window.location.href = "/admin/login";
         }
         return Promise.reject(err);
     }

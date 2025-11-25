@@ -330,11 +330,187 @@
       "logos": "الشعارات",
       "articles": "المقالات",
       "ads": "الاعلانات",
+      "messages": "التحدث مع العملاء",
       "admins": "المسؤولين",
+      "subscriptions": "الاشتراكات",
       "invoices": "الفواتير",
       "todayPrice": "السعر اليوم",
       "logout": "تسجيل الخروج",
       "Egypt": "مصر"
+    },
+    "verifications": {
+      "sectionLabel": "توثيق الحسابات",
+      "title": "طلبات توثيق الحسابات",
+      "detailsTitle": "توثيق الحساب",
+      "searchPlaceholder": "ابحث باسم المستخدم أو رقم الحساب",
+      "status": {
+        "pending": "قيد المراجعة",
+        "approved": "تمت الموافقة",
+        "rejected": "مرفوض"
+      },
+      "table": {
+        "accountNumber": "رقم الحساب",
+        "submittedAt": "تاريخ التقديم",
+        "name": "الاسم",
+        "phone": "رقم التليفون",
+        "accountType": "نوع الحساب",
+        "email": "البريد الإلكتروني"
+      },
+      "empty": "لا توجد طلبات مطابقة حالياً.",
+      "fields": {
+        "email": "البريد الإلكتروني",
+        "phone": "رقم التليفون",
+        "accountType": "نوع الحساب",
+        "submittedAt": "تاريخ التقديم"
+      },
+      "attachments": {
+        "front": "عرض وجه البطاقة",
+        "back": "عرض ظهر البطاقة",
+        "selfie": "عرض الصورة السيلفي"
+      },
+      "actions": {
+        "approve": "وثق الحساب",
+        "reject": "رفض التوثيق"
+      },
+      "viewProfile": "عرض الملف الشخصي",
+      "rejectModal": {
+        "title": "سبب رفض التوثيق",
+        "placeholder": "اذكر سبب الرفض",
+        "cancel": "إلغاء",
+        "submit": "إرسال",
+        "sending": "جاري الإرسال..."
+      },
+      "errors": {
+        "fetch": "فشل في تحميل طلبات التوثيق",
+        "fetchOne": "فشل في تحميل بيانات الطلب",
+        "notFound": "لا توجد بيانات متاحة لهذا الطلب",
+        "approve": "تعذر توثيق الحساب",
+        "reject": "تعذر رفض الطلب"
+      },
+      "messages": {
+        "approved": "تم توثيق الحساب بنجاح",
+        "rejected": "تم رفض الطلب"
+      }
+    },
+    "chat": {
+      "title": "التحدث مع العملاء",
+      "searchPlaceholder": "ابحث عن محادثة...",
+      "empty": "لا توجد محادثات متاحة.",
+      "noMessagesYet": "لا توجد رسائل بعد.",
+      "selectConversation": "اختر محادثة لبدء التراسل.",
+      "typePlaceholder": "اكتب رسالتك هنا...",
+      "unknownUser": "مستخدم غير معروف",
+      "actions": {
+        "contactClient": "مخاطبة العميل",
+        "send": "ارسال",
+        "cancel": "الغاء"
+      },
+      "messages": {
+        "initiated": "تم فتح المحادثة بنجاح"
+      },
+      "errors": {
+        "fetchConversations": "فشل في تحميل المحادثات",
+        "sendFailed": "تعذر ارسال الرسالة",
+        "userRequired": "يرجى اختيار العميل أولاً",
+        "initiateFailed": "تعذر فتح محادثة جديدة"
+      },
+      "modal": {
+        "title": "مخاطبة العميل",
+        "user": "اختر العميل",
+        "userPlaceholder": "اكتب اسم العميل للبحث عنه",
+        "subject": "العنوان",
+        "message": "النص",
+        "sending": "جاري الارسال..."
+      }
+    },
+    "todayPrices": {
+      "sectionLabel": "الأسعار اليومية",
+      "title": "الاسعار اليوم",
+      "count": "عدد السجلات: {{count}}",
+      "export": "تصدير",
+      "categories": {
+        "sheep": "الاغنام",
+        "cows": "الابقار",
+        "camels": "الابل"
+      },
+      "table": {
+        "accountNumber": "رقم الحساب",
+        "predictionDate": "تاريخ تسجيل التوقع",
+        "name": "الاسم",
+        "accountType": "نوع الحساب",
+        "expected": "السعر المتوقع",
+        "current": "السعر الحالي"
+      },
+      "empty": "لا يوجد بيانات في هذا القسم حالياً."
+    },
+    "advertisements": {
+      "pageTitle": "إدارة الاعلانات",
+      "subtitle": "قم بإضافة أو حذف الاعلانات الافتتاحية والمتحركة.",
+      "heroTitle": "اضافة دعاية افتتاحية",
+      "sliderTitle": "اضافة اعلانات متحركة",
+      "emptyHeroSection": "لا توجد إعلانات افتتاحية بعد.",
+      "emptySliderSection": "لا توجد إعلانات متحركة بعد.",
+      "actions": {
+        "addHero": "اضافة اعلان عام",
+        "addSlider": "اضافة اعلان متحرك",
+        "confirmDelete": "هل أنت متأكد من حذف هذا الإعلان؟ سيتم ازالته نهائياً."
+      },
+      "modal": {
+        "title": "اضافة اعلان جديد",
+        "imageLabel": "صورة الاعلان",
+        "orderLabel": "ترتيب العرض",
+        "cancel": "الغاء",
+        "save": "حفظ",
+        "saving": "جاري الحفظ..."
+      },
+      "errors": {
+        "fetch": "فشل في تحميل الاعلانات",
+        "upload": "تعذر رفع الاعلان، حاول مرة أخرى.",
+        "delete": "تعذر حذف الاعلان، حاول مرة أخرى.",
+        "fileRequired": "يرجى اختيار صورة الاعلان أولاً."
+      },
+      "messages": {
+        "created": "تم اضافة الاعلان بنجاح",
+        "deleted": "تم حذف الاعلان بنجاح"
+      }
+    },
+    "packages": {
+      "title": "تسعير الباقات",
+      "currency": "جنيه",
+      "empty": "لا توجد باقات في هذه الفئة.",
+      "actions": {
+        "add": "اضافة باقة جديدة",
+        "edit": "تعديل",
+        "delete": "حذف",
+        "cancel": "إلغاء",
+        "save": "حفظ",
+        "update": "تحديث"
+      },
+      "fields": {
+        "category": "فئة الباقة",
+        "choose": "اختر الفئة",
+        "name": "اسم الباقة",
+        "namePlaceholder": "ادخل اسم الباقة",
+        "description": "تفاصيل الباقة",
+        "descriptionPlaceholder": "اكتب وصفاً مختصراً",
+        "price": "سعر الباقة"
+      },
+      "errors": {
+        "fetchCategories": "فشل في تحميل فئات الباقات",
+        "fetchPackages": "فشل في تحميل الباقات",
+        "required": "يرجى ملء جميع الحقول المطلوبة",
+        "saveFailed": "تعذر حفظ الباقة، حاول مرة أخرى",
+        "deleteFailed": "تعذر حذف الباقة"
+      },
+      "messages": {
+        "created": "تم إضافة الباقة بنجاح",
+        "updated": "تم تحديث الباقة بنجاح",
+        "deleted": "تم حذف الباقة بنجاح"
+      },
+      "delete": {
+        "confirmTitle": "هل أنت متأكد من حذف الباقة؟",
+        "confirmMessage": "سيتم حذف هذه الباقة نهائياً ولا يمكن التراجع."
+      }
     },
     "additions": {
       "title": "الإضافات",
@@ -482,6 +658,68 @@
         "deleteError": "حدث خطأ في حذف المنتج",
         "updateError": "حدث خطأ في تحديث الحالة",
         "exportSuccess": "تم التصدير بنجاح"
+      }
+    },
+    "articles": {
+      "title": "المقالات",
+      "addArticle": "اضافة مقالة",
+      "editArticle": "تعديل المقال",
+      "delete": "حذف",
+      "cancel": "إلغاء",
+      "send": "ارسال",
+      "addImage": "اضافة صورة",
+      "articleTitle": "عنوان المقال",
+      "articleTitlePlaceholder": "أدخل عنوان المقال",
+      "articleContent": "المقال",
+      "articleContentPlaceholder": "أدخل محتوى المقال",
+      "noArticles": "لا توجد مقالات",
+      "fetchError": "فشل في تحميل المقالات",
+      "addSuccess": "تم اضافة المقال بنجاح",
+      "addError": "حدث خطأ في إضافة المقال",
+      "updateSuccess": "تم تحديث المقال بنجاح",
+      "updateError": "حدث خطأ في تحديث المقال",
+      "deleteSuccess": "تم حذف المقال بنجاح",
+      "deleteError": "حدث خطأ في حذف المقال",
+      "deleteConfirmTitle": "هل أنت متأكد من حذف المقال؟",
+      "deleteConfirmMessage": "هل أنت متأكد من حذف هذا المقال؟ لا يمكن التراجع عن هذا الإجراء.",
+      "fillAllFields": "يرجى ملء جميع الحقول المطلوبة"
+    },
+    "packages": {
+      "title": "تسعير الباقات",
+      "currency": "جنيه",
+      "empty": "لا توجد باقات متاحة في هذا القسم.",
+      "actions": {
+        "add": "اضافة باقة",
+        "edit": "تعديل",
+        "update": "تحديث",
+        "save": "حفظ",
+        "cancel": "إلغاء",
+        "delete": "حذف الباقة"
+      },
+      "fields": {
+        "category": "تصنيف الباقة",
+        "choose": "اختر التصنيف",
+        "name": "اسم العرض",
+        "namePlaceholder": "ادخل اسم الباقة",
+        "description": "وصف الباقة",
+        "descriptionPlaceholder": "اكتب وصفاً مختصراً للباقة",
+        "price": "سعر العرض"
+      },
+      "delete": {
+        "confirmTitle": "هل أنت متأكد من حذف هذه الباقة؟",
+        "confirmMessage": "عند حذف الباقة سيتم ازالتها نهائياً من النظام."
+      },
+      "errors": {
+        "fetchCategories": "فشل في تحميل تصنيفات الباقات",
+        "fetchPackages": "فشل في تحميل الباقات",
+        "required": "يرجى ملء جميع الحقول المطلوبة",
+        "saveFailed": "تعذر حفظ بيانات الباقة",
+        "deleteFailed": "تعذر حذف الباقة"
+      },
+      "messages": {
+        "created": "تم اضافة الباقة بنجاح",
+        "updated": "تم تحديث الباقة بنجاح",
+        "deleted": "تم حذف الباقة بنجاح"
       }
     }
   }

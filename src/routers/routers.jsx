@@ -15,7 +15,19 @@ import Additions from "../components/Dashboard/Additions/Additions";
 import Category from "../components/Dashboard/Additions/Category";
 import Accounts from "../components/Dashboard/Accounts/Accounts";
 import UpdateAccount from "../components/Dashboard/Accounts/UpdateAccount";
-import Invoices from "../components/Dashboard/Invoices/Invoices";
+import DashboardInvoices from "../components/Dashboard/Invoices/Invoices";
+import SubscriptionsPage from "../pages/Dashboard/SubscriptionsPage";
+import InvoicesPage from "../pages/Dashboard/InvoicesPage";
+import InvoiceDetailsPage from "../pages/Dashboard/InvoiceDetailsPage";
+import AuctionsList from "../pages/Dashboard/AuctionsList";
+import AuctionDetails from "../pages/Dashboard/AuctionDetails";
+import VerificationsList from "../pages/Dashboard/VerificationsList";
+import VerificationDetails from "../pages/Dashboard/VerificationDetails";
+import TodayPrices from "../pages/Dashboard/TodayPrices";
+import AdvertisementsPage from "../pages/Dashboard/AdvertisementsPage";
+import PackagesPage from "../pages/Dashboard/PackagesPage";
+import ArticlesPage from "../pages/Dashboard/ArticlesPage";
+import ChatPage from "../pages/Dashboard/ChatPage";
 import VerifyAccountPage from "../pages/Profile/VerifyAccount";
 import EditProfilePage from "../pages/Profile/EditProfilePage";
 import ProfilePage from "../pages/Profile/ProfilePage";
@@ -174,7 +186,19 @@ export const routers = createBrowserRouter([
           // { path: "products", element: <Products /> },
           { path: "accounts", element: <Accounts /> },
           { path: "accounts/update-account/:userId", element: <UpdateAccount /> },
-          { path: "invoices", element: <Invoices /> },
+          { path: "auctions", element: <AuctionsList /> },
+          { path: "auctions/:id", element: <AuctionDetails /> },
+          { path: "ads", element: <AdvertisementsPage /> },
+          { path: "packages", element: <PackagesPage /> },
+          { path: "articles", element: <ArticlesPage /> },
+          { path: "messages", element: <ChatPage /> },
+          { path: "verification", element: <VerificationsList /> },
+          { path: "verification/:id", element: <VerificationDetails /> },
+          { path: "today-price", element: <TodayPrices /> },
+          { path: "invoices-old", element: <DashboardInvoices /> },
+          { path: "subscriptions", element: <SubscriptionsPage /> },
+          { path: "invoices", element: <InvoicesPage /> },
+          { path: "invoice/:id", element: <InvoiceDetailsPage /> },
           { path: "products", element: <ProductsReview /> },
           { path: "*", element: <Navigate to="/dashboard" replace /> },
         ],

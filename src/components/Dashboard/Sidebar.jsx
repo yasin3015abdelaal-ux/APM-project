@@ -57,16 +57,18 @@ const Sidebar = () => {
     const menuItems = [
         { label: t("dashboard.sidebar.accounts"), path: "/dashboard/accounts" },
         { label: t("dashboard.sidebar.posts"), path: "/dashboard/posts" },
-        { label: t("dashboard.sidebar.auctionsss"), path: "/dashboard/auctionss" },
+        { label: t("dashboard.sidebar.auctions"), path: "/dashboard/auctions" },
         { label: t("dashboard.sidebar.additions"), path: "/dashboard/additions" },
         { label: t("dashboard.sidebar.products"), path: "/dashboard/products" },
         { label: t("dashboard.sidebar.packages"), path: "/dashboard/packages" },
         { label: t("dashboard.sidebar.reports"), path: "/dashboard/reports" },
+        { label: t("dashboard.sidebar.messages"), path: "/dashboard/messages" },
         { label: t("dashboard.sidebar.verification"), path: "/dashboard/verification" },
         { label: t("dashboard.sidebar.logos"), path: "/dashboard/logos" },
         { label: t("dashboard.sidebar.articles"), path: "/dashboard/articles" },
         { label: t("dashboard.sidebar.ads"), path: "/dashboard/ads" },
         { label: t("dashboard.sidebar.admins"), path: "/dashboard/admins" },
+        { label: t("dashboard.sidebar.subscriptions"), path: "/dashboard/subscriptions" },
         { label: t("dashboard.sidebar.invoices"), path: "/dashboard/invoices" },
         { label: t("dashboard.sidebar.todayPrice"), path: "/dashboard/today-price" },
     ];
@@ -94,6 +96,21 @@ const Sidebar = () => {
         }
         if (path === "/dashboard/accounts") {
             return location.pathname.startsWith("/dashboard/accounts");
+        }
+        if (path === "/dashboard/auctions") {
+            return location.pathname.startsWith("/dashboard/auctions");
+        }
+        if (path === "/dashboard/verification") {
+            return location.pathname.startsWith("/dashboard/verification");
+        }
+        if (path === "/dashboard/messages") {
+            return location.pathname.startsWith("/dashboard/messages");
+        }
+        if (path === "/dashboard/packages") {
+            return location.pathname.startsWith("/dashboard/packages");
+        }
+        if (path === "/dashboard/articles") {
+            return location.pathname.startsWith("/dashboard/articles");
         }
         return location.pathname === path;
     };
