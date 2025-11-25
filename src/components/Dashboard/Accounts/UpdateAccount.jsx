@@ -51,18 +51,23 @@ const UpdateAccount = () => {
         }
     };
 
-    const handleToggleStatus = async () => {
+const handleToggleStatus = async () => {
         setShowVerifyModal(false);
         try {
-            await adminAPI.patch(`/users/${userId}/toggle-status`);
-
             const currentVerified = userData.verified_account === 1;
+            const newStatus = currentVerified ? 0 : 1;
+
+            // Send the correct API request with body
+            await adminAPI.put(`/users/${userId}/update-verification-status`, {
+                verified_account: newStatus
+            });
+
             const message = currentVerified
                 ? t('dashboard.accounts.accountDetails.accountUnverified')
                 : t('dashboard.accounts.accountDetails.accountVerified');
 
             // Update local state and sessionStorage
-            const updatedUser = { ...userData, verified_account: currentVerified ? 0 : 1 };
+            const updatedUser = { ...userData, verified_account: newStatus };
             setUserData(updatedUser);
             sessionStorage.setItem('selectedUser', JSON.stringify(updatedUser));
 
@@ -77,28 +82,28 @@ const UpdateAccount = () => {
             showToast(errorMsg, 'error');
         }
     };
-
     const handleDeleteAccount = async () => {
         setShowDeleteModal(false);
-        // try {
-        //     await adminAPI.delete(`/users/${userId}`);
-        //     sessionStorage.removeItem('selectedUser');
+        try {
+            await adminAPI.delete(`/users/${userId}`);
+            sessionStorage.removeItem('selectedUser');
 
-        //     // Trigger update in Accounts list
-        //     window.dispatchEvent(new Event('userDataUpdated'));
+            // Trigger update in Accounts list
+            window.dispatchEvent(new Event('userDataUpdated'));
 
-        //     showToast(t('dashboard.accounts.accountDetails.accountDeleted'), 'success');
+            showToast(t('dashboard.accounts.accountDetails.accountDeleted'), 'success');
 
-        //     setTimeout(() => {
-        //         navigate('/dashboard/accounts');
-        //     }, 1500);
+            setTimeout(() => {
+                navigate('/dashboard/accounts');
+            }, 1500);
 
-        // } catch (err) {
-        //     console.error('Error deleting account:', err);
-        //     const errorMsg = err.response?.data?.message || t('dashboard.accounts.accountDetails.errorDeleting');
-        //     showToast(errorMsg, 'error');
-        // }
+        } catch (err) {
+            console.error('Error deleting account:', err);
+            const errorMsg = err.response?.data?.message || t('dashboard.accounts.accountDetails.errorDeleting');
+            showToast(errorMsg, 'error');
+        }
     };
+
 
     if (loading) {
         return <Loader />;

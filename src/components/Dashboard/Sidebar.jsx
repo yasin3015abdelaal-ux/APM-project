@@ -57,7 +57,7 @@ const Sidebar = () => {
     const menuItems = [
         { label: t("dashboard.sidebar.accounts"), path: "/dashboard/accounts" },
         { label: t("dashboard.sidebar.posts"), path: "/dashboard/posts" },
-        { label: t("dashboard.sidebar.auctionsss"), path: "/dashboard/auctionss" },
+        { label: t("dashboard.sidebar.auctions"), path: "/dashboard/auctions" },
         { label: t("dashboard.sidebar.additions"), path: "/dashboard/additions" },
         { label: t("dashboard.sidebar.products"), path: "/dashboard/products" },
         { label: t("dashboard.sidebar.packages"), path: "/dashboard/packages" },

@@ -15,15 +15,16 @@ const Category = () => {
     const [selectedSubCategory, setSelectedSubCategory] = useState(null);
     const [newSubCategoryNameAr, setNewSubCategoryNameAr] = useState('');
     const [newSubCategoryNameEn, setNewSubCategoryNameEn] = useState('');
-    const [successMessage, setSuccessMessage] = useState('');
     const [subCategories, setSubCategories] = useState([]);
     const [categoryName, setCategoryName] = useState({ ar: '', en: '' });
     const [loading, setLoading] = useState(true);
     const [toast, setToast] = useState(null);
+    
     const showToast = (message, type = "success") => {
         setToast({ message, type });
         setTimeout(() => setToast(null), 4000);
     };
+
     // Fetch category details and subcategories
     useEffect(() => {
         const fetchData = async () => {
@@ -69,11 +70,21 @@ const Category = () => {
                 setNewSubCategoryNameAr('');
                 setNewSubCategoryNameEn('');
                 setShowAddModal(false);
-                setSuccessMessage(t('dashboard.additions.subCategoryAdded'));
-                showToast(successMessage);
+                
+                showToast(
+                    isRTL 
+                        ? 'تمت إضافة الفئة الفرعية بنجاح' 
+                        : 'Subcategory added successfully',
+                    'success'
+                );
             } catch (error) {
                 console.error('Error adding subcategory:', error);
-                showToast(isRTL ? 'حدث خطأ أثناء إضافة الفئة الفرعية' : 'Error adding subcategory');
+                showToast(
+                    isRTL 
+                        ? 'حدث خطأ أثناء إضافة الفئة الفرعية' 
+                        : 'Error adding subcategory',
+                    'error'
+                );
             }
         }
     };
@@ -93,23 +104,30 @@ const Category = () => {
     //         ));
             
     //         setShowConfirmModal(false);
-    //         setSuccessMessage(t('dashboard.additions.successMessage'));
-    //         showToast(successMessge)
+    //         showToast(
+    //             isRTL 
+    //                 ? 'تم إيقاف الفئة الفرعية بنجاح' 
+    //                 : 'Subcategory stopped successfully',
+    //             'success'
+    //         );
     //     } catch (error) {
     //         console.error('Error stopping subcategory:', error);
-    //    showToast(isRTL ? 'حدث خطأ أثناء إيقاف الفئة' : 'Error stopping subcategory');
+    //         showToast(
+    //             isRTL 
+    //                 ? 'حدث خطأ أثناء إيقاف الفئة' 
+    //                 : 'Error stopping subcategory',
+    //             'error'
+    //         );
     //     }
     // };
 
     if (loading) {
-        return (
-            <Loader />
-        );
+        return <Loader />;
     }
 
     return (
         <div className="min-h-screen relative" dir={isRTL ? 'rtl' : 'ltr'}>
-                        {toast && (
+            {toast && (
                 <div className={`fixed top-4 sm:top-5 ${isRTL ? "left-4 sm:left-5" : "right-4 sm:right-5"} z-50 animate-slide-in max-w-[90%] sm:max-w-md`}>
                     <div className={`px-4 py-3 sm:px-6 sm:py-4 rounded-lg sm:rounded-xl shadow-lg flex items-center gap-2 sm:gap-3 ${toast.type === "success" ? "bg-main text-white" : "bg-red-500 text-white"}`}>
                         {toast.type === "success" ? (
@@ -125,6 +143,7 @@ const Category = () => {
                     </div>
                 </div>
             )}
+
             {/* Header */}
             <div className="mb-6 flex justify-between items-center">
                 <h1 className="text-2xl font-bold text-main">

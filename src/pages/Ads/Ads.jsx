@@ -156,7 +156,7 @@ export default function Ads() {
     const fetchCategories = async () => {
       try {
         const response = await userAPI.get('/categories');
-        setCategories(response.data.data || []);
+        setCategories(response.data.data.product_categories || []);
       } catch (err) {
         console.error('Error fetching categories:', err);
       }

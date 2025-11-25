@@ -90,8 +90,16 @@ export const dataAPI = {
 // Auction endpoints
 export const auctionAPI = {
     getAllAuctions: () => userAPI.get('/auctions'),
-    participate: (auctionId, role) => 
-        userAPI.post(`/auctions/${auctionId}/participate`, { role }),
+    participate: (date, role) => 
+        userAPI.post(`/auctions/participate`, { date, role }),
+    role: (auctionId) => 
+        userAPI.get(`/auctions/${auctionId}/my-role`),
     getProducts: (auctionId) => 
         userAPI.get(`/auctions/${auctionId}/products`),
+    getMyProducts: (auctionId) => 
+        userAPI.get(`/auctions/${auctionId}/my-products`),
+    getPreviousProducts: () => 
+        userAPI.get(`/auctions/my-previous-products`),
+    addProductToAuction: (auctionId, data) =>
+        userAPI.post(`/auctions/${auctionId}/products`, data),
 };

@@ -193,11 +193,11 @@ const ProfileHover = () => {
         {isAuthenticated && (
           <button
             onClick={handleLogout}
-            disabled={isLoggingOut}
+            disabled={isLoggingOut} dir={i18n.language === "en" ? "ltr" : "rtl"}
             className="self-center w-full max-w-[160px] border-2 border-main rounded-lg text-sm sm:text-base text-main bg-white px-4 py-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:bg-green-50 transition mt-2"
           >
             {isLoggingOut
-              ? t("logging out...") || "جاري تسجيل الخروج..."
+              ? t("auth.login.loggingOut")
               : t("log out")}
           </button>
         )}

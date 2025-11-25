@@ -43,12 +43,19 @@ export const AuthProvider = ({ children }) => {
 
     // Logout function
     const logout = () => {
-        localStorage.removeItem("authToken");
-        localStorage.removeItem("userData");
+        const keysToKeep = ["dir", "i18nextLng", "adminData", "adminToken"];
+
+        Object.keys(localStorage).forEach((key) => {
+            if (!keysToKeep.includes(key)) {
+                localStorage.removeItem(key);
+            }
+        });
+
         setToken(null);
         setUser(null);
         delete axios.defaults.headers.common["Authorization"];
     };
+
 
     // Update user data
     const updateUser = (userData) => {
