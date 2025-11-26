@@ -316,6 +316,28 @@
     "yes": "نعم",
     "no": "لا"
   },
+  "prices": {
+      "submitPrices": "أسعار اللحوم اليوم",
+      "governorate": "المحافظة",
+      "selectGovernorate": "اختر المحافظة",
+      "cowPrices": "أسعار الأبقار",
+      "sheepPrices": "أسعار الأغنام",
+      "camelPrices": "أسعار الإبل",
+      "netPrice": "السعر الصافي",
+      "standingPrice": "السعر القائم",
+      "priceNote": "ملاحظة مهمة",
+      "priceNoteDescription": "يرجى إدخال الأسعار الحالية بدقة. ستساعد هذه المعلومات المستخدمين الآخرين في معرفة أسعار السوق.",
+      "submit": "إرسال الأسعار"
+  },
+  "contact": {
+      "contactUs": "تواصل معنا",
+      "suggestion": "اقتراح",
+      "complaint": "شكوى",
+      "subscriptionIssue": "مشكلة في الاشتراك",
+      "other": "أخرى",
+      "message": "الطلب",
+      "submit": "إرسال الطلب"
+  },
   "dashboard": {
     "sidebar": {
       "accounts": "الحسابات",

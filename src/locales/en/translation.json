@@ -187,7 +187,7 @@
         "deleteConfirmMessage": "Are you sure you want to delete this ad? This action cannot be undone.",
         "yes": "Yes",
         "no": "No",
-        "deleteSuccess":"Ad deleted successfully"
+        "deleteSuccess": "Ad deleted successfully"
     },
     "profile": {
         "title": "Profile",
@@ -316,6 +316,28 @@
         "confirmRemove": "Are you sure you want to remove this product from the auction?",
         "yes": "Yes",
         "no": "No"
+    },
+    "prices": {
+        "submitPrices": "Today’s Meat Prices",
+        "governorate": "Governorate",
+        "selectGovernorate": "Select Governorate",
+        "cowPrices": "Cow Prices",
+        "sheepPrices": "Sheep Prices",
+        "camelPrices": "Camel Prices",
+        "netPrice": "Net Price",
+        "standingPrice": "Live Weight Price",
+        "priceNote": "Important Note",
+        "priceNoteDescription": "Please enter current prices accurately. This information will help other users know market prices.",
+        "submit": "Submit Prices"
+    },
+    "contact": {
+        "contactUs": "Contact Us",
+        "suggestion": "Suggestion",
+        "complaint": "Complaint",
+        "subscriptionIssue": "Subscription Issue",
+        "other": "Other",
+        "message": "Request",
+        "submit": "Send Message"
     },
     "dashboard": {
         "sidebar": {

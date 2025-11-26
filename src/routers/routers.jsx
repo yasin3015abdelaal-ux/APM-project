@@ -44,6 +44,8 @@ import AuctionPage from "../pages/Auctions/AuctionPage";
 import AuctionsManagement from "../components/Dashboard/Auctions/AuctionsManagement";
 // import AuctionsList from "../pages/Auctions/AuctionsList";
 import PreviousAuctions from "../pages/Auctions/PreviousAuctions";
+import ContactUs from "../pages/Contact/ContactUs";
+import Prices from "../pages/Prices/Prices";
 
 export const routers = createBrowserRouter([
   {
@@ -101,6 +103,22 @@ export const routers = createBrowserRouter([
             element: (
               <ProtectedRoute>
                 <Notifications />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "contact",
+            element: (
+              <ProtectedRoute>
+                <ContactUs />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "prices",
+            element: (
+              <ProtectedRoute>
+                <Prices />
               </ProtectedRoute>
             ),
           },
