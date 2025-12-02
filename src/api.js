@@ -35,7 +35,7 @@ userAPI.interceptors.response.use(
 
 // ADMIN API
 const ADMIN_BASE = "https://api.world-apm.com/admin";
-const ADMIN_CHAT_BASE = "https://api.world-apm.com/api/api/admin/chat";
+const ADMIN_CHAT_BASE = "https://api.world-apm.com/api/admin/chat";
 
 export const adminAPI = axios.create({
     baseURL: ADMIN_BASE,
@@ -46,6 +46,40 @@ export const adminChatAPI = axios.create({
     baseURL: ADMIN_CHAT_BASE,
     headers: { "Content-Type": "application/json" },
 });
+
+// Admin Chat Messages API (different base URL for messages endpoints)
+export const adminChatMessagesAPI = axios.create({
+    baseURL: "https://api.world-apm.com/admin/chat",
+    headers: { "Content-Type": "application/json" },
+});
+
+export const chatMessagesAPI = axios.create({
+    baseURL: "https://api.world-apm.com/api",
+    headers: { "Content-Type": "application/json" },
+});
+
+// Add token for chatMessagesAPI
+chatMessagesAPI.interceptors.request.use((config) => {
+    const token = localStorage.getItem("adminToken");
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+    if (config.data instanceof FormData) {
+        delete config.headers["Content-Type"];
+    }
+    return config;
+});
+
+// Handle admin logout on 401 for chatMessagesAPI
+chatMessagesAPI.interceptors.response.use(
+    (res) => res,
+    (err) => {
+        if (err.response?.status === 401) {
+            localStorage.removeItem("adminToken");
+            localStorage.removeItem("adminData");
+            window.location.href = "/admin/login";
+        }
+        return Promise.reject(err);
+    }
+);
 
 // Add token for admin
 adminAPI.interceptors.request.use((config) => {
@@ -58,6 +92,15 @@ adminAPI.interceptors.request.use((config) => {
 });
 
 adminChatAPI.interceptors.request.use((config) => {
+    const token = localStorage.getItem("adminToken");
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+    if (config.data instanceof FormData) {
+        delete config.headers["Content-Type"];
+    }
+    return config;
+});
+
+adminChatMessagesAPI.interceptors.request.use((config) => {
     const token = localStorage.getItem("adminToken");
     if (token) config.headers.Authorization = `Bearer ${token}`;
     if (config.data instanceof FormData) {
@@ -84,6 +127,18 @@ adminAPI.interceptors.response.use(
 );
 
 adminChatAPI.interceptors.response.use(
+    (res) => res,
+    (err) => {
+        if (err.response?.status === 401) {
+            localStorage.removeItem("adminToken");
+            localStorage.removeItem("adminData");
+            window.location.href = "/admin/login";
+        }
+        return Promise.reject(err);
+    }
+);
+
+adminChatMessagesAPI.interceptors.response.use(
     (res) => res,
     (err) => {
         if (err.response?.status === 401) {

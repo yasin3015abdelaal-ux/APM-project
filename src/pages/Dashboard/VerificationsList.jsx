@@ -11,15 +11,14 @@ const normalizeVerifications = (records) => {
 
   return records.map((item) => {
     const user = item.user || {};
-    const profile = user.profile || {};
 
     return {
-      id: item.id || item.verification_id,
-      accountNumber: user.account_number || user.id || "-",
-      name: user.name || profile.full_name || "-",
-      phone: user.phone || profile.phone || "-",
-      createdAt: item.created_at || user.created_at || "",
-      type: item.account_type || user.account_type || profile.account_type || "-",
+      id: item.id,
+      accountNumber: user.id || "-",
+      name: user.name || "-",
+      phone: user.phone || "-",
+      createdAt: item.submitted_at || "",
+      type: user.type || "-",
       email: user.email || "-",
       status: item.status || "pending",
     };
@@ -31,9 +30,19 @@ const VerificationsList = () => {
   const navigate = useNavigate();
   const [status, setStatus] = useState("pending");
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [verifications, setVerifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Debounce effect for search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [search]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -45,7 +54,7 @@ const VerificationsList = () => {
 
         const params = new URLSearchParams({
           status,
-          search,
+          search: debouncedSearch,
           per_page: "15",
         });
 
@@ -53,15 +62,7 @@ const VerificationsList = () => {
           signal: controller.signal,
         });
 
-        let data = [];
-        if (Array.isArray(response.data)) {
-          data = response.data;
-        } else if (Array.isArray(response.data?.data)) {
-          data = response.data.data;
-        } else if (Array.isArray(response.data?.data?.verifications)) {
-          data = response.data.data.verifications;
-        }
-
+        const data = response.data?.data || [];
         setVerifications(normalizeVerifications(data));
       } catch (err) {
         if (err.name === "CanceledError") return;
@@ -75,9 +76,9 @@ const VerificationsList = () => {
     fetchVerifications();
 
     return () => controller.abort();
-  }, [status, search, t]);
+  }, [status, debouncedSearch, t]);
 
-  if (loading) {
+  if (loading && !verifications.length) {
     return <Loader />;
   }
 
@@ -96,7 +97,7 @@ const VerificationsList = () => {
   }
 
   return (
-    <section className="space-y-6" dir={i18n.language === "ar" ? "rtl" : "ltr"}>
+    <section className="w-full space-y-6" dir={i18n.language === "ar" ? "rtl" : "ltr"}>
       <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <p className="text-sm uppercase tracking-widest text-emerald-500">
@@ -131,26 +132,32 @@ const VerificationsList = () => {
         ))}
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-emerald-100 bg-white shadow-sm">
-        <table className="min-w-full text-sm">
+      {loading && verifications.length > 0 && (
+        <div className="flex justify-center py-2">
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent"></div>
+        </div>
+      )}
+
+      <div className="w-full overflow-x-auto rounded-xl border border-emerald-100 bg-white shadow-sm">
+        <table className="w-full min-w-max text-sm">
           <thead className="bg-emerald-50 text-emerald-700">
             <tr>
-              <th className="px-4 py-3 text-right font-medium">
+              <th className="whitespace-nowrap px-4 py-3 text-right font-medium">
                 {t("dashboard.verifications.table.accountNumber")}
               </th>
-              <th className="px-4 py-3 text-right font-medium">
+              <th className="whitespace-nowrap px-4 py-3 text-right font-medium">
                 {t("dashboard.verifications.table.submittedAt")}
               </th>
-              <th className="px-4 py-3 text-right font-medium">
+              <th className="whitespace-nowrap px-4 py-3 text-right font-medium">
                 {t("dashboard.verifications.table.name")}
               </th>
-              <th className="px-4 py-3 text-right font-medium">
+              <th className="whitespace-nowrap px-4 py-3 text-right font-medium">
                 {t("dashboard.verifications.table.phone")}
               </th>
-              <th className="px-4 py-3 text-right font-medium">
+              <th className="whitespace-nowrap px-4 py-3 text-right font-medium">
                 {t("dashboard.verifications.table.accountType")}
               </th>
-              <th className="px-4 py-3 text-right font-medium">
+              <th className="whitespace-nowrap px-4 py-3 text-right font-medium">
                 {t("dashboard.verifications.table.email")}
               </th>
             </tr>
@@ -174,20 +181,20 @@ const VerificationsList = () => {
                   }
                   className="cursor-pointer border-t border-emerald-50 text-right text-slate-700 transition hover:bg-emerald-50"
                 >
-                  <td className="px-4 py-3 font-medium">
+                  <td className="whitespace-nowrap px-4 py-3 font-medium">
                     {verification.accountNumber}
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="whitespace-nowrap px-4 py-3">
                     {verification.createdAt
                       ? new Date(verification.createdAt).toLocaleDateString(
                           i18n.language === "ar" ? "ar-EG" : "en-US"
                         )
                       : "-"}
                   </td>
-                  <td className="px-4 py-3">{verification.name}</td>
-                  <td className="px-4 py-3">{verification.phone}</td>
-                  <td className="px-4 py-3">{verification.type}</td>
-                  <td className="px-4 py-3">{verification.email}</td>
+                  <td className="whitespace-nowrap px-4 py-3">{verification.name}</td>
+                  <td className="whitespace-nowrap px-4 py-3">{verification.phone}</td>
+                  <td className="whitespace-nowrap px-4 py-3">{verification.type}</td>
+                  <td className="whitespace-nowrap px-4 py-3">{verification.email}</td>
                 </tr>
               ))
             )}
@@ -199,4 +206,3 @@ const VerificationsList = () => {
 };
 
 export default VerificationsList;
-

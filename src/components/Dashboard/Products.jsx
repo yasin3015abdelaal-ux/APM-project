@@ -244,23 +244,23 @@ const ProductsReview = () => {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                     {filteredProducts.length === 0 ? (
-                        <p className="text-center text-xl md:text-2xl font-bold min-h-96 flex items-center justify-center text-gray-500">
+                        <p className="col-span-full text-center text-xl md:text-2xl font-bold min-h-96 flex items-center justify-center text-gray-500">
                             {t('dashboard.products.noProducts')}
                         </p>
                     ) : (
                         filteredProducts.map((product) => (
                             <div
                                 key={product.id}
-                                className="flex rounded-lg border border-gray-200 gap-3 flex-col md:flex-row bg-white shadow-sm hover:shadow-md transition-shadow"
+                                className="flex flex-col rounded-lg border border-gray-200 bg-white shadow-sm hover:shadow-md transition-shadow overflow-hidden"
                             >
-                                <div className="border-b border-l-0 border-gray-200 p-2 md:border-l md:border-b-0 bg-gray-50">
+                                <div className="relative w-full h-48 bg-gray-50">
                                     {product.image ? (
                                         <img
                                             src={product.image}
                                             alt={isRTL ? product.name_ar : product.name_en}
-                                            className="w-full object-cover rounded md:w-40 md:h-40"
+                                            className="w-full h-full object-cover"
                                             onError={(e) => {
                                                 e.target.style.display = 'none';
                                                 e.target.nextElementSibling.style.display = 'block';
@@ -268,57 +268,50 @@ const ProductsReview = () => {
                                         />
                                     ) : null}
                                     <div 
-                                        className={`${product.image ? 'hidden' : 'block'} w-full md:w-40 md:h-40`}
+                                        className={`${product.image ? 'hidden' : 'block'} w-full h-full`}
                                         style={{ display: product.image ? 'none' : 'block' }}
                                     >
                                         <PlaceholderSVG />
                                     </div>
+                                    
+                                    <div className="absolute top-2 right-2">
+                                        {getStatusBadge(product.status)}
+                                    </div>
                                 </div>
 
                                 <div className="flex flex-col flex-1 p-3">
-                                    <div className="flex items-start justify-between mb-2 gap-2">
-                                        <h3 className="font-bold text-lg md:text-xl flex-1">
-                                            {isRTL ? product.name_ar : product.name_en}
-                                        </h3>
-                                        {getStatusBadge(product.status)}
-                                    </div>
+                                    <h3 className="font-bold text-base mb-2 line-clamp-2 min-h-[3rem]">
+                                        {isRTL ? product.name_ar : product.name_en}
+                                    </h3>
 
-                                    <div className="mb-1.5">
-                                        <p className="font-medium text-xs md:text-sm text-gray-700">
-                                            {t('dashboard.products.table.seller')}: <span className="text-main">{product.user?.name || 'N/A'}</span>
+                                    <div className="space-y-1.5 mb-3 text-xs">
+                                        <p className="text-gray-700">
+                                            <span className="font-medium">{t('dashboard.products.table.seller')}:</span> <span className="text-main">{product.user?.name || 'N/A'}</span>
                                         </p>
-                                    </div>
 
-                                    <div className="mb-1.5">
-                                        <p className="font-medium text-xs md:text-sm text-gray-700">
-                                            {t('dashboard.products.details.category')}: {isRTL ? product.category?.name_ar : product.category?.name_en}
+                                        <p className="text-gray-700">
+                                            <span className="font-medium">{t('dashboard.products.details.category')}:</span> {isRTL ? product.category?.name_ar : product.category?.name_en}
                                         </p>
-                                    </div>
 
-                                    {product.sub_category && (
-                                        <div className="mb-1.5">
-                                            <p className="font-medium text-xs md:text-sm text-gray-700">
-                                                {t('dashboard.products.details.subCategory')}: {isRTL ? product.sub_category?.name_ar : product.sub_category?.name_en}
+                                        {product.sub_category && (
+                                            <p className="text-gray-700">
+                                                <span className="font-medium">{t('dashboard.products.details.subCategory')}:</span> {isRTL ? product.sub_category?.name_ar : product.sub_category?.name_en}
                                             </p>
-                                        </div>
-                                    )}
+                                        )}
 
-                                    <div className="mb-2">
-                                        <p className="font-medium text-xs md:text-sm text-gray-700">
-                                            {t('dashboard.products.details.governorate')}: {isRTL ? product.governorate?.name_ar : product.governorate?.name_en}
+                                        <p className="text-gray-700">
+                                            <span className="font-medium">{t('dashboard.products.details.governorate')}:</span> {isRTL ? product.governorate?.name_ar : product.governorate?.name_en}
                                         </p>
                                     </div>
 
                                     {product.description && (
-                                        <div className="mb-2">
-                                            <p className="text-xs text-gray-600 line-clamp-2">
-                                                {isRTL ? product.description_ar : product.description_en}
-                                            </p>
-                                        </div>
+                                        <p className="text-xs text-gray-600 line-clamp-2 mb-3">
+                                            {isRTL ? product.description_ar : product.description_en}
+                                        </p>
                                     )}
 
-                                    <div className="flex items-center justify-between mt-auto pt-2 border-t border-gray-100 flex-col md:flex-row gap-2">
-                                        <h6 className="font-bold text-xl md:text-2xl text-main">
+                                    <div className="mt-auto pt-3 border-t border-gray-100">
+                                        <h6 className="font-bold text-lg text-main mb-2">
                                             {product.price} {product.country?.currency || (isRTL ? 'جنيه' : 'EGP')}
                                         </h6>
 
@@ -326,26 +319,26 @@ const ProductsReview = () => {
                                             <button
                                                 onClick={() => handleAcceptProduct(product.id)}
                                                 disabled={actionLoading === product.id || product.status === 'active'}
-                                                className={`p-2 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed ${
+                                                className={`flex-1 p-2 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed ${
                                                     product.status === 'active'
                                                     ? 'bg-green-400 text-white cursor-not-allowed'
                                                     : 'bg-green-600 hover:bg-green-700 text-white cursor-pointer'
                                                 }`}
                                                 title={t('dashboard.products.actions.accept')}
                                             >
-                                                <Check size={20} />
+                                                <Check size={20} className="mx-auto" />
                                             </button>
                                             <button
                                                 onClick={() => handleRejectProduct(product.id)}
                                                 disabled={actionLoading === product.id || product.status === 'rejected'}
-                                                className={`p-2 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed ${
+                                                className={`flex-1 p-2 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed ${
                                                     product.status === 'rejected'
                                                     ? 'bg-red-400 text-white cursor-not-allowed'
                                                     : 'bg-red-600 hover:bg-red-700 text-white cursor-pointer'
                                                 }`}
                                                 title={t('dashboard.products.actions.reject')}
                                             >
-                                                <X size={20} />
+                                                <X size={20} className="mx-auto" />
                                             </button>
                                         </div>
                                     </div>

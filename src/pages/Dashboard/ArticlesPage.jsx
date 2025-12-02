@@ -1,11 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { adminAPI } from "../../api";
 import Loader from "../../components/Ui/Loader/Loader";
+import { Editor } from "@tinymce/tinymce-react";
 
 const ArticlesPage = () => {
   const { t, i18n } = useTranslation();
   const isRTL = i18n.language === "ar";
+  const editorRef = useRef(null);
 
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -82,6 +84,10 @@ const ArticlesPage = () => {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
+  };
+
+  const handleEditorChange = (content, editor) => {
+    setFormData({ ...formData, content });
   };
 
   const resetForm = () => {
@@ -323,9 +329,10 @@ const ArticlesPage = () => {
                   <h3 className="text-lg font-semibold text-slate-800">
                     {article.title}
                   </h3>
-                  <p className="line-clamp-3 text-sm text-slate-600">
-                    {article.content}
-                  </p>
+                  <div 
+                    className="prose prose-sm max-w-none text-sm text-slate-600 line-clamp-3"
+                    dangerouslySetInnerHTML={{ __html: article.content }}
+                  />
                 </div>
 
                 {/* Edit Button */}
@@ -344,7 +351,7 @@ const ArticlesPage = () => {
       {/* Add Article Modal */}
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-          <div className="w-full max-w-2xl rounded-2xl border border-emerald-400 bg-white p-6 shadow-xl">
+          <div className="w-full max-w-4xl rounded-2xl border border-emerald-400 bg-white p-6 shadow-xl">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-xl font-semibold text-emerald-700">
                 {t("dashboard.articles.addArticle")}
@@ -409,14 +416,56 @@ const ArticlesPage = () => {
                 <label className="mb-1 block text-sm font-medium text-slate-700">
                   {t("dashboard.articles.articleContent")}
                 </label>
-                <textarea
-                  name="content"
-                  value={formData.content}
-                  onChange={handleInputChange}
-                  rows={6}
-                  className="w-full rounded-md border border-emerald-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
-                  placeholder={t("dashboard.articles.articleContentPlaceholder")}
-                />
+                <div className="border border-emerald-300 rounded-md overflow-hidden focus-within:border-emerald-500 focus-within:ring-1 focus-within:ring-emerald-500">
+                  <Editor
+                    apiKey={process.env.REACT_APP_TINYMCE_API_KEY || "no-api-key"} // يمكنك الحصول على API key مجاني من TinyMCE
+                    onInit={(evt, editor) => (editorRef.current = editor)}
+                    value={formData.content}
+                    onEditorChange={handleEditorChange}
+                    init={{
+                      height: 350,
+                      menubar: true,
+                      directionality: isRTL ? 'rtl' : 'ltr',
+                      language: isRTL ? 'ar' : 'en',
+                      plugins: [
+                        'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
+                        'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
+                        'insertdatetime', 'media', 'table', 'help', 'wordcount'
+                      ],
+                      toolbar: 'undo redo | blocks fontfamily fontsize | ' +
+                        'bold italic underline strikethrough forecolor backcolor | ' +
+                        'alignleft aligncenter alignright alignjustify | ' +
+                        'bullist numlist outdent indent | ' +
+                        'removeformat | link image media table | help',
+                      content_style: `
+                        body {
+                          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+                          font-size: 14px;
+                          line-height: 1.6;
+                          color: #334155;
+                        }
+                        ${isRTL ? `
+                          body { 
+                            direction: rtl; 
+                            text-align: right;
+                          }
+                          .tox-toolbar__group {
+                            flex-direction: row-reverse;
+                          }
+                        ` : ''}
+                      `,
+                      images_upload_url: '/api/upload', // يمكنك إضافة endpoint لرفع الصور
+                      automatic_uploads: false,
+                      file_picker_types: 'image',
+                      image_title: true,
+                      image_caption: true,
+                      image_advtab: true,
+                      branding: false,
+                      skin: 'oxide',
+                      content_css: 'default',
+                    }}
+                  />
+                </div>
               </div>
             </div>
 
@@ -435,7 +484,7 @@ const ArticlesPage = () => {
       {/* Edit Article Modal */}
       {showEditModal && selectedArticle && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-          <div className="w-full max-w-2xl rounded-2xl border border-emerald-400 bg-white p-6 shadow-xl">
+          <div className="w-full max-w-4xl rounded-2xl border border-emerald-400 bg-white p-6 shadow-xl">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-xl font-semibold text-emerald-700">
                 {t("dashboard.articles.editArticle")}
@@ -501,14 +550,56 @@ const ArticlesPage = () => {
                 <label className="mb-1 block text-sm font-medium text-slate-700">
                   {t("dashboard.articles.articleContent")}
                 </label>
-                <textarea
-                  name="content"
-                  value={formData.content}
-                  onChange={handleInputChange}
-                  rows={6}
-                  className="w-full rounded-md border border-emerald-300 px-3 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
-                  placeholder={t("dashboard.articles.articleContentPlaceholder")}
-                />
+                <div className="border border-emerald-300 rounded-md overflow-hidden focus-within:border-emerald-500 focus-within:ring-1 focus-within:ring-emerald-500">
+                  <Editor
+                    apiKey={process.env.REACT_APP_TINYMCE_API_KEY || "no-api-key"}
+                    onInit={(evt, editor) => (editorRef.current = editor)}
+                    value={formData.content}
+                    onEditorChange={handleEditorChange}
+                    init={{
+                      height: 350,
+                      menubar: true,
+                      directionality: isRTL ? 'rtl' : 'ltr',
+                      language: isRTL ? 'ar' : 'en',
+                      plugins: [
+                        'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
+                        'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
+                        'insertdatetime', 'media', 'table', 'help', 'wordcount'
+                      ],
+                      toolbar: 'undo redo | blocks fontfamily fontsize | ' +
+                        'bold italic underline strikethrough forecolor backcolor | ' +
+                        'alignleft aligncenter alignright alignjustify | ' +
+                        'bullist numlist outdent indent | ' +
+                        'removeformat | link image media table | help',
+                      content_style: `
+                        body {
+                          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+                          font-size: 14px;
+                          line-height: 1.6;
+                          color: #334155;
+                        }
+                        ${isRTL ? `
+                          body { 
+                            direction: rtl; 
+                            text-align: right;
+                          }
+                          .tox-toolbar__group {
+                            flex-direction: row-reverse;
+                          }
+                        ` : ''}
+                      `,
+                      images_upload_url: '/api/upload',
+                      automatic_uploads: false,
+                      file_picker_types: 'image',
+                      image_title: true,
+                      image_caption: true,
+                      image_advtab: true,
+                      branding: false,
+                      skin: 'oxide',
+                      content_css: 'default',
+                    }}
+                  />
+                </div>
               </div>
             </div>
 
@@ -565,4 +656,3 @@ const ArticlesPage = () => {
 };
 
 export default ArticlesPage;
-

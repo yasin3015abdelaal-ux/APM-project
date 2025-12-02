@@ -27,6 +27,7 @@ import TodayPrices from "../pages/Dashboard/TodayPrices";
 import AdvertisementsPage from "../pages/Dashboard/AdvertisementsPage";
 import PackagesPage from "../pages/Dashboard/PackagesPage";
 import ArticlesPage from "../pages/Dashboard/ArticlesPage";
+import ReportsPage from "../pages/Dashboard/ReportsPage";
 import ChatPage from "../pages/Dashboard/ChatPage";
 import VerifyAccountPage from "../pages/Profile/VerifyAccount";
 import EditProfilePage from "../pages/Profile/EditProfilePage";
@@ -44,8 +45,8 @@ import AuctionPage from "../pages/Auctions/AuctionPage";
 import AuctionsManagement from "../components/Dashboard/Auctions/AuctionsManagement";
 // import AuctionsList from "../pages/Auctions/AuctionsList";
 import PreviousAuctions from "../pages/Auctions/PreviousAuctions";
-import ContactUs from "../pages/Contact/ContactUs";
 import Prices from "../pages/Prices/Prices";
+import ContactUs from "../pages/Contact/ContactUs";
 
 export const routers = createBrowserRouter([
   {
@@ -83,6 +84,22 @@ export const routers = createBrowserRouter([
             ),
           },
           {
+            path: "contact",
+            element: (
+              <ProtectedRoute>
+                <ContactUs />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "prices",
+            element: (
+              <ProtectedRoute>
+                <Prices />
+              </ProtectedRoute>
+            ),
+          },
+          {
             path: "ads/:id/edit",
             element: (
               <ProtectedRoute>
@@ -103,22 +120,6 @@ export const routers = createBrowserRouter([
             element: (
               <ProtectedRoute>
                 <Notifications />
-              </ProtectedRoute>
-            ),
-          },
-          {
-            path: "contact",
-            element: (
-              <ProtectedRoute>
-                <ContactUs />
-              </ProtectedRoute>
-            ),
-          },
-          {
-            path: "prices",
-            element: (
-              <ProtectedRoute>
-                <Prices />
               </ProtectedRoute>
             ),
           },
@@ -246,6 +247,7 @@ export const routers = createBrowserRouter([
           { path: "auctions/:id", element: <AuctionDetails /> },
           { path: "ads", element: <AdvertisementsPage /> },
           { path: "packages", element: <PackagesPage /> },
+          { path: "reports", element: <ReportsPage /> },
           { path: "articles", element: <ArticlesPage /> },
           { path: "messages", element: <ChatPage /> },
           { path: "verification", element: <VerificationsList /> },

@@ -2,6 +2,110 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { adminAPI } from "../../api";
 import Loader from "../../components/Ui/Loader/Loader";
+import { useEditor, EditorContent } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+import { TextStyle } from '@tiptap/extension-text-style';
+import { Color } from '@tiptap/extension-color';
+
+const MenuBar = ({ editor }) => {
+  if (!editor) return null;
+
+  return (
+    <div className="flex flex-wrap gap-1 p-2 border-b border-emerald-200 bg-emerald-50/30">
+      <button
+        type="button"
+        onClick={() => editor.chain().focus().toggleBold().run()}
+        className={`px-3 py-1 rounded text-sm font-semibold transition ${
+          editor.isActive('bold') ? 'bg-emerald-500 text-white' : 'bg-white text-slate-700 hover:bg-emerald-100'
+        }`}
+      >
+        B
+      </button>
+      <button
+        type="button"
+        onClick={() => editor.chain().focus().toggleItalic().run()}
+        className={`px-3 py-1 rounded text-sm italic transition ${
+          editor.isActive('italic') ? 'bg-emerald-500 text-white' : 'bg-white text-slate-700 hover:bg-emerald-100'
+        }`}
+      >
+        I
+      </button>
+      <button
+        type="button"
+        onClick={() => editor.chain().focus().toggleStrike().run()}
+        className={`px-3 py-1 rounded text-sm line-through transition ${
+          editor.isActive('strike') ? 'bg-emerald-500 text-white' : 'bg-white text-slate-700 hover:bg-emerald-100'
+        }`}
+      >
+        S
+      </button>
+      <div className="w-px h-6 bg-emerald-300 mx-1" />
+      <button
+        type="button"
+        onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+        className={`px-3 py-1 rounded text-sm font-bold transition ${
+          editor.isActive('heading', { level: 1 }) ? 'bg-emerald-500 text-white' : 'bg-white text-slate-700 hover:bg-emerald-100'
+        }`}
+      >
+        H1
+      </button>
+      <button
+        type="button"
+        onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+        className={`px-3 py-1 rounded text-sm font-bold transition ${
+          editor.isActive('heading', { level: 2 }) ? 'bg-emerald-500 text-white' : 'bg-white text-slate-700 hover:bg-emerald-100'
+        }`}
+      >
+        H2
+      </button>
+      <button
+        type="button"
+        onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+        className={`px-3 py-1 rounded text-sm font-bold transition ${
+          editor.isActive('heading', { level: 3 }) ? 'bg-emerald-500 text-white' : 'bg-white text-slate-700 hover:bg-emerald-100'
+        }`}
+      >
+        H3
+      </button>
+      <div className="w-px h-6 bg-emerald-300 mx-1" />
+      <button
+        type="button"
+        onClick={() => editor.chain().focus().toggleBulletList().run()}
+        className={`px-3 py-1 rounded text-sm transition ${
+          editor.isActive('bulletList') ? 'bg-emerald-500 text-white' : 'bg-white text-slate-700 hover:bg-emerald-100'
+        }`}
+      >
+        • List
+      </button>
+      <button
+        type="button"
+        onClick={() => editor.chain().focus().toggleOrderedList().run()}
+        className={`px-3 py-1 rounded text-sm transition ${
+          editor.isActive('orderedList') ? 'bg-emerald-500 text-white' : 'bg-white text-slate-700 hover:bg-emerald-100'
+        }`}
+      >
+        1. List
+      </button>
+      <div className="w-px h-6 bg-emerald-300 mx-1" />
+      <button
+        type="button"
+        onClick={() => editor.chain().focus().undo().run()}
+        disabled={!editor.can().undo()}
+        className="px-3 py-1 rounded text-sm bg-white text-slate-700 hover:bg-emerald-100 disabled:opacity-50 disabled:cursor-not-allowed transition"
+      >
+        ↶
+      </button>
+      <button
+        type="button"
+        onClick={() => editor.chain().focus().redo().run()}
+        disabled={!editor.can().redo()}
+        className="px-3 py-1 rounded text-sm bg-white text-slate-700 hover:bg-emerald-100 disabled:opacity-50 disabled:cursor-not-allowed transition"
+      >
+        ↷
+      </button>
+    </div>
+  );
+};
 
 const PackagesPage = () => {
   const { t, i18n } = useTranslation();
@@ -15,7 +119,7 @@ const PackagesPage = () => {
 
   const [toast, setToast] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
-  const [modalMode, setModalMode] = useState("add"); // add | edit
+  const [modalMode, setModalMode] = useState("add");
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [formData, setFormData] = useState({
     id: null,
@@ -24,6 +128,24 @@ const PackagesPage = () => {
     price: "",
     package_category_id: "",
   });
+
+  const editor = useEditor({
+    extensions: [
+      StarterKit,
+      TextStyle,
+      Color,
+    ],
+    content: formData.description,
+    onUpdate: ({ editor }) => {
+      setFormData(prev => ({ ...prev, description: editor.getHTML() }));
+    },
+  });
+
+  useEffect(() => {
+    if (editor && formData.description !== editor.getHTML()) {
+      editor.commands.setContent(formData.description || '');
+    }
+  }, [formData.description, editor]);
 
   const showToast = (message, type = "success") => {
     setToast({ message, type });
@@ -257,7 +379,10 @@ const PackagesPage = () => {
                   </svg>
                 </button>
               </div>
-              <p className="mb-4 text-sm text-slate-600">{pkg.description}</p>
+              <div 
+                className="mb-4 text-sm text-slate-600 prose prose-sm max-w-none"
+                dangerouslySetInnerHTML={{ __html: pkg.description }}
+              />
               <p className="mb-4 text-xl font-bold text-emerald-600">
                 {pkg.price} {t("dashboard.packages.currency")}
               </p>
@@ -274,11 +399,8 @@ const PackagesPage = () => {
 
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-          <form
-            onSubmit={handleSubmit}
-            className="w-full max-w-2xl space-y-4 rounded-2xl border border-emerald-200 bg-white p-6 shadow-xl"
-          >
-            <div className="flex items-center justify-between">
+          <div className="w-full max-w-2xl space-y-4 rounded-2xl border border-emerald-200 bg-white p-6 shadow-xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between sticky top-0 bg-white pb-3 border-b border-emerald-100 z-10">
               <h2 className="text-xl font-semibold text-emerald-700">
                 {modalMode === "edit"
                   ? t("dashboard.packages.actions.edit")
@@ -305,78 +427,81 @@ const PackagesPage = () => {
               </button>
             </div>
 
-            <label className="block text-sm font-medium text-slate-700">
-              {t("dashboard.packages.fields.category")}
-              <select
-                name="package_category_id"
-                value={formData.package_category_id}
-                onChange={handleInput}
-                className="mt-2 w-full rounded-md border border-emerald-300 px-3 py-2 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
-              >
-                <option value="">{t("dashboard.packages.fields.choose")}</option>
-                {categories.map((cat) => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat.name}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <div className="space-y-4">
+              <label className="block text-sm font-medium text-slate-700">
+                {t("dashboard.packages.fields.category")}
+                <select
+                  name="package_category_id"
+                  value={formData.package_category_id}
+                  onChange={handleInput}
+                  className="mt-2 w-full rounded-md border border-emerald-300 px-3 py-2 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                >
+                  <option value="">{t("dashboard.packages.fields.choose")}</option>
+                  {categories.map((cat) => (
+                    <option key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
 
-            <label className="block text-sm font-medium text-slate-700">
-              {t("dashboard.packages.fields.name")}
-              <input
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleInput}
-                className="mt-2 w-full rounded-md border border-emerald-300 px-3 py-2 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
-                placeholder={t("dashboard.packages.fields.namePlaceholder")}
-              />
-            </label>
+              <label className="block text-sm font-medium text-slate-700">
+                {t("dashboard.packages.fields.name")}
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInput}
+                  className="mt-2 w-full rounded-md border border-emerald-300 px-3 py-2 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                  placeholder={t("dashboard.packages.fields.namePlaceholder")}
+                />
+              </label>
 
-            <label className="block text-sm font-medium text-slate-700">
-              {t("dashboard.packages.fields.description")}
-              <textarea
-                name="description"
-                value={formData.description}
-                onChange={handleInput}
-                rows={4}
-                className="mt-2 w-full rounded-md border border-emerald-300 px-3 py-2 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
-                placeholder={t("dashboard.packages.fields.descriptionPlaceholder")}
-              />
-            </label>
+              <label className="block text-sm font-medium text-slate-700">
+                {t("dashboard.packages.fields.description")}
+                <div className="mt-2 border border-emerald-300 rounded-md overflow-hidden bg-white">
+                  <MenuBar editor={editor} />
+                  <EditorContent 
+                    editor={editor} 
+                    className="prose prose-sm max-w-none p-3 min-h-[200px] focus:outline-none"
+                    style={{ direction: isRTL ? 'rtl' : 'ltr' }}
+                  />
+                </div>
+              </label>
 
-            <label className="block text-sm font-medium text-slate-700">
-              {t("dashboard.packages.fields.price")}
-              <input
-                type="number"
-                step="0.01"
-                name="price"
-                value={formData.price}
-                onChange={handleInput}
-                className="mt-2 w-full rounded-md border border-emerald-300 px-3 py-2 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
-                placeholder="0.00"
-              />
-            </label>
+              <label className="block text-sm font-medium text-slate-700">
+                {t("dashboard.packages.fields.price")}
+                <input
+                  type="number"
+                  step="0.01"
+                  name="price"
+                  value={formData.price}
+                  onChange={handleInput}
+                  className="mt-2 w-full rounded-md border border-emerald-300 px-3 py-2 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                  placeholder="0.00"
+                />
+              </label>
 
-            <div className="flex justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => setModalOpen(false)}
-                className="rounded-lg border border-slate-300 px-5 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50"
-              >
-                {t("dashboard.packages.actions.cancel")}
-              </button>
-              <button
-                type="submit"
-                className="rounded-lg bg-emerald-500 px-6 py-2 text-sm font-semibold text-white hover:bg-emerald-600"
-              >
-                {modalMode === "edit"
-                  ? t("dashboard.packages.actions.update")
-                  : t("dashboard.packages.actions.save")}
-              </button>
+              <div className="flex justify-end gap-3 pt-4 sticky bottom-0 bg-white border-t border-emerald-100">
+                <button
+                  type="button"
+                  onClick={() => setModalOpen(false)}
+                  className="rounded-lg border border-slate-300 px-5 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50"
+                >
+                  {t("dashboard.packages.actions.cancel")}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSubmit}
+                  className="rounded-lg bg-emerald-500 px-6 py-2 text-sm font-semibold text-white hover:bg-emerald-600"
+                >
+                  {modalMode === "edit"
+                    ? t("dashboard.packages.actions.update")
+                    : t("dashboard.packages.actions.save")}
+                </button>
+              </div>
             </div>
-          </form>
+          </div>
         </div>
       )}
 
@@ -411,4 +536,3 @@ const PackagesPage = () => {
 };
 
 export default PackagesPage;
-
