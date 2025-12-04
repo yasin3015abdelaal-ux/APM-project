@@ -9,6 +9,7 @@ import Login from "../components/Login/Login";
 import ProductsPage from "../components/Products/ProductsPage";
 import ProductDetails from "../components/Products/ProductDetails";
 import DashboardHome from "../pages/Dashboard/Home";
+import SettingsPage from "../pages/Dashboard/SettingsPage";
 import { ProtectedRoute, PublicRoute } from "../RouteGuards/RouteGuards";
 import { ProtectedAdminRoute } from "../contexts/AdminContext";
 import Additions from "../components/Dashboard/Additions/Additions";
@@ -237,7 +238,8 @@ export const routers = createBrowserRouter([
           </ProtectedAdminRoute>
         ),
         children: [
-          { index: true, element: <DashboardHome /> },
+          { index: true, element: <SettingsPage /> },
+          { path: "home", element: <DashboardHome /> },
           { path: "additions", element: <Additions /> },
           { path: "additions/category/:categoryId", element: <Category /> },
           // { path: "products", element: <Products /> },

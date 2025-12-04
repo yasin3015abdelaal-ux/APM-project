@@ -15,6 +15,7 @@ const ArticlesPage = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
   const [selectedArticle, setSelectedArticle] = useState(null);
   const [toast, setToast] = useState(null);
   const [formData, setFormData] = useState({
@@ -144,6 +145,7 @@ const ArticlesPage = () => {
         imagePreview: articleData.image_url || null,
       });
       setShowEditModal(true);
+      setShowViewModal(false);
     } catch (err) {
       console.error("Error fetching article:", err);
       showToast(t("dashboard.articles.fetchError"), "error");
@@ -202,6 +204,18 @@ const ArticlesPage = () => {
       console.error("Error deleting article:", err);
       showToast(err.response?.data?.message || t("dashboard.articles.deleteError"), "error");
     }
+  };
+
+  const handleViewArticle = (article) => {
+    setSelectedArticle(article);
+    setShowViewModal(true);
+  };
+
+  // Helper function to strip HTML tags for preview
+  const stripHtml = (html) => {
+    const tmp = document.createElement("DIV");
+    tmp.innerHTML = html;
+    return tmp.textContent || tmp.innerText || "";
   };
 
   if (loading && articles.length === 0) {
@@ -329,16 +343,23 @@ const ArticlesPage = () => {
                   <h3 className="text-lg font-semibold text-slate-800">
                     {article.title}
                   </h3>
-                  <div 
-                    className="prose prose-sm max-w-none text-sm text-slate-600 line-clamp-3"
-                    dangerouslySetInnerHTML={{ __html: article.content }}
-                  />
+                  <p className="text-sm text-slate-600 line-clamp-2">
+                    {stripHtml(article.content)}
+                  </p>
                 </div>
+
+                {/* View Button */}
+                <button
+                  onClick={() => handleViewArticle(article)}
+                  className="mt-4 w-full rounded-lg bg-emerald-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-600"
+                >
+                  {t("dashboard.articles.viewArticle") || "عرض المقالة"}
+                </button>
 
                 {/* Edit Button */}
                 <button
                   onClick={() => handleEditClick(article)}
-                  className="mt-4 w-full rounded-lg bg-emerald-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-600"
+                  className="mt-2 w-full rounded-lg border border-emerald-500 px-4 py-2 text-sm font-semibold text-emerald-500 transition hover:bg-emerald-50"
                 >
                   {t("dashboard.articles.editArticle")}
                 </button>
@@ -351,8 +372,8 @@ const ArticlesPage = () => {
       {/* Add Article Modal */}
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-          <div className="w-full max-w-4xl rounded-2xl border border-emerald-400 bg-white p-6 shadow-xl">
-            <div className="mb-4 flex items-center justify-between">
+          <div className="w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-2xl border border-emerald-400 bg-white p-6 shadow-xl">
+            <div className="mb-4 flex items-center justify-between sticky top-0 bg-white pb-2 border-b border-emerald-200 z-10">
               <h2 className="text-xl font-semibold text-emerald-700">
                 {t("dashboard.articles.addArticle")}
               </h2>
@@ -418,7 +439,7 @@ const ArticlesPage = () => {
                 </label>
                 <div className="border border-emerald-300 rounded-md overflow-hidden focus-within:border-emerald-500 focus-within:ring-1 focus-within:ring-emerald-500">
                   <Editor
-                    apiKey={process.env.REACT_APP_TINYMCE_API_KEY || "no-api-key"} // يمكنك الحصول على API key مجاني من TinyMCE
+                    apiKey={process.env.REACT_APP_TINYMCE_API_KEY || "no-api-key"}
                     onInit={(evt, editor) => (editorRef.current = editor)}
                     value={formData.content}
                     onEditorChange={handleEditorChange}
@@ -454,7 +475,7 @@ const ArticlesPage = () => {
                           }
                         ` : ''}
                       `,
-                      images_upload_url: '/api/upload', // يمكنك إضافة endpoint لرفع الصور
+                      images_upload_url: '/api/upload',
                       automatic_uploads: false,
                       file_picker_types: 'image',
                       image_title: true,
@@ -484,8 +505,8 @@ const ArticlesPage = () => {
       {/* Edit Article Modal */}
       {showEditModal && selectedArticle && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-          <div className="w-full max-w-4xl rounded-2xl border border-emerald-400 bg-white p-6 shadow-xl">
-            <div className="mb-4 flex items-center justify-between">
+          <div className="w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-2xl border border-emerald-400 bg-white p-6 shadow-xl">
+            <div className="mb-4 flex items-center justify-between sticky top-0 bg-white pb-2 border-b border-emerald-200 z-10">
               <h2 className="text-xl font-semibold text-emerald-700">
                 {t("dashboard.articles.editArticle")}
               </h2>
@@ -646,6 +667,82 @@ const ArticlesPage = () => {
                 className="rounded-lg bg-red-500 px-6 py-2 text-sm font-semibold text-white transition hover:bg-red-600"
               >
                 {t("dashboard.articles.delete")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* View Article Modal */}
+      {showViewModal && selectedArticle && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div className="w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-2xl border border-emerald-400 bg-white shadow-xl">
+            {/* Header with sticky position */}
+            <div className="sticky top-0 bg-white z-10 p-6 border-b border-emerald-200 flex items-center justify-between">
+              <h2 className="text-2xl font-semibold text-emerald-700">
+                {selectedArticle.title}
+              </h2>
+              <button
+                onClick={() => {
+                  setShowViewModal(false);
+                  setSelectedArticle(null);
+                }}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-6 space-y-4">
+              {/* Article Image */}
+              {selectedArticle.image_url && (
+                <div className="w-full h-64 overflow-hidden rounded-lg">
+                  <img
+                    src={selectedArticle.image_url}
+                    alt={selectedArticle.title}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
+
+              {/* Article Content */}
+              <div 
+                className="prose prose-slate max-w-none text-slate-700"
+                style={{
+                  fontSize: '16px',
+                  lineHeight: '1.8'
+                }}
+                dangerouslySetInnerHTML={{ __html: selectedArticle.content }}
+              />
+            </div>
+
+            {/* Footer with action buttons */}
+            <div className="sticky bottom-0 bg-white z-10 p-6 border-t border-emerald-200 flex justify-center gap-3">
+              <button
+                onClick={() => {
+                  setShowViewModal(false);
+                  handleEditClick(selectedArticle);
+                }}
+                className="rounded-lg bg-emerald-500 px-6 py-2 text-sm font-semibold text-white transition hover:bg-emerald-600"
+              >
+                {t("dashboard.articles.editArticle")}
+              </button>
+              <button
+                onClick={() => {
+                  setShowViewModal(false);
+                  setSelectedArticle(null);
+                }}
+                className="rounded-lg border border-slate-300 bg-white px-6 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+              >
+                {t("dashboard.articles.close") || "إغلاق"}
               </button>
             </div>
           </div>
