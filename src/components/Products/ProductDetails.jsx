@@ -6,6 +6,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { userAPI, chatAPI } from '../../api';
 import PlaceholderSVG from '../../assets/PlaceholderSVG';
 import Loader from '../../components/Ui/Loader/Loader';
+import SellerReportModal from '../SellerRating/SellerReport';
 
 const ProductDetails = () => {
     const { id } = useParams();
@@ -22,6 +23,7 @@ const ProductDetails = () => {
     const [showOptions, setShowOptions] = useState(false);
     const [showShareMenu, setShowShareMenu] = useState(false);
     const [isContacting, setIsContacting] = useState(false);
+    const [showReportModal, setShowReportModal] = useState(false);
     
     const optionsRef = useRef(null);
     const shareRef = useRef(null);
@@ -181,13 +183,7 @@ const ProductDetails = () => {
 
     const handleReportAd = () => {
         setShowOptions(false);
-        navigate('/contact', { 
-            state: { 
-                selectedType: 'complaint',
-                productId: id,
-                productName: isRTL ? product?.name_ar : product?.name_en
-            } 
-        });
+        setShowReportModal(true);
     };
 
     const handleChat = async (e) => {
@@ -465,7 +461,6 @@ const ProductDetails = () => {
         return isRTL ? 'جنيه' : 'EGP';
     };
 
-    // Get seller data
     const seller = product?.user || {};
     const sellerName = isRTL ? (seller.name_ar || seller.name) : (seller.name || seller.name_ar);
     const sellerRating = seller.rating || 0;
@@ -473,6 +468,15 @@ const ProductDetails = () => {
 
     return (
         <div dir={isRTL ? 'rtl' : 'ltr'}>
+            {/* Report Modal */}
+            <SellerReportModal
+                isOpen={showReportModal}
+                onClose={() => setShowReportModal(false)}
+                sellerId={product?.user?.id || product?.user_id}
+                sellerName={sellerName}
+                productId={id}
+            />
+
             {toast && (
                 <div className={`fixed top-3 ${isRTL ? "left-3" : "right-3"} z-50 animate-slide-in max-w-[90%]`}>
                     <div className={`px-3 py-2 rounded-lg shadow-lg flex items-center gap-2 text-xs ${toast.type === "success" ? "bg-main text-white" : "bg-red-500 text-white"}`}>
@@ -651,13 +655,11 @@ const ProductDetails = () => {
                             )}
                         </div>
 
-                        {/* Seller Info Section */}
                         <div 
                             onClick={handleSellerClick}
                             className="bg-white rounded-lg p-3 border border-gray-200 hover:border-main transition cursor-pointer"
                         >
                             <div className="flex items-center gap-3">
-                                {/* Seller Avatar */}
                                 <div className="flex-shrink-0">
                                     {sellerAvatar ? (
                                         <img
@@ -677,7 +679,6 @@ const ProductDetails = () => {
                                     </div>
                                 </div>
 
-                                {/* Seller Info */}
                                 <div className="flex-1 min-w-0">
                                     <h3 className="text-base font-bold text-gray-900 truncate mb-1">
                                         {sellerName || (isRTL ? 'البائع' : 'Seller')}
@@ -690,7 +691,6 @@ const ProductDetails = () => {
                                     </div>
                                 </div>
 
-                                {/* Contact Buttons */}
                                 <div className="flex sm:hidden items-center gap-2">
                                     <button
                                         onClick={(e) => {

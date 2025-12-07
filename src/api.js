@@ -225,7 +225,6 @@ export const auctionAPI = {
             ['auction_products', 'auctions']
         );
         
-        // مسح الكاش الخاص بالـ auction ده بالتحديد
         invalidateCacheById('auction_products', auctionId);
         invalidateCacheById('my_auction_products', auctionId);
         
@@ -280,14 +279,6 @@ export const reviewAPI = {
         return response;
     },
     
-    updateReview: async (reviewId, data) => {
-        const response = await withCacheInvalidation(
-            () => userAPI.put(`/seller-reviews/${reviewId}`, data),
-            ['reviews']
-        );
-        return response;
-    },
-    
     deleteReview: async (reviewId) => {
         const response = await withCacheInvalidation(
             () => userAPI.delete(`/seller-reviews/${reviewId}`),
@@ -295,9 +286,19 @@ export const reviewAPI = {
         );
         return response;
     },
+};
+
+// ====== Report APIs ======
+export const reportAPI = {
+    getReportReasons: () => userAPI.get('/report-reasons'),
     
-    getMyReview: (sellerId) =>
-        userAPI.get(`/seller-reviews/my-review/${sellerId}`),
+    createSellerReport: async (data) => {
+        const response = await withCacheInvalidation(
+            () => userAPI.post('/seller-reports', data),
+            ['reports']
+        );
+        return response;
+    },
 };
 
 // ====== Articles APIs ======
@@ -320,7 +321,6 @@ export const articlesAPI = {
             ['articles']
         );
         
-        // مسح الكاش الخاص بالمقال ده
         invalidateCacheById('article', articleId);
         
         return response;
