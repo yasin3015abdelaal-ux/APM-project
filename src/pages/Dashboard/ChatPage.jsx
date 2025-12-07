@@ -228,7 +228,7 @@ const ChatPage = () => {
       setConversationsLoading(true);
       setConversationsError(null);
       const response = await adminChatAPI.get("/conversations", {
-        params: { user_id: "", type: "", page: 1 },
+        params: { user_id: null, type: null, page: 1 },
       });
       const list = parseArray(response.data).map((conv) => ({
         id: conv.id,

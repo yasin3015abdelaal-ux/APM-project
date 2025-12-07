@@ -22,14 +22,9 @@ const UpdateAccount = () => {
         setTimeout(() => setToast(null), 4000);
     };
 
+    // Always fetch fresh data from API
     useEffect(() => {
-        const storedUser = sessionStorage.getItem('selectedUser');
-        if (storedUser) {
-            setUserData(JSON.parse(storedUser));
-            setLoading(false);
-        } else {
-            fetchUserData();
-        }
+        fetchUserData();
     }, [userId]);
 
     const fetchUserData = async () => {
@@ -41,8 +36,6 @@ const UpdateAccount = () => {
             const data = response.data?.data || response.data;
 
             setUserData(data);
-            // Save to sessionStorage
-            sessionStorage.setItem('selectedUser', JSON.stringify(data));
         } catch (err) {
             console.error('Error fetching user:', err);
             setError(err.response?.data?.message || err.message || t('dashboard.accounts.accountDetails.errorFetching'));
@@ -51,13 +44,12 @@ const UpdateAccount = () => {
         }
     };
 
-const handleToggleStatus = async () => {
+    const handleToggleStatus = async () => {
         setShowVerifyModal(false);
         try {
             const currentVerified = userData.verified_account === 1;
             const newStatus = currentVerified ? 0 : 1;
 
-            // Send the correct API request with body
             await adminAPI.put(`/users/${userId}/update-verification-status`, {
                 verified_account: newStatus
             });
@@ -66,15 +58,13 @@ const handleToggleStatus = async () => {
                 ? t('dashboard.accounts.accountDetails.accountUnverified')
                 : t('dashboard.accounts.accountDetails.accountVerified');
 
-            // Update local state and sessionStorage
-            const updatedUser = { ...userData, verified_account: newStatus };
-            setUserData(updatedUser);
-            sessionStorage.setItem('selectedUser', JSON.stringify(updatedUser));
+            showToast(message, 'success');
+
+            // Fetch fresh data after update
+            fetchUserData();
 
             // Trigger update in Accounts list
             window.dispatchEvent(new Event('userDataUpdated'));
-
-            showToast(message, 'success');
 
         } catch (err) {
             console.error('Error toggling account status:', err);
@@ -82,11 +72,11 @@ const handleToggleStatus = async () => {
             showToast(errorMsg, 'error');
         }
     };
+
     const handleDeleteAccount = async () => {
         setShowDeleteModal(false);
         try {
             await adminAPI.delete(`/users/${userId}`);
-            sessionStorage.removeItem('selectedUser');
 
             // Trigger update in Accounts list
             window.dispatchEvent(new Event('userDataUpdated'));
@@ -103,7 +93,6 @@ const handleToggleStatus = async () => {
             showToast(errorMsg, 'error');
         }
     };
-
 
     if (loading) {
         return <Loader />;
@@ -317,14 +306,14 @@ const handleToggleStatus = async () => {
                     </div>
 
                     {/* Services Count */}
-                    <div>
+                    {/* <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1.5 text-right">
                             {t('dashboard.accounts.accountDetails.servicesCount')}
                         </label>
                         <div className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-700 text-sm text-center font-medium">
                             {userData.services_count || 0}
                         </div>
-                    </div>
+                    </div> */}
                 </div>
 
                 {/* Action Buttons */}
