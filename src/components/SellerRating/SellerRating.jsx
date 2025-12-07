@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { X } from "lucide-react";
-import { reviewAPI } from "../../api";
+import { userAPI } from "../../api";
 
 const SellerRatingModal = ({ isOpen, onClose, sellerId, sellerName }) => {
     const { t, i18n } = useTranslation();
@@ -9,46 +8,27 @@ const SellerRatingModal = ({ isOpen, onClose, sellerId, sellerName }) => {
 
     const [honestRating, setHonestRating] = useState(0);
     const [easyToDealRating, setEasyToDealRating] = useState(0);
+    const [productQualityRating, setProductQualityRating] = useState(0);
     const [comment, setComment] = useState("");
+    
     const [hoveredHonestStar, setHoveredHonestStar] = useState(0);
+    const [hoveredEasyStar, setHoveredEasyStar] = useState(0);
+    const [hoveredQualityStar, setHoveredQualityStar] = useState(0);
+    
     const [loading, setLoading] = useState(false);
-    const [checkingExisting, setCheckingExisting] = useState(true);
-    const [existingReviewId, setExistingReviewId] = useState(null);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState(false);
-
-    useEffect(() => {
-        if (isOpen && sellerId) {
-            checkExistingReview();
-        }
-    }, [isOpen, sellerId]);
-
-    const checkExistingReview = async () => {
-        try {
-            setCheckingExisting(true);
-            const response = await reviewAPI.getMyReview(sellerId);
-            
-            if (response.data?.data) {
-                const review = response.data.data;
-                setExistingReviewId(review.id);
-                setHonestRating(review.honest_rating);
-                setEasyToDealRating(review.easy_to_deal_rating);
-                setComment(review.comment || "");
-            }
-        } catch (error) {
-            setExistingReviewId(null);
-        } finally {
-            setCheckingExisting(false);
-        }
-    };
 
     const resetForm = () => {
         setHonestRating(0);
         setEasyToDealRating(0);
+        setProductQualityRating(0);
         setComment("");
         setError("");
         setSuccess(false);
-        setExistingReviewId(null);
+        setHoveredHonestStar(0);
+        setHoveredEasyStar(0);
+        setHoveredQualityStar(0);
     };
 
     const handleClose = () => {
@@ -60,8 +40,8 @@ const SellerRatingModal = ({ isOpen, onClose, sellerId, sellerName }) => {
         e.preventDefault();
         setError("");
 
-        if (honestRating === 0 || easyToDealRating === 0) {
-            setError(isRTL ? "من فضلك اختر التقييمين" : "Please select both ratings");
+        if (honestRating === 0 || easyToDealRating === 0 || productQualityRating === 0) {
+            setError(isRTL ? "من فضلك اختر جميع التقييمات" : "Please select all ratings");
             return;
         }
 
@@ -73,21 +53,19 @@ const SellerRatingModal = ({ isOpen, onClose, sellerId, sellerName }) => {
         try {
             setLoading(true);
             const data = {
-                honest_rating: honestRating,
-                easy_to_deal_rating: easyToDealRating,
+                seller_id: sellerId,
+                rating_honest: honestRating,
+                rating_easy_to_deal_with: easyToDealRating,
+                rating_product_quality: productQualityRating,
                 ...(comment.trim() && { comment: comment.trim() })
             };
 
-            if (existingReviewId) {
-                await reviewAPI.updateReview(existingReviewId, data);
-            } else {
-                await reviewAPI.createReview(sellerId, data);
-            }
+            await userAPI.post('/seller-reviews', data);
 
             setSuccess(true);
             setTimeout(() => {
                 handleClose();
-            }, 1500);
+            }, 2000);
 
         } catch (error) {
             console.error("Error submitting review:", error);
@@ -118,7 +96,7 @@ const SellerRatingModal = ({ isOpen, onClose, sellerId, sellerName }) => {
 
         return (
             <div 
-                className="flex gap-2 justify-center"
+                className="flex gap-1.5 justify-center"
                 onMouseLeave={() => !disabled && setHoveredStar(0)}
             >
                 {[1, 2, 3, 4, 5].map((star) => {
@@ -133,7 +111,6 @@ const SellerRatingModal = ({ isOpen, onClose, sellerId, sellerName }) => {
                                         type="button"
                                         onClick={() => handleStarClick(star, true)}
                                         onMouseEnter={() => handleStarHover(star, true)}
-                                        onMouseLeave={() => !disabled && setHoveredStar(0)}
                                         className="absolute inset-0 w-1/2 z-10 cursor-pointer focus:outline-none"
                                         style={{ clipPath: 'polygon(0 0, 50% 0, 50% 100%, 0 100%)' }}
                                         disabled={disabled}
@@ -142,35 +119,33 @@ const SellerRatingModal = ({ isOpen, onClose, sellerId, sellerName }) => {
                                         type="button"
                                         onClick={() => handleStarClick(star, false)}
                                         onMouseEnter={() => handleStarHover(star, false)}
-                                        onMouseLeave={() => !disabled && setHoveredStar(0)}
                                         className="absolute inset-0 w-1/2 right-0 z-10 cursor-pointer focus:outline-none"
                                         style={{ clipPath: 'polygon(50% 0, 100% 0, 100% 100%, 50% 100%)' }}
                                         disabled={disabled}
                                     />
                                 </>
                             ) : (
-                            <>
-                                <button
-                                    type="button"
-                                    onClick={() => handleStarClick(star, true)}
-                                    onMouseEnter={() => handleStarHover(star, true)}
-                                    onMouseLeave={() => !disabled && setHoveredStar(0)}
-                                    className="absolute inset-0 w-1/2 right-0 z-10 cursor-pointer focus:outline-none"
-                                    style={{ clipPath: 'polygon(50% 0, 100% 0, 100% 100%, 50% 100%)' }}
-                                    disabled={disabled}
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => handleStarClick(star, false)}
-                                    onMouseEnter={() => handleStarHover(star, false)}
-                                    onMouseLeave={() => !disabled && setHoveredStar(0)}
-                                    className="absolute inset-0 w-1/2 z-10 cursor-pointer focus:outline-none"
-                                    style={{ clipPath: 'polygon(0 0, 50% 0, 50% 100%, 0 100%)' }}
-                                    disabled={disabled}
-                                />
-                            </>)}
+                                <>
+                                    <button
+                                        type="button"
+                                        onClick={() => handleStarClick(star, true)}
+                                        onMouseEnter={() => handleStarHover(star, true)}
+                                        className="absolute inset-0 w-1/2 right-0 z-10 cursor-pointer focus:outline-none"
+                                        style={{ clipPath: 'polygon(50% 0, 100% 0, 100% 100%, 50% 100%)' }}
+                                        disabled={disabled}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => handleStarClick(star, false)}
+                                        onMouseEnter={() => handleStarHover(star, false)}
+                                        className="absolute inset-0 w-1/2 z-10 cursor-pointer focus:outline-none"
+                                        style={{ clipPath: 'polygon(0 0, 50% 0, 50% 100%, 0 100%)' }}
+                                        disabled={disabled}
+                                    />
+                                </>
+                            )}
                             <svg
-                                className="w-11 h-11 sm:w-12 sm:h-12 transition-all duration-200 pointer-events-none group-hover:scale-110"
+                                className="w-7 h-7 transition-all duration-200 pointer-events-none group-hover:scale-110"
                                 viewBox="0 0 24 24"
                                 strokeWidth={1.5}
                             >
@@ -187,7 +162,7 @@ const SellerRatingModal = ({ isOpen, onClose, sellerId, sellerName }) => {
                                         {isHalfFilled && (
                                             <defs>
                                                 <linearGradient 
-                                                    id={`half-gradient-${star}`} 
+                                                    id={`half-gradient-${star}-${rating}-${hoveredStar}`} 
                                                     x1={isRTL ? "100%" : "0%"} 
                                                     y1="0%" 
                                                     x2={isRTL ? "0%" : "100%"} 
@@ -201,7 +176,7 @@ const SellerRatingModal = ({ isOpen, onClose, sellerId, sellerName }) => {
                                             </defs>
                                         )}
                                         <path
-                                            fill={isFilled ? "#FBBF24" : `url(#half-gradient-${star})`}
+                                            fill={isFilled ? "#FBBF24" : `url(#half-gradient-${star}-${rating}-${hoveredStar})`}
                                             stroke="#F59E0B"
                                             strokeLinecap="round"
                                             strokeLinejoin="round"
@@ -225,106 +200,151 @@ const SellerRatingModal = ({ isOpen, onClose, sellerId, sellerName }) => {
             onClick={handleClose}
         >
             <div 
-                className="bg-white rounded-3xl w-full max-w-md shadow-2xl animate-slide-up"
+                className="bg-white rounded-3xl w-full max-w-md shadow-2xl animate-slide-up max-h-[90vh] overflow-y-auto"
                 onClick={(e) => e.stopPropagation()}
                 dir={isRTL ? "rtl" : "ltr"}
             >
-                <div className="flex justify-center pt-4 pb-2">
+                <div className="flex justify-center pt-4 pb-2 sticky top-0 bg-white z-10">
                     <div className="w-12 h-1 bg-gray-300 rounded-full"></div>
                 </div>
 
-                <form onSubmit={handleSubmit} className="px-6 pb-6 space-y-5">
-                    {checkingExisting ? (
-                        <div className="text-center py-12">
-                            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-main mx-auto"></div>
+                <form onSubmit={handleSubmit} className="px-6 pb-6 space-y-4">
+                    <div className="text-center space-y-1 mb-2">
+                        <h2 className="text-2xl font-bold text-gray-900">
+                            {isRTL ? "قيم تجربتك" : "Rate Your Experience"}
+                        </h2>
+                        <p className="text-gray-500 text-sm">{sellerName}</p>
+                    </div>
+
+                    {success && (
+                        <div className="bg-green-50 border border-green-200 rounded-xl p-3 flex items-center gap-2">
+                            <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+                                <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                </svg>
+                            </div>
+                            <p className="text-sm font-medium text-green-800">
+                                {isRTL ? "تم إرسال التقييم بنجاح!" : "Review submitted successfully!"}
+                            </p>
                         </div>
-                    ) : (
-                        <>
-                            <div className="text-center space-y-1">
-                                <h2 className="text-2xl font-bold text-gray-900">
-                                    {isRTL ? "قيم تجربتك" : "Rate Your Experience"}
-                                </h2>
-                                <p className="text-gray-500">{sellerName}</p>
-                            </div>
+                    )}
 
-                            {success && (
-                                <div className="bg-green-50 border border-green-200 rounded-xl p-3 flex items-center gap-2">
-                                    <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
-                                        <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                                        </svg>
-                                    </div>
-                                    <p className="text-sm font-medium text-green-800">
-                                        {isRTL ? "تم إرسال التقييم بنجاح!" : "Review submitted successfully!"}
-                                    </p>
-                                </div>
-                            )}
+                    {error && (
+                        <div className="bg-red-50 border border-red-200 rounded-xl p-3">
+                            <p className="text-sm text-red-800 text-center">{error}</p>
+                        </div>
+                    )}
 
-                            {error && (
-                                <div className="bg-red-50 border border-red-200 rounded-xl p-3">
-                                    <p className="text-sm text-red-800 text-center">{error}</p>
-                                </div>
-                            )}
-
-                            <div className="space-y-3">
-                                <StarRating
-                                    rating={honestRating}
-                                    setRating={setHonestRating}
-                                    hoveredStar={hoveredHonestStar}
-                                    setHoveredStar={setHoveredHonestStar}
-                                    disabled={loading || success}
-                                />
-                                <p className="text-center text-gray-400 text-sm">
-                                    {isRTL ? "اختر تقييمك" : "Select Rating"}
-                                </p>
-                            </div>
-
-                            <div className="flex gap-3">
-                                <div className="flex-1 py-3 rounded-2xl font-bold text-sm border-2 bg-white border-main text-main shadow-sm flex items-center justify-center gap-2">
-                                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    {/* Honest Rating */}
+                    <div className="bg-gradient-to-r from-blue-50 to-blue-100/50 rounded-2xl p-4">
+                        <div className="flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                                <div className="p-2 bg-blue-500 rounded-xl shadow-sm">
+                                    <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
                                         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                                     </svg>
-                                    {isRTL ? "امين" : "Honest"}
                                 </div>
-                                <div className="flex-1 py-3 rounded-2xl font-bold text-sm border-2 bg-white border-main text-main shadow-sm flex items-center justify-center gap-2">
-                                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                <span className="font-bold text-blue-800 text-sm whitespace-nowrap">
+                                    {isRTL ? "الأمانة" : "Honesty"}
+                                </span>
+                            </div>
+                            <StarRating
+                                rating={honestRating}
+                                setRating={setHonestRating}
+                                hoveredStar={hoveredHonestStar}
+                                setHoveredStar={setHoveredHonestStar}
+                                disabled={loading || success}
+                            />
+                        </div>
+                    </div>
+
+                    {/* Easy to Deal Rating */}
+                    <div className="bg-gradient-to-r from-green-50 to-green-100/50 rounded-2xl p-4">
+                        <div className="flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                                <div className="p-2 bg-green-500 rounded-xl shadow-sm">
+                                    <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
                                         <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
                                     </svg>
-                                    {isRTL ? "سهل التعامل" : "Easy to Deal"}
                                 </div>
+                                <span className="font-bold text-green-800 text-sm whitespace-nowrap">
+                                    {isRTL ? "سهولة التعامل" : "Easy to Deal"}
+                                </span>
                             </div>
+                            <StarRating
+                                rating={easyToDealRating}
+                                setRating={setEasyToDealRating}
+                                hoveredStar={hoveredEasyStar}
+                                setHoveredStar={setHoveredEasyStar}
+                                disabled={loading || success}
+                            />
+                        </div>
+                    </div>
 
-                            <div className="relative">
-                                <textarea
-                                    value={comment}
-                                    onChange={(e) => setComment(e.target.value)}
-                                    placeholder={isRTL ? "أضف تعليق (اختياري)" : "Add comment (optional)"}
-                                    className="w-full px-4 py-3 pb-8 border-2 border-main/20 rounded-2xl outline-none focus:border-main transition-all resize-none text-sm bg-white"
-                                    rows={3}
-                                    maxLength={200}
-                                    disabled={loading || success}
-                                />
-                                <div className={`absolute bottom-2 text-xs text-main ${isRTL ? 'left-4' : 'right-4'}`}>
-                                    {comment.length}/200
+                    {/* Product Quality Rating */}
+                    <div className="bg-gradient-to-r from-purple-50 to-purple-100/50 rounded-2xl p-4">
+                        <div className="flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                                <div className="p-2 bg-purple-500 rounded-xl shadow-sm">
+                                    <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                    </svg>
                                 </div>
+                                <span className="font-bold text-purple-800 text-sm whitespace-nowrap">
+                                    {isRTL ? "جودة المنتج" : "Product Quality"}
+                                </span>
                             </div>
+                            <StarRating
+                                rating={productQualityRating}
+                                setRating={setProductQualityRating}
+                                hoveredStar={hoveredQualityStar}
+                                setHoveredStar={setHoveredQualityStar}
+                                disabled={loading || success}
+                            />
+                        </div>
+                    </div>
 
-                            <button
-                                type="submit"
-                                className="w-full py-3.5 bg-gradient-to-r from-main to-main hover:from-main/90 hover:to-main/90 text-white font-bold rounded-2xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
-                                disabled={loading || success || honestRating === 0 || easyToDealRating === 0}
-                            >
-                                {loading ? (
-                                    <span className="flex items-center justify-center gap-2">
-                                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                                        {isRTL ? "جاري الإرسال..." : "Submitting..."}
-                                    </span>
-                                ) : (
-                                    isRTL ? "إرسال التقييم" : "Submit Review"
-                                )}
-                            </button>
-                        </>
-                    )}
+                    {/* Comment */}
+                    <div className="relative">
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            {isRTL ? "أضف تعليقك" : "Add Your Comment"}
+                        </label>
+                        <textarea
+                            value={comment}
+                            onChange={(e) => setComment(e.target.value)}
+                            placeholder={isRTL ? "شاركنا تجربتك مع البائع... (اختياري)" : "Share your experience... (optional)"}
+                            className="w-full px-4 py-3 pb-8 border-2 border-gray-200 rounded-2xl outline-none focus:border-main focus:ring-2 focus:ring-main/20 transition-all resize-none text-sm bg-white placeholder-gray-400"
+                            rows={3}
+                            maxLength={200}
+                            disabled={loading || success}
+                        />
+                        <div className={`absolute bottom-3 text-xs font-medium ${
+                            comment.length >= 10 ? "text-main" : "text-gray-400"
+                        } ${isRTL ? 'left-4' : 'right-4'}`}>
+                            {comment.length}/200
+                        </div>
+                    </div>
+
+                    {/* Submit Button */}
+                    <button
+                        type="submit"
+                        className="w-full py-3.5 bg-gradient-to-r from-main to-green-600 hover:from-green-600 hover:to-main text-white font-bold rounded-2xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98]"
+                        disabled={loading || success || honestRating === 0 || easyToDealRating === 0 || productQualityRating === 0}
+                    >
+                        {loading ? (
+                            <span className="flex items-center justify-center gap-2">
+                                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                                {isRTL ? "جاري الإرسال..." : "Submitting..."}
+                            </span>
+                        ) : (
+                            <span className="flex items-center justify-center gap-2">
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                </svg>
+                                {isRTL ? "إرسال التقييم" : "Submit Review"}
+                            </span>
+                        )}
+                    </button>
                 </form>
             </div>
 

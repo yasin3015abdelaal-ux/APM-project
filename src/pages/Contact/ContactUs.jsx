@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
-import { MessageCircle, AlertCircle, HelpCircle, Mail, Send, CheckCircle2 } from "lucide-react";
+import { MessageCircle, HelpCircle, Mail, Send, CheckCircle2, AlertCircle } from "lucide-react";
 import { userAPI } from "../../api";
 import Loader from "../../components/Ui/Loader/Loader";
 
@@ -28,17 +28,6 @@ const ContactUs = () => {
                 ...prev,
                 type: location.state.selectedType
             }));
-            
-            if (location.state?.productId) {
-                const productInfo = location.state.productName 
-                    ? `\n\nالمنتج: ${location.state.productName} (رقم: ${location.state.productId})`
-                    : `\n\nرقم المنتج: ${location.state.productId}`;
-                
-                setForm(prev => ({
-                    ...prev,
-                    message: `أريد الإبلاغ عن إعلان${productInfo}\nالسبب: `
-                }));
-            }
         }
     }, [location.state]);
 
@@ -47,11 +36,6 @@ const ContactUs = () => {
             value: "suggestion", 
             label: t("contact.suggestion"),
             icon: <HelpCircle className="w-4 h-4" />,
-        },
-        { 
-            value: "complaint", 
-            label: t("contact.complaint"),
-            icon: <AlertCircle className="w-4 h-4" />,
         },
         { 
             value: "subscription_issue", 
@@ -133,7 +117,7 @@ const ContactUs = () => {
                         <label className="block text-gray-700 font-medium mb-3 text-sm">
                             {isRTL ? "نوع الرسالة" : "Message Type"}
                         </label>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                             {messageTypes.map((type) => (
                                 <label
                                     key={type.value}
