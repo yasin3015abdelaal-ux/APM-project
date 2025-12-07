@@ -176,7 +176,19 @@ const Messages = () => {
     const fetchConversations = useCallback(async (page = 1, silent = false) => {
         try {
             if (!silent) setLoading(true);
-            const response = await chatAPI.getConversations({ page, limit: 50 });
+            
+            const params = { 
+                page, 
+                limit: 50,
+                type: 'auction'
+            };
+            
+            if (activeFilter !== 'all') {
+                params.conversation_type = activeFilter;
+            }
+            
+            const response = await chatAPI.getConversations(params);
+            
             if (response.data.success) {
                 setConversations(response.data.data);
             } else {
@@ -190,7 +202,7 @@ const Messages = () => {
         } finally {
             if (!silent) setLoading(false);
         }
-    }, [showToast, t]); 
+    }, [showToast, t, activeFilter]);
 
     const fetchUnreadCount = useCallback(async () => {
         try {
@@ -202,6 +214,31 @@ const Messages = () => {
             console.error("Error fetching unread count:", error);
         }
     }, [updateUnreadCount]);
+
+    const handleFilterChange = useCallback((newFilter) => {
+        setActiveFilter(newFilter);
+        
+        const params = { 
+            page: 1, 
+            limit: 50,
+            type: 'auction'
+        };
+        
+        if (newFilter !== 'all') {
+            params.conversation_type = newFilter;
+        }
+        
+        chatAPI.getConversations(params)
+            .then(response => {
+                if (response.data.success) {
+                    setConversations(response.data.data);
+                }
+            })
+            .catch(error => {
+                console.error("Error fetching conversations:", error);
+                showToast(t('messages.errorLoadingConversations'), "error");
+            });
+    }, [showToast, t]);
 
     const fetchMessages = useCallback(async (conversationId, silent = false) => {
         if (fetchMessagesAbortController.current) {
@@ -437,16 +474,10 @@ const Messages = () => {
                 clearInterval(messageRefreshInterval.current);
             }
         };
-    }, [selectedConversationId]); 
+    }, [selectedConversationId, fetchConversations, fetchUnreadCount, fetchMessages]);
 
     const filteredConversations = useMemo(() => {
         let filtered = [...conversations];
-        
-        if (activeFilter === "buy") {
-            filtered = filtered.filter(conv => conv.type === "buy");
-        } else if (activeFilter === "sell") {
-            filtered = filtered.filter(conv => conv.type === "sell");
-        }
         
         if (debouncedSearchQuery.trim()) {
             const query = debouncedSearchQuery.toLowerCase().trim();
@@ -456,7 +487,7 @@ const Messages = () => {
         }
         
         return filtered;
-    }, [conversations, debouncedSearchQuery, activeFilter]);
+    }, [conversations, debouncedSearchQuery]);
 
     const selectedConversation = useMemo(() => {
         return conversations.find(c => c.id === selectedConversationId);
@@ -522,7 +553,7 @@ const Messages = () => {
 
                     <div className="flex gap-2 mb-4">
                         <button
-                            onClick={() => setActiveFilter("all")}
+                            onClick={() => handleFilterChange("all")}
                             className={`flex-1 cursor-pointer px-3 py-2 rounded-lg text-sm font-medium transition-all ${
                                 activeFilter === "all"
                                     ? "bg-main text-white shadow-md"
@@ -532,7 +563,7 @@ const Messages = () => {
                             {t('messages.tabs.all')}
                         </button>
                         <button
-                            onClick={() => setActiveFilter("buy")}
+                            onClick={() => handleFilterChange("buy")}
                             className={`flex-1 cursor-pointer px-3 py-2 rounded-lg text-sm font-medium transition-all ${
                                 activeFilter === "buy"
                                     ? "bg-main text-white shadow-md"
@@ -542,9 +573,9 @@ const Messages = () => {
                             {t('messages.tabs.buy')}
                         </button>
                         <button
-                            onClick={() => setActiveFilter("sell")}
+                            onClick={() => handleFilterChange("sale")}
                             className={`flex-1 cursor-pointer px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                                activeFilter === "sell"
+                                activeFilter === "sale"
                                     ? "bg-main text-white shadow-md"
                                     : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                             }`}
@@ -559,9 +590,8 @@ const Messages = () => {
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             placeholder={t('messages.searchPlaceholder')}
-                            className="w-full px-5 py-3 pr-11 text-sm border border-gray-200 rounded-xl outline-none focus:border-main focus:ring-2 focus:ring-main/20 transition-all bg-gray-50"
+                            className={`w-full ${isRTL ? 'pr-11 pl-5 text-right' : 'pl-11 pr-5 text-left'} py-3 text-sm border border-gray-200 rounded-xl outline-none focus:border-main focus:ring-2 focus:ring-main/20 transition-all bg-gray-50`}
                             autoComplete="off"
-                            dir="auto"
                             aria-label={t('messages.searchPlaceholder')}
                         />
                         <svg className={`absolute ${isRTL ? 'right-4' : 'left-4'} top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400`} fill="none" stroke="currentColor" viewBox="0 0 24 24">

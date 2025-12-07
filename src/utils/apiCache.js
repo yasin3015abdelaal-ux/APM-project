@@ -94,7 +94,6 @@ class APICache {
 
 export const apiCache = new APICache();
 
-
 export const cachedAPICall = async (cacheKey, apiCallFunction, options = {}) => {
     const {
         ttl = 5 * 60 * 1000,      
@@ -137,7 +136,6 @@ export const createCacheKey = (base, params = {}) => {
 
     return `${base}?${paramString}`;
 };
-
 
 export const clearCacheByPrefix = (prefix) => {
     const keys = apiCache.keys();
@@ -189,7 +187,6 @@ export const debugCache = () => {
     console.log('\n===================');
 };
 
-// Export default object
 export default {
     apiCache,
     cachedAPICall,
