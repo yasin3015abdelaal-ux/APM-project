@@ -20,7 +20,6 @@ import DashboardInvoices from "../components/Dashboard/Invoices/Invoices";
 import SubscriptionsPage from "../pages/Dashboard/SubscriptionsPage";
 import InvoicesPage from "../pages/Dashboard/InvoicesPage";
 import InvoiceDetailsPage from "../pages/Dashboard/InvoiceDetailsPage";
-import AuctionsList from "../pages/Dashboard/AuctionsList";
 import AuctionDetails from "../pages/Dashboard/AuctionDetails";
 import VerificationsList from "../pages/Dashboard/VerificationsList";
 import VerificationDetails from "../pages/Dashboard/VerificationDetails";
@@ -41,13 +40,25 @@ import Notifications from "../pages/Notifications/Notifications";
 import FavoritesPage from "../pages/Favorites/FavoritesPage";
 import ProductsReview from "../components/Dashboard/Products";
 import AuctionProducts from "../pages/Auctions/AuctionsProducts";
-// import MyAuctions from "../pages/Auctions/MyAuctions";
 import AuctionPage from "../pages/Auctions/AuctionPage";
 import AuctionsManagement from "../components/Dashboard/Auctions/AuctionsManagement";
-// import AuctionsList from "../pages/Auctions/AuctionsList";
-import PreviousAuctions from "../pages/Auctions/PreviousAuctions";
-import Prices from "../pages/Prices/Prices";
+import AuctionsList from "../pages/Auctions/AuctionsList";
 import ContactUs from "../pages/Contact/ContactUs";
+import Prices from "../pages/Prices/Prices";
+import Cart from "../pages/Cart/Cart";
+import Packages from "../components/Packages/Packages";
+import Invoices from "../components/Packages/Invoices";
+import PreviousAuctionProducts from "../pages/Auctions/PreviousAuctions";
+import PreviousAuctionsList from "../pages/Auctions/PerviousAuctionsList";
+import AboutUsPage from "../pages/About/About";
+import TermsPage from "../pages/Terms/Terms";
+import Articles from "../pages/Articles/ArticlesPage";
+import SellerReviews from "../pages/SellerReviews/SellerReviews";
+import ArticleDetailsPage from "../pages/Articles/ArticleDetails";
+import SellerDetails from "../components/Products/SellerDetails";
+// import AuctionsList from "../pages/Auctions/AuctionsList";
+// import Prices from "../pages/Prices/Prices";
+// import ContactUs from "../pages/Contact/ContactUs";
 
 export const routers = createBrowserRouter([
   {
@@ -58,7 +69,15 @@ export const routers = createBrowserRouter([
       {
         element: <MainLayout />,
         children: [
-          { index: true, element: <HomePage /> },
+          // Public routes (accessible without login)
+          { 
+            index: true, 
+            element: (
+              <ProtectedRoute allowGuest={true}>
+                <HomePage />
+              </ProtectedRoute>
+            )
+          },
           {
             path: "login",
             element: (
@@ -75,7 +94,93 @@ export const routers = createBrowserRouter([
               </PublicRoute>
             ),
           },
-          { path: "ads", element: <Ads /> },
+          {
+            path: "products",
+            children: [
+              {
+                index: true,
+                element: (
+                  <ProtectedRoute allowGuest={true}>
+                    <ProductsPage />
+                  </ProtectedRoute>
+                ),
+              },
+              {
+                path: ":categoryId",
+                element: (
+                  <ProtectedRoute allowGuest={true}>
+                    <ProductsPage />
+                  </ProtectedRoute>
+                ),
+              },
+            ],
+          },
+          {
+            path: "product-details/:id",
+            element: (
+              <ProtectedRoute allowGuest={true}>
+                <ProductDetails />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "seller/:sellerId",
+            element: (
+              <ProtectedRoute allowGuest={true}>
+                <SellerDetails />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "about-us",
+            element: (
+              <PublicRoute>
+                <AboutUsPage />
+              </PublicRoute>
+            ),
+          },
+          {
+            path: "terms-and-conditions",
+            element: (
+              <PublicRoute>
+                <TermsPage />
+              </PublicRoute>
+            ),
+          },
+          {
+            path: "articles",
+            element: (
+              <PublicRoute>
+                <Articles />
+              </PublicRoute>
+            ),
+          },
+          {
+            path: "articles/:articleId",
+            element: (
+              <PublicRoute>
+                <ArticleDetailsPage />
+              </PublicRoute>
+            ),
+          },
+          {
+            path: "seller-reviews",
+            element: (
+              <PublicRoute>
+                <SellerReviews />
+              </PublicRoute>
+            ),
+          },
+
+          // Protected routes
+          { 
+            path: "ads", 
+            element: (
+              <ProtectedRoute>
+                <Ads />
+              </ProtectedRoute>
+            )
+          },
           {
             path: "ads/create",
             element: (
@@ -109,7 +214,7 @@ export const routers = createBrowserRouter([
             ),
           },
           {
-            path: "messages",
+            path: "chats",
             element: (
               <ProtectedRoute>
                 <Messages />
@@ -133,6 +238,30 @@ export const routers = createBrowserRouter([
             ),
           },
           {
+            path: "packages",
+            element: (
+              <ProtectedRoute>
+                <Packages />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "cart",
+            element: (
+              <ProtectedRoute>
+                <Cart />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "invoices",
+            element: (
+              <ProtectedRoute>
+                <Invoices />
+              </ProtectedRoute>
+            ),
+          },
+          {
             path: "auction",
             element: (
               <ProtectedRoute>
@@ -152,7 +281,7 @@ export const routers = createBrowserRouter([
             path: "auction-products",
             element: (
               <ProtectedRoute>
-                <AuctionProducts  />
+                <AuctionProducts />
               </ProtectedRoute>
             ),
           },
@@ -160,7 +289,15 @@ export const routers = createBrowserRouter([
             path: "previous-auctions",
             element: (
               <ProtectedRoute>
-                <PreviousAuctions  />
+                <PreviousAuctionsList />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "previous-auction-products",
+            element: (
+              <ProtectedRoute>
+                <PreviousAuctionProducts />
               </ProtectedRoute>
             ),
           },
@@ -188,38 +325,6 @@ export const routers = createBrowserRouter([
               </ProtectedRoute>
             ),
           },
-          {
-            path: "products",
-            children: [
-              {
-                // Route for all products (no category selected)
-                index: true,
-                element: (
-                  <ProtectedRoute>
-                    <ProductsPage />
-                  </ProtectedRoute>
-                ),
-              },
-              {
-                // Route for specific category
-                path: ":categoryId",
-                element: (
-                  <ProtectedRoute>
-                    <ProductsPage />
-                  </ProtectedRoute>
-                ),
-              },
-            ],
-          },
-          {
-            // Route for product details
-            path: "product-details/:id",
-            element: (
-              <ProtectedRoute>
-                <ProductDetails />
-              </ProtectedRoute>
-            ),
-          },
         ],
       },
 
@@ -242,10 +347,8 @@ export const routers = createBrowserRouter([
           { path: "home", element: <DashboardHome /> },
           { path: "additions", element: <Additions /> },
           { path: "additions/category/:categoryId", element: <Category /> },
-          // { path: "products", element: <Products /> },
           { path: "accounts", element: <Accounts /> },
           { path: "accounts/update-account/:userId", element: <UpdateAccount /> },
-          // { path: "auctions", element: <AuctionsList /> },
           { path: "auctions/:id", element: <AuctionDetails /> },
           { path: "ads", element: <AdvertisementsPage /> },
           { path: "packages", element: <PackagesPage /> },
@@ -259,11 +362,6 @@ export const routers = createBrowserRouter([
           { path: "subscriptions", element: <SubscriptionsPage /> },
           { path: "invoices", element: <InvoicesPage /> },
           { path: "invoice/:id", element: <InvoiceDetailsPage /> },
-          {
-            path: "accounts/update-account/:userId",
-            element: <UpdateAccount />,
-          },
-          // { path: "invoices", element: <Invoices /> },
           { path: "products", element: <ProductsReview /> },
           { path: "auctions", element: <AuctionsManagement /> },
           { path: "*", element: <Navigate to="/dashboard" replace /> },

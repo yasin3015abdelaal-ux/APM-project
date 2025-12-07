@@ -1,9 +1,126 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Upload, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate } from 'react-router-dom';
-import { adminAPI, userAPI } from '../../api';
+import { adminAPI, getCachedSubCategories, userAPI } from '../../api';
 import Loader from '../../components/Ui/Loader/Loader';
+
+// Delete Confirmation Modal Component
+function DeleteConfirmModal({ isOpen, onClose, onConfirm, isRTL, showToast }) {
+    const [soldOnWebsite, setSoldOnWebsite] = useState(false);
+    const [changedMind, setChangedMind] = useState(false);
+    const [loading, setLoading] = useState(false);
+
+    const handleSoldChange = (checked) => {
+        if (checked) {
+            setChangedMind(false);
+        }
+        setSoldOnWebsite(checked);
+    };
+
+    const handleChangedMindChange = (checked) => {
+        if (checked) {
+            setSoldOnWebsite(false);
+        }
+        setChangedMind(checked);
+    };
+
+    const handleConfirm = async () => {
+        setLoading(true);
+        await onConfirm(soldOnWebsite);
+        showToast(
+            isRTL ? 'تم حذف الإعلان بنجاح' : 'Ad deleted successfully',
+            'success'
+        );
+        setLoading(false);
+    };
+
+
+    const isConfirmDisabled = !soldOnWebsite && !changedMind;
+
+    if (!isOpen) return null;
+
+    return (
+        <div
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+            onClick={onClose}
+        >
+            <div
+                className="bg-white rounded-xl p-6 max-w-md w-full shadow-xl"
+                onClick={(e) => e.stopPropagation()}
+                dir={isRTL ? 'rtl' : 'ltr'}
+            >
+                {/* Header */}
+                <div className="flex items-center justify-between mb-5">
+                    <h3 className="text-xl font-bold text-gray-900">
+                        {isRTL ? 'حذف الإعلان' : 'Delete Ad'}
+                    </h3>
+                    <button
+                        onClick={onClose}
+                        className="text-gray-400 hover:text-gray-600 cursor-pointer"
+                    >
+                        <X className="w-5 h-5" />
+                    </button>
+                </div>
+
+                <div className="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-100">
+                    <label className="flex items-center gap-3 cursor-pointer">
+                        <input
+                            type="checkbox"
+                            checked={soldOnWebsite}
+                            onChange={(e) => handleSoldChange(e.target.checked)}
+                            className="w-5 h-5 rounded cursor-pointer accent-green-600"
+                            style={{ accentColor: '#16a34a' }}
+                        />
+                        <span className="text-gray-800 font-medium text-sm">
+                            {isRTL
+                                ? 'تم البيع على الموقع'
+                                : 'Sold on the website'}
+                        </span>
+                    </label>
+                </div>
+
+                <div className="mb-6 p-4 bg-amber-50 rounded-lg border border-amber-100">
+                    <label className="flex items-center gap-3 cursor-pointer">
+                        <input
+                            type="checkbox"
+                            checked={changedMind}
+                            onChange={(e) => handleChangedMindChange(e.target.checked)}
+                            className="w-5 h-5 rounded cursor-pointer accent-green-600"
+                            style={{ accentColor: '#16a34a' }}
+                        />
+                        <span className="text-gray-800 font-medium text-sm">
+                            {isRTL
+                                ? 'غيرت رأيك من البيع'
+                                : 'Change your mind about selling'}
+                        </span>
+                    </label>
+                </div>
+
+                {/* Buttons */}
+                <div className="flex gap-3">
+                    <button
+                        onClick={handleConfirm}
+                        disabled={loading || isConfirmDisabled}
+                        className="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-2.5 px-4 text-sm rounded-lg transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        {loading
+                            ? (isRTL ? 'جاري...' : 'Loading...')
+                            : (isRTL ? 'متابعة' : 'Continue')}
+                    </button>
+                    <button
+                        onClick={onClose}
+                        disabled={loading}
+                        className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-2.5 px-4 text-sm rounded-lg transition cursor-pointer"
+                    >
+                        {isRTL ? 'الرجوع عن الحذف' : 'Cancel Delete'}
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    );
+}
 
 const EditAds = () => {
     const { t, i18n } = useTranslation();
@@ -67,7 +184,6 @@ const EditAds = () => {
 
             console.log('Loading product with ID:', id);
 
-            // Load product first to check if it exists
             let productRes;
             try {
                 productRes = await userAPI.get(`/products/${id}`);
@@ -75,8 +191,7 @@ const EditAds = () => {
             } catch (err) {
                 console.error('Error loading product:', err);
                 console.error('Error response:', err.response?.data);
-                
-                // Check the error message
+
                 if (err.response?.status === 404) {
                     throw new Error('المنتج غير موجود أو تم حذفه');
                 } else if (err.response?.status === 403) {
@@ -86,7 +201,6 @@ const EditAds = () => {
                 }
             }
 
-            // Then load categories and governorates
             const [categoriesRes, governoratesRes] = await Promise.all([
                 userAPI.get('/categories'),
                 userAPI.get(`/governorates?country_id=${country_id}`)
@@ -102,7 +216,6 @@ const EditAds = () => {
             setCategories(Array.isArray(categoriesData) ? categoriesData : []);
             setGovernorates(Array.isArray(governoratesData) ? governoratesData : []);
 
-            // Set form data from product
             if (productData) {
                 setFormData({
                     category_id: productData.category?.id || productData.category_id || '',
@@ -126,7 +239,6 @@ const EditAds = () => {
                     contact_method: productData.contact_method || ''
                 });
 
-                // Set subcategory from product response if available
                 if (productData.sub_category) {
                     setSubCategories([productData.sub_category]);
                 }
@@ -145,24 +257,16 @@ const EditAds = () => {
         }
     };
 
-    const loadSubCategories = async (categoryId) => {
-        try {
-            // Try different endpoint patterns
-            let res;
-            try {
-                res = await adminAPI.get(`/subcategories?category_id=${categoryId}`);
-            } catch (err) {
-                res = await userAPI.get(`/subcategories/${categoryId}`);
-            }
-            
-            console.log('SubCategories Response:', res.data);
-            const subCategoriesData = res?.data?.data || res?.data?.subcategories || res?.data;
-            setSubCategories(Array.isArray(subCategoriesData) ? subCategoriesData : []);
-        } catch (error) {
-            console.error('Error loading subcategories:', error);
-            setSubCategories([]);
-        }
-    };
+const loadSubCategories = async (categoryId) => {
+    try {
+        const { data, fromCache } = await getCachedSubCategories(categoryId);
+        console.log(fromCache ? '📦 SubCategories من الكاش' : '🌐 SubCategories من API');
+        setSubCategories(Array.isArray(data) ? data : []);
+    } catch (error) {
+        console.error('Error loading subcategories:', error);
+        setSubCategories([]);
+    }
+};
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -191,7 +295,6 @@ const EditAds = () => {
         try {
             const dataToSend = new FormData();
 
-            // Required fields
             dataToSend.append('category_id', formData.category_id);
             dataToSend.append('sub_category_id', formData.sub_category_id);
             dataToSend.append('name_ar', formData.name_ar || '');
@@ -206,27 +309,16 @@ const EditAds = () => {
             dataToSend.append('location', formData.location);
             dataToSend.append('contact_method', formData.contact_method);
 
-            // Boolean fields
             dataToSend.append('delivery_available', formData.delivery_available ? '1' : '0');
             dataToSend.append('needs_vaccinations', formData.needs_vaccinations ? '1' : '0');
             dataToSend.append('retail_sale_available', formData.retail_sale_available ? '1' : '0');
             dataToSend.append('price_negotiable', formData.price_negotiable ? '1' : '0');
 
-            // Image - only if new image was selected
             if (formData.image instanceof File) {
                 dataToSend.append('image', formData.image);
             }
 
             dataToSend.append('_method', 'PUT');
-
-            console.log('Sending data:', {
-                category_id: formData.category_id,
-                sub_category_id: formData.sub_category_id,
-                name_ar: formData.name_ar,
-                name_en: formData.name_en,
-                governorate_id: formData.governorate_id,
-                hasImage: formData.image instanceof File
-            });
 
             await userAPI.post(`/products/${id}`, dataToSend, {
                 headers: {
@@ -240,19 +332,15 @@ const EditAds = () => {
             }, 1500);
         } catch (error) {
             console.error('Error updating product:', error);
-            console.error('Error response:', error.response?.data);
-            
-            // Get validation errors if available
+
             const validationErrors = error.response?.data?.errors;
             let errorMessage = '';
-            
+
             if (validationErrors) {
-                // Get first validation error
                 const firstErrorKey = Object.keys(validationErrors)[0];
                 const firstError = validationErrors[firstErrorKey];
                 const errorText = Array.isArray(firstError) ? firstError[0] : firstError;
-                
-                // Translate common validation errors to Arabic if RTL
+
                 if (isRTL) {
                     if (errorText.includes('required')) {
                         errorMessage = `حقل ${translateFieldName(firstErrorKey)} مطلوب`;
@@ -267,18 +355,17 @@ const EditAds = () => {
                     errorMessage = errorText;
                 }
             } else {
-                errorMessage = isRTL 
-                    ? 'حدث خطأ أثناء تعديل الإعلان' 
+                errorMessage = isRTL
+                    ? 'حدث خطأ أثناء تعديل الإعلان'
                     : 'Error updating ad';
             }
-            
+
             showToast(errorMessage, 'error');
         } finally {
             setLoading(false);
         }
     };
 
-    // Helper function to translate field names
     const translateFieldName = (fieldName) => {
         const translations = {
             'category_id': 'الفئة',
@@ -299,26 +386,33 @@ const EditAds = () => {
         return translations[fieldName] || fieldName;
     };
 
-    const handleDelete = async () => {
+    const handleDelete = async (soldOnWebsite) => {
         try {
-            await userAPI.delete(`/products/${id}`);
-            showToast(t('ads.deleteSuccess') || 'تم حذف الإعلان بنجاح!');
+            await userAPI.delete(`/products/${id}`, {
+                data: { sold_on_website: soldOnWebsite }
+            });
+
+            showToast(
+                isRTL ? 'تم حذف الإعلان بنجاح' : 'Ad deleted successfully',
+                'success'
+            );
             setTimeout(() => {
                 navigate('/ads');
             }, 1500);
         } catch (error) {
             console.error('Error deleting product:', error);
-            showToast(error.response?.data?.message || t('ads.deleteError') || 'حدث خطأ أثناء حذف الإعلان', 'error');
+            showToast(
+                isRTL ? 'حدث خطأ أثناء حذف الإعلان' : 'Error deleting ad',
+                'error'
+            );
         }
         setShowDeleteConfirm(false);
     };
 
-    // Loading state
     if (dataLoading) {
         return <Loader />;
     }
 
-    // Error state
     if (error) {
         return (
             <div className="min-h-screen flex items-center justify-center p-4">
@@ -364,7 +458,7 @@ const EditAds = () => {
                     </div>
                 </div>
             )}
-            {/* Header */}
+
             <div className="text-main text-center py-4 rounded-t-lg">
                 <h1 className="text-3xl font-bold">{t('ads.editYourAd')}</h1>
             </div>
@@ -792,33 +886,13 @@ const EditAds = () => {
             </form>
 
             {/* Delete Confirmation Modal */}
-            {showDeleteConfirm && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={() => setShowDeleteConfirm(false)}>
-                    <div className="bg-white rounded-lg p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-xl font-bold text-gray-900">{t('ads.deleteConfirmTitle')}</h3>
-                            <button onClick={() => setShowDeleteConfirm(false)} className="cursor-pointer text-gray-400 hover:text-gray-600">
-                                <X className="w-6 h-6" />
-                            </button>
-                        </div>
-                        <p className="text-gray-600 mb-6">{t('ads.deleteConfirmMessage')}</p>
-                        <div className="flex gap-4">
-                            <button
-                                onClick={handleDelete}
-                                className="flex-1 cursor-pointer bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg transition-colors"
-                            >
-                                {t('ads.yes')}
-                            </button>
-                            <button
-                                onClick={() => setShowDeleteConfirm(false)}
-                                className="flex-1 cursor-pointer bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-4 rounded-lg transition-colors"
-                            >
-                                {t('ads.no')}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+            <DeleteConfirmModal
+                isOpen={showDeleteConfirm}
+                onClose={() => setShowDeleteConfirm(false)}
+                onConfirm={handleDelete}
+                isRTL={isRTL}
+                showToast={showToast}
+            />
         </div>
     );
 };

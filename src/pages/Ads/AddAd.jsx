@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Upload } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { adminAPI, userAPI } from "../../api";
+import { adminAPI, getCachedSubCategories, userAPI } from "../../api";
 import Loader from "../../components/Ui/Loader/Loader";
 import Categories from "../../components/Categories/Categories";
 
@@ -95,22 +95,16 @@ const AddAds = () => {
         }
     };
 
-    const loadSubCategories = async (categoryId) => {
-        try {
-            let res;
-            try {
-                res = await adminAPI.get(`/subcategories?category_id=${categoryId}`);
-            } catch (err) {
-                res = await userAPI.get(`/subcategories/${categoryId}`);
-            }
-            
-            const subCategoriesData = res?.data?.data || res?.data?.subcategories || res?.data;
-            setSubCategories(Array.isArray(subCategoriesData) ? subCategoriesData : []);
-        } catch (error) {
-            console.error("Error loading subcategories:", error);
-            setSubCategories([]);
-        }
-    };
+const loadSubCategories = async (categoryId) => {
+    try {
+        const { data, fromCache } = await getCachedSubCategories(categoryId);
+        console.log(fromCache ? '📦 SubCategories من الكاش' : '🌐 SubCategories من API');
+        setSubCategories(Array.isArray(data) ? data : []);
+    } catch (error) {
+        console.error('Error loading subcategories:', error);
+        setSubCategories([]);
+    }
+};
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;

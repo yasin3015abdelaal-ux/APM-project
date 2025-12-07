@@ -8,11 +8,11 @@
   "notification": "notifications",
   "viewProfile": "view profile",
   "favorite ads": "favorite ads",
-  "subscriptions": "subscriptions",
+  "subscriptions": "packages",
   "contact us": "contact us",
   "share the app": "share the app",
   "my ads": "my ads",
-  "subscriptions and invoices": "subscriptions and invoices",
+  "subscriptions and invoices": "packages and invoices",
   "today's meat price": "today's meat price",
   "about us": "about us",
   "privacy, terms, and conditions": "privacy, terms, and conditions",
@@ -205,6 +205,8 @@
     "uploadPersonalPhoto": "Upload Personal Photo",
     "submitVerification": "Submit Verification Request",
     "verificationInfo": "To verify your account for faster selling and increased credibility, please upload your ID card photo, personal photo, mobile number, and email.",
+    "accountVerified": "Account Verified",
+    "verificationComplete": "Your account has been successfully verified",
     "confirmPassword": "Confirm Password",
     "confirmPasswordPlaceholder": "Confirm new password",
     "passwordPlaceholder": "Leave blank if you don't want to change password",
@@ -244,7 +246,42 @@
     },
     "typePlaceholder": "Type your message...",
     "startChatNow": "Start the conversation now",
-    "selectChat": "Select a chat to view"
+    "selectChat": "Select a chat to view",
+    "back": "Back",
+    "online": "Online",
+    "chatOptions": "Chat Options",
+    "rateSeller": "Rate Seller",
+    "writeMessage": "Write message",
+    "sendMessage": "Send message",
+    "noResults": "No results found",
+    "tryAnotherSearch": "Try searching with different keywords",
+    "allChats": "All your conversations",
+    "conversationsCount": "conversations",
+    "yesterday": "Yesterday",
+    "daysAgo": "days ago",
+    "noUser": "User",
+    "selectChatToStart": "Select a conversation from the sidebar to view messages and chat with them",
+    "errorLoadingConversations": "Error loading conversations",
+    "errorLoadingMessages": "Error loading messages",
+    "errorSendingMessage": "Error sending message",
+    "errorLoadingUserData": "Error loading user data",
+    "rateSellerTitle": "Rate Seller",
+    "editReview": "Edit Review",
+    "honestyRating": "Honesty Rating",
+    "easyToDealRating": "Easy to Deal Rating",
+    "commentOptional": "Comment (Optional)",
+    "shareExperience": "Share your experience with the seller...",
+    "maxCharacters": "Max 1000 characters",
+    "cancel": "Cancel",
+    "submitReview": "Submit Review",
+    "updateReview": "Update Review",
+    "submitting": "Submitting...",
+    "reviewSubmitted": "Review submitted successfully!",
+    "selectBothRatings": "Please select both ratings",
+    "commentTooLong": "Comment is too long (max 1000 characters)",
+    "errorSubmittingReview": "Error submitting review",
+    "existingReviewNote": "You have an existing review for this seller. You can update it here.",
+    "note": "Note:"
   },
   "notifications": {
     "title": "Notifications",
@@ -314,7 +351,7 @@
     "no": "No"
   },
   "prices": {
-    "submitPrices": "Today’s Meat Prices",
+    "submitPrices": "Today's Meat Prices",
     "governorate": "Governorate",
     "selectGovernorate": "Select Governorate",
     "cowPrices": "Cow Prices",
@@ -498,44 +535,6 @@
       "messages": {
         "created": "Advertisement created successfully",
         "deleted": "Advertisement deleted successfully"
-      }
-    },
-    "packages": {
-      "title": "Packages Pricing",
-      "currency": "EGP",
-      "empty": "No packages available in this category.",
-      "actions": {
-        "add": "Add new package",
-        "edit": "Edit",
-        "delete": "Delete",
-        "cancel": "Cancel",
-        "save": "Save",
-        "update": "Update"
-      },
-      "fields": {
-        "category": "Package category",
-        "choose": "Choose category",
-        "name": "Package name",
-        "namePlaceholder": "Enter package name",
-        "description": "Package description",
-        "descriptionPlaceholder": "Add a short description",
-        "price": "Package price"
-      },
-      "errors": {
-        "fetchCategories": "Failed to load package categories",
-        "fetchPackages": "Failed to load packages",
-        "required": "Please fill all required fields",
-        "saveFailed": "Unable to save package, try again",
-        "deleteFailed": "Unable to delete package"
-      },
-      "messages": {
-        "created": "Package created successfully",
-        "updated": "Package updated successfully",
-        "deleted": "Package deleted successfully"
-      },
-      "delete": {
-        "confirmTitle": "Are you sure you want to delete this package?",
-        "confirmMessage": "This action is irreversible and will delete the package."
       }
     },
     "additions": {

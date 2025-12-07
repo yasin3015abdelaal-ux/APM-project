@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { userAPI } from "../../api";
 import Loader from "../../components/Ui/Loader/Loader";
+import CustomSelect from "../../components/Ui/CustomSelect/CustomSelect";
 
 const Prices = () => {
     const { t, i18n } = useTranslation();
@@ -43,6 +44,10 @@ const Prices = () => {
 
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value });
+    };
+
+    const handleGovernorateChange = (value) => {
+        setForm({ ...form, governorate_id: value });
     };
 
     const handleSubmit = async (e) => {
@@ -97,6 +102,14 @@ const Prices = () => {
         return <Loader />;
     }
 
+    const governorateOptions = [
+        { value: "", label: t("prices.selectGovernorate") },
+        ...governorates.map(gov => ({
+            value: gov.id.toString(),
+            label: isRTL ? gov.name_ar : gov.name_en
+        }))
+    ];
+
     return (
         <div className={`w-full max-w-5xl mx-auto bg-white ${isRTL ? "rtl" : "ltr"}`} dir={isRTL ? "rtl" : "ltr"}>
             {toast && (
@@ -121,25 +134,19 @@ const Prices = () => {
             </div>
 
             <form onSubmit={handleSubmit} className="p-8 space-y-6">
-                {/* Governorate Selection */}
+                {/* Governorate Selection with CustomSelect */}
                 <div>
                     <label className="block text-gray-700 font-medium mb-2">
                         {t("prices.governorate")}
                     </label>
-                    <select
-                        name="governorate_id"
+                    <CustomSelect
+                        options={governorateOptions}
                         value={form.governorate_id}
-                        onChange={handleChange}
-                        required
-                        className="w-full cursor-pointer px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-main focus:border-transparent bg-main text-white"
-                    >
-                        <option value="">{t("prices.selectGovernorate")}</option>
-                        {governorates.map((gov) => (
-                            <option key={gov.id} value={gov.id}>
-                                {isRTL ? gov.name_ar : gov.name_en}
-                            </option>
-                        ))}
-                    </select>
+                        onChange={handleGovernorateChange}
+                        placeholder={t("prices.selectGovernorate")}
+                        isRTL={isRTL}
+                        className="w-full"
+                    />
                 </div>
 
                 {/* Cow Prices */}
@@ -268,7 +275,7 @@ const Prices = () => {
                             onChange={(e) => setAgreedToTerms(e.target.checked)}
                             className="mt-1 w-5 h-5 text-red-600 border-red-300 rounded focus:ring-red-500 cursor-pointer"
                         />
-                        <span className="text-red-900 font-semibold text-base">
+                        <span className="text-red-900 font-semibold text-sm">
                             {isRTL 
                                 ? "هذا السعر على مسؤوليتي الشخصية وفي حالة وجود أي خطأ أو تلاعب بالأسعار أكون أنا المسؤول عنه"
                                 : "This price is my personal responsibility and in case of any error or manipulation of prices, I am responsible for it"}

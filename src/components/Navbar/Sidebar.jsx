@@ -57,22 +57,22 @@ const Sidebar = ({ isOpen, onClose }) => {
 
     const menuItems = [
         { key: "favorite ads", icon: "favorite", route: "/favorites" },
-        { key: "subscriptions", icon: "article", route: "/subscriptions" },
-        { key: "contact us", icon: "call", route: "/contact-us" },
+        { key: "subscriptions", icon: "article", route: "/packages" },
+        { key: "contact us", icon: "call", route: "/contact" },
         { key: "share the app", icon: "share" },
         { key: "my ads", icon: "add_ad", route: "/ads" },
         { key: "notification", icon: "notifications", route: "/notifications" },
         {
             key: "subscriptions and invoices",
             icon: "receipt",
-            route: "/subscriptions-invoices",
+            route: "/invoices",
         },
-        { key: "today's meat price", icon: "payments", route: "/meat-prices" },
+        { key: "today's meat price", icon: "payments", route: "/prices" },
         { key: "about us", icon: "info", route: "/about-us" },
         {
             key: "privacy, terms, and conditions",
             icon: "policy",
-            route: "/privacy-policy",
+            route: "/terms-and-conditions",
         },
     ];
 
