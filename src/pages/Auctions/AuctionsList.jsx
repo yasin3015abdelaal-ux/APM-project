@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Calendar, Edit2, Eye } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { auctionAPI } from "../../api";
+import { auctionAPI, getCachedAuctions } from "../../api";
 import Loader from "../../components/Ui/Loader/Loader";
 
 const AuctionsList = () => {
@@ -18,24 +18,26 @@ const AuctionsList = () => {
         setTimeout(() => setToast(null), 4000);
     };
 
-    const fetchAuctions = async () => {
-        setLoading(true);
-        try {
-            const response = await auctionAPI.getAllAuctions();
-            const sortedAuctions = (response.data?.data || response.data || []).sort((a, b) => {
-                return new Date(b.start_time) - new Date(a.start_time);
-            });
-            setAuctions(sortedAuctions);
-        } catch (error) {
-            console.error("Error fetching auctions:", error);
-            showToast(
-                isRTL ? "حدث خطأ في تحميل المزادات" : "Error loading auctions",
-                "error"
-            );
-        } finally {
-            setLoading(false);
-        }
-    };
+const fetchAuctions = async () => {
+    setLoading(true);
+    try {
+        const { data, fromCache } = await getCachedAuctions();
+        console.log(fromCache ? '📦 Auctions من الكاش' : '🌐 Auctions من API');
+        
+        const sortedAuctions = data.sort((a, b) => {
+            return new Date(b.start_time) - new Date(a.start_time);
+        });
+        setAuctions(sortedAuctions);
+    } catch (error) {
+        console.error("Error fetching auctions:", error);
+        showToast(
+            isRTL ? "حدث خطأ في تحميل المزادات" : "Error loading auctions",
+            "error"
+        );
+    } finally {
+        setLoading(false);
+    }
+};
 
     useEffect(() => {
         fetchAuctions();
@@ -142,8 +144,8 @@ const AuctionsList = () => {
             )}
 
             <div className="max-w-4xl mx-auto">
-                <div className="mb-6">
-                    <h1 className="text-2xl font-bold text-main text-center">
+                <div className="mb-5">
+                    <h1 className="text-xl font-bold text-main text-center">
                         {isRTL ? "قائمة المزادات" : "Auctions List"}
                     </h1>
                 </div>
@@ -151,11 +153,13 @@ const AuctionsList = () => {
                 {loading ? (
                     <Loader />
                 ) : auctions.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500 bg-white rounded-2xl border-2 border-gray-200">
-                        {isRTL ? "لا توجد مزادات متاحة" : "No auctions available"}
+                    <div className="text-center py-6 text-gray-500 bg-white rounded-2xl border-2 border-gray-200">
+                        <p className="text-base">
+                            {isRTL ? "لا توجد مزادات متاحة" : "No auctions available"}
+                        </p>
                     </div>
                 ) : (
-                    <div className="space-y-4">
+                    <div className="space-y-3">
                         {auctions.map((auction) => {
                             const status = getAuctionStatus(auction);
                             const { dayName, fullDate } = formatDate(auction.start_time);
@@ -164,17 +168,17 @@ const AuctionsList = () => {
                             return (
                                 <div
                                     key={auction.id}
-                                    className={`border-2 rounded-2xl p-6 transition-all hover:shadow-md ${status.color}`}
+                                    className={`border-2 rounded-2xl p-5 transition-all hover:shadow-md ${status.color}`}
                                 >
                                     <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-4">
+                                        <div className="flex items-center gap-3">
                                             <Calendar
                                                 className={status.status !== "past" ? "text-white" : "text-main"}
-                                                size={28}
+                                                size={24}
                                             />
                                             <div className="flex">
-                                                <h3 className="font-bold text-lg">{dayName}</h3>
-                                                <p className={`text-md ${status.status !== "past" ? "text-white opacity-90" : "text-gray-500"}`}>
+                                                <h3 className="font-bold text-base">{dayName}</h3>
+                                                <p className={`text-sm ${status.status !== "past" ? "text-white opacity-90" : "text-gray-500"}`}>
                                                     {", "}{fullDate}
                                                 </p>
                                             </div>
@@ -182,7 +186,7 @@ const AuctionsList = () => {
 
                                         <button
                                             onClick={() => handleButtonClick(auction)}
-                                            className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition ${
+                                            className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition ${
                                                 status.status !== "past" 
                                                     ? "bg-white text-main hover:bg-green-50" 
                                                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -190,12 +194,12 @@ const AuctionsList = () => {
                                         >
                                             {canEdit ? (
                                                 <>
-                                                    <Edit2 size={18} />
+                                                    <Edit2 size={16} />
                                                     {isRTL ? "تعديل" : "Edit"}
                                                 </>
                                             ) : (
                                                 <>
-                                                    <Eye size={18} />
+                                                    <Eye size={16} />
                                                     {isRTL ? "عرض" : "View"}
                                                 </>
                                             )}

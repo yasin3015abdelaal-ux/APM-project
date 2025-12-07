@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { Heart, MapPin, ShoppingCart } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Heart, ShoppingCart } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { userAPI } from '../../api';
 import Loader from '../../components/Ui/Loader/Loader';
-import PlaceholderSVG from '../../assets/PlaceholderSVG';
+import ProductCard from '../../components/ProductCard/ProductCard';
 
 const FavoritesPage = () => {
     const navigate = useNavigate();
@@ -69,6 +69,14 @@ const FavoritesPage = () => {
 
     const handleProductClick = (productId) => {
         navigate(`/product-details/${productId}`);
+    };
+
+    const handleToggleFavorite = (productId) => {
+        removeFavorite(productId);
+    };
+
+    const handleContactSeller = (productId) => {
+        console.log('Contact seller for product:', productId);
     };
 
     if (loading) {
@@ -144,91 +152,31 @@ const FavoritesPage = () => {
                         </button>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
                         {favorites.map((favorite) => {
                             const product = favorite.product || favorite;
-                            const productId = product.id;
-                            const imageUrl = product.image || product.images?.[0];
                             
+                            const productData = {
+                                ...product,
+                                id: product.id,
+                                name_ar: product.name_ar,
+                                name_en: product.name_en,
+                                price: product.price,
+                                image: product.image || product.images?.[0],
+                                governorate: product.governorate,
+                                created_at: product.created_at,
+                                user_id: product.user_id || product.seller_id
+                            };
+
                             return (
-                                <div
-                                    key={productId}
-                                    className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all overflow-hidden border border-gray-100 group"
-                                >
-                                    <div
-                                        className="relative h-56 bg-gray-100 cursor-pointer"
-                                        onClick={() => handleProductClick(productId)}
-                                    >
-                                        {imageUrl ? (
-                                            <img
-                                                src={imageUrl}
-                                                alt={isRTL ? product.name_ar : product.name_en}
-                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                                onError={(e) => {
-                                                    e.target.style.display = 'none';
-                                                    e.target.nextElementSibling.style.display = 'block';
-                                                }}
-                                            />
-                                        ) : null}
-                                        <div 
-                                            className={`${imageUrl ? 'hidden' : 'block'} w-full h-full`}
-                                            style={{ display: imageUrl ? 'none' : 'block' }}
-                                        >
-                                            <PlaceholderSVG />
-                                        </div>
-
-                                        <button
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                removeFavorite(productId);
-                                            }}
-                                            className="absolute top-3 right-3 cursor-pointer bg-red-500 hover:bg-red-600 text-white rounded-full p-2 shadow-md transition-all z-10 group/btn"
-                                        >
-                                            <Heart
-                                                size={20}
-                                                className="fill-white group-hover/btn:scale-110 transition-transform"
-                                            />
-                                        </button>
-                                    </div>
-
-                                    <div className="p-4">
-                                        <h3
-                                            className="text-lg font-bold text-gray-800 mb-2 cursor-pointer hover:text-main transition line-clamp-2 min-h-[3.5rem]"
-                                            onClick={() => handleProductClick(productId)}
-                                        >
-                                            {isRTL ? product.name_ar : product.name_en}
-                                        </h3>
-
-                                        {product.governorate && (
-                                            <div className="flex items-center text-sm text-main mb-3">
-                                                <MapPin size={16} className={isRTL ? 'ml-1' : 'mr-1'} />
-                                                <span className="font-medium">
-                                                    {isRTL ? product.governorate.name_ar : product.governorate.name_en}
-                                                </span>
-                                            </div>
-                                        )}
-
-                                        {(product.description || product.description_ar || product.description_en) && (
-                                            <p className="text-xs text-gray-600 mb-3 line-clamp-2">
-                                                {isRTL 
-                                                    ? (product.description_ar || product.description) 
-                                                    : (product.description_en || product.description)}
-                                            </p>
-                                        )}
-
-                                        <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-                                            <div className="text-2xl font-bold text-main">
-                                                {product.price} <span className="text-sm">{t('ads.concurrency')}</span>
-                                            </div>
-                                            <button
-                                                onClick={() => handleProductClick(productId)}
-                                                className="bg-main hover:bg-green-800 cursor-pointer text-white px-4 py-2 rounded-lg text-sm font-medium transition shadow-sm hover:shadow-md"
-                                            >
-                                                {isRTL ? 'عرض التفاصيل' : 'View Details'}
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
+                                <ProductCard
+                                    key={product.id}
+                                    product={productData}
+                                    isFavorite={true}
+                                    onToggleFavorite={handleToggleFavorite}
+                                    onProductClick={handleProductClick}
+                                    onContactSeller={handleContactSeller}
+                                />
                             );
                         })}
                     </div>

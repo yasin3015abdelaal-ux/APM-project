@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { userAPI } from "../../api";
@@ -21,17 +21,17 @@ const VerifyAccountPage = () => {
     const [files, setFiles] = useState({
         idCardFront: null,
         idCardBack: null,
-        personalPhoto: null,
-        commercialRecord: null,
-        taxCard: null,
+        selfie: null,
+        commercialRegistration: null,
+        taxNumberDocument: null,
     });
 
     const [previews, setPreviews] = useState({
         idCardFront: null,
         idCardBack: null,
-        personalPhoto: null,
-        commercialRecord: null,
-        taxCard: null,
+        selfie: null,
+        commercialRegistration: null,
+        taxNumberDocument: null,
     });
 
     const showToast = (message, type = "success") => {
@@ -73,10 +73,21 @@ const VerifyAccountPage = () => {
         }
     };
 
+    const handleRemoveFile = (fieldName) => {
+        setFiles({
+            ...files,
+            [fieldName]: null,
+        });
+        setPreviews({
+            ...previews,
+            [fieldName]: null,
+        });
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (!files.idCardFront || !files.idCardBack || !files.personalPhoto ||  !files.commercialRecord || !files.taxCard) {
+        if (!files.idCardFront || !files.idCardBack || !files.selfie || !files.commercialRegistration || !files.taxNumberDocument) {
             showToast(
                 isRTL
                     ? "يرجى رفع جميع الصور المطلوبة"
@@ -91,11 +102,15 @@ const VerifyAccountPage = () => {
             const formData = new FormData();
             formData.append("id_card_front", files.idCardFront);
             formData.append("id_card_back", files.idCardBack);
-            formData.append("personal_photo", files.personalPhoto);
-            formData.append("commercial_record", files.commercialRecord);
-            formData.append("tax_card", files.taxCard);
+            formData.append("selfie", files.selfie);
+            formData.append("commercial_registration", files.commercialRegistration);
+            formData.append("tax_number_document", files.taxNumberDocument);
 
-            // await userAPI.post("/verify-account", formData);
+            await userAPI.post("/verification/submit", formData, {
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                },
+            });
 
             setShowSuccessModal(true);
         } catch (err) {
@@ -106,7 +121,6 @@ const VerifyAccountPage = () => {
                     : "An error occurred while submitting the request",
                 "error"
             );
-            return;
         } finally {
             setSubmitting(false);
         }
@@ -126,14 +140,16 @@ const VerifyAccountPage = () => {
             <div dir={dir} className="min-h-screen flex flex-col items-center py-6">
                 {toast && (
                     <div
-                        className={`fixed top-4 sm:top-5 ${dir === "rtl" ? "left-4 sm:left-5" : "right-4 sm:right-5"
-                            } z-50 animate-slide-in max-w-[90%] sm:max-w-md`}
+                        className={`fixed top-4 sm:top-5 ${
+                            dir === "rtl" ? "left-4 sm:left-5" : "right-4 sm:right-5"
+                        } z-50 animate-slide-in max-w-[90%] sm:max-w-md`}
                     >
                         <div
-                            className={`px-4 py-3 sm:px-6 sm:py-4 rounded-lg sm:rounded-xl shadow-lg flex items-center gap-2 sm:gap-3 ${toast.type === "success"
-                                ? "bg-main text-white"
-                                : "bg-red-500 text-white"
-                                }`}
+                            className={`px-4 py-3 sm:px-6 sm:py-4 rounded-lg sm:rounded-xl shadow-lg flex items-center gap-2 sm:gap-3 ${
+                                toast.type === "success"
+                                    ? "bg-main text-white"
+                                    : "bg-red-500 text-white"
+                            }`}
                         >
                             {toast.type === "success" ? (
                                 <svg
@@ -199,8 +215,9 @@ const VerifyAccountPage = () => {
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
                             <div className="flex flex-col">
                                 <label
-                                    className={`text-sm font-bold mb-2 ${isRTL ? "text-right" : "text-left"
-                                        }`}
+                                    className={`text-sm font-bold mb-2 ${
+                                        isRTL ? "text-right" : "text-left"
+                                    }`}
                                 >
                                     {t("profile.emailReadOnly")}
                                 </label>
@@ -208,15 +225,17 @@ const VerifyAccountPage = () => {
                                     type="email"
                                     value={profile.email}
                                     readOnly
-                                    className={`border border-gray-300 py-2 px-3 rounded-md text-sm bg-gray-100 cursor-not-allowed ${isRTL ? "text-right" : "text-left"
-                                        }`}
+                                    className={`border border-gray-300 py-2 px-3 rounded-md text-sm bg-gray-100 cursor-not-allowed ${
+                                        isRTL ? "text-right" : "text-left"
+                                    }`}
                                 />
                             </div>
 
                             <div className="flex flex-col">
                                 <label
-                                    className={`text-sm font-bold mb-2 ${isRTL ? "text-right" : "text-left"
-                                        }`}
+                                    className={`text-sm font-bold mb-2 ${
+                                        isRTL ? "text-right" : "text-left"
+                                    }`}
                                 >
                                     {t("profile.phoneReadOnly")}
                                 </label>
@@ -224,22 +243,26 @@ const VerifyAccountPage = () => {
                                     type="text"
                                     value={profile.phone}
                                     readOnly
-                                    className={`border border-gray-300 py-2 px-3 rounded-md text-sm bg-gray-100 cursor-not-allowed ${isRTL ? "text-right" : "text-left"
-                                        }`}
+                                    className={`border border-gray-300 py-2 px-3 rounded-md text-sm bg-gray-100 cursor-not-allowed ${
+                                        isRTL ? "text-right" : "text-left"
+                                    }`}
                                 />
                             </div>
                         </div>
+
+                        {/* ID Card Front and Back */}
                         <div className="border-t pt-5">
                             <label
-                                className={`text-sm font-bold mb-3 block ${isRTL ? "text-right" : "text-left"
-                                    }`}
+                                className={`text-sm font-bold mb-3 block ${
+                                    isRTL ? "text-right" : "text-left"
+                                }`}
                             >
                                 {t("profile.id")}
                             </label>
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="cursor-pointer flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-main transition">
+                                    <label className="cursor-pointer flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-main transition relative">
                                         <input
                                             type="file"
                                             accept="image/*"
@@ -247,11 +270,24 @@ const VerifyAccountPage = () => {
                                             className="hidden"
                                         />
                                         {previews.idCardFront ? (
-                                            <img
-                                                src={previews.idCardFront}
-                                                alt="ID Front"
-                                                className="w-full h-32 object-cover rounded"
-                                            />
+                                            <div className="relative w-full">
+                                                <img
+                                                    src={previews.idCardFront}
+                                                    alt="ID Front"
+                                                    className="w-full h-32 object-cover rounded"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        e.stopPropagation();
+                                                        handleRemoveFile("idCardFront");
+                                                    }}
+                                                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 transition shadow-lg font-bold cursor-pointer"
+                                                >
+                                                    ×
+                                                </button>
+                                            </div>
                                         ) : (
                                             <>
                                                 <Upload className="w-8 h-8 text-gray-400 mb-2" />
@@ -264,7 +300,7 @@ const VerifyAccountPage = () => {
                                 </div>
 
                                 <div>
-                                    <label className="cursor-pointer flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-main transition">
+                                    <label className="cursor-pointer flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-main transition relative">
                                         <input
                                             type="file"
                                             accept="image/*"
@@ -272,11 +308,24 @@ const VerifyAccountPage = () => {
                                             className="hidden"
                                         />
                                         {previews.idCardBack ? (
-                                            <img
-                                                src={previews.idCardBack}
-                                                alt="ID Back"
-                                                className="w-full h-32 object-cover rounded"
-                                            />
+                                            <div className="relative w-full">
+                                                <img
+                                                    src={previews.idCardBack}
+                                                    alt="ID Back"
+                                                    className="w-full h-32 object-cover rounded"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        e.stopPropagation();
+                                                        handleRemoveFile("idCardBack");
+                                                    }}
+                                                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 transition shadow-lg font-bold cursor-pointer"
+                                                >
+                                                    ×
+                                                </button>
+                                            </div>
                                         ) : (
                                             <>
                                                 <Upload className="w-8 h-8 text-gray-400 mb-2" />
@@ -290,10 +339,12 @@ const VerifyAccountPage = () => {
                             </div>
                         </div>
 
+                        {/* Selfie / Personal Photo */}
                         <div className="border-t pt-5">
                             <label
-                                className={`text-sm font-bold mb-3 block ${isRTL ? "text-right" : "text-left"
-                                    }`}
+                                className={`text-sm font-bold mb-3 block ${
+                                    isRTL ? "text-right" : "text-left"
+                                }`}
                             >
                                 {t("profile.personalPhoto")}
                             </label>
@@ -302,15 +353,28 @@ const VerifyAccountPage = () => {
                                 <input
                                     type="file"
                                     accept="image/*"
-                                    onChange={(e) => handleFileChange(e, "personalPhoto")}
+                                    onChange={(e) => handleFileChange(e, "selfie")}
                                     className="hidden"
                                 />
-                                {previews.personalPhoto ? (
-                                    <img
-                                        src={previews.personalPhoto}
-                                        alt="Personal"
-                                        className="w-40 h-40 object-cover rounded-full"
-                                    />
+                                {previews.selfie ? (
+                                    <div className="relative">
+                                        <img
+                                            src={previews.selfie}
+                                            alt="Personal"
+                                            className="w-40 h-40 object-cover rounded-full"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                handleRemoveFile("selfie");
+                                            }}
+                                            className="absolute top-0 right-0 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-red-600 transition shadow-lg font-bold text-xl cursor-pointer"
+                                        >
+                                            ×
+                                        </button>
+                                    </div>
                                 ) : (
                                     <>
                                         <Upload className="w-10 h-10 text-gray-400 mb-2" />
@@ -321,27 +385,44 @@ const VerifyAccountPage = () => {
                                 )}
                             </label>
                         </div>
+
+                        {/* Business Documents */}
                         <div className="border-t pt-5">
                             <label
-                                className={`text-sm font-bold mb-3 block ${isRTL ? "text-right" : "text-left"}`}
+                                className={`text-sm font-bold mb-3 block ${
+                                    isRTL ? "text-right" : "text-left"
+                                }`}
                             >
                                 {t("profile.businessDocs")}
                             </label>
 
                             <div className="grid grid-cols-2 gap-4">
-                                <label className="cursor-pointer flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-main transition">
+                                <label className="cursor-pointer flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-main transition relative">
                                     <input
                                         type="file"
                                         accept="image/*"
-                                        onChange={(e) => handleFileChange(e, "commercialRecord")}
+                                        onChange={(e) => handleFileChange(e, "commercialRegistration")}
                                         className="hidden"
                                     />
-                                    {previews.commercialRecord ? (
-                                        <img
-                                            src={previews.commercialRecord}
-                                            alt="Commercial Record"
-                                            className="w-full h-32 object-cover rounded"
-                                        />
+                                    {previews.commercialRegistration ? (
+                                        <div className="relative w-full">
+                                            <img
+                                                src={previews.commercialRegistration}
+                                                alt="Commercial Registration"
+                                                className="w-full h-32 object-cover rounded"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                    handleRemoveFile("commercialRegistration");
+                                                }}
+                                                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 transition shadow-lg font-bold cursor-pointer"
+                                            >
+                                                ×
+                                            </button>
+                                        </div>
                                     ) : (
                                         <>
                                             <Upload className="w-8 h-8 text-gray-400 mb-2" />
@@ -351,19 +432,33 @@ const VerifyAccountPage = () => {
                                         </>
                                     )}
                                 </label>
-                                <label className="cursor-pointer flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-main transition">
+
+                                <label className="cursor-pointer flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-main transition relative">
                                     <input
                                         type="file"
                                         accept="image/*"
-                                        onChange={(e) => handleFileChange(e, "taxCard")}
+                                        onChange={(e) => handleFileChange(e, "taxNumberDocument")}
                                         className="hidden"
                                     />
-                                    {previews.taxCard ? (
-                                        <img
-                                            src={previews.taxCard}
-                                            alt="Tax Card"
-                                            className="w-full h-32 object-cover rounded"
-                                        />
+                                    {previews.taxNumberDocument ? (
+                                        <div className="relative w-full">
+                                            <img
+                                                src={previews.taxNumberDocument}
+                                                alt="Tax Number Document"
+                                                className="w-full h-32 object-cover rounded"
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                    handleRemoveFile("taxNumberDocument");
+                                                }}
+                                                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 transition shadow-lg font-bold cursor-pointer"
+                                            >
+                                                ×
+                                            </button>
+                                        </div>
                                     ) : (
                                         <>
                                             <Upload className="w-8 h-8 text-gray-400 mb-2" />
@@ -379,7 +474,7 @@ const VerifyAccountPage = () => {
                         <button
                             type="submit"
                             disabled={submitting}
-                            className="w-full bg-main text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition disabled:opacity-50 mt-6"
+                            className="w-full bg-main cursor-pointer text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition disabled:opacity-50 mt-6"
                         >
                             {submitting
                                 ? t("profile.loading")
@@ -391,7 +486,7 @@ const VerifyAccountPage = () => {
 
             {/* Success Modal */}
             {showSuccessModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div className="fixed inset-0 bg-[#00000062] bg-opacity-50 flex items-center justify-center z-50">
                     <div
                         dir={dir}
                         className="bg-white rounded-lg p-8 max-w-md w-full mx-4 text-center"
@@ -421,7 +516,7 @@ const VerifyAccountPage = () => {
                         </div>
                         <button
                             onClick={() => navigate("/")}
-                            className="w-full bg-main text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition"
+                            className="w-full bg-main cursor-pointer text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition"
                         >
                             {t("profile.successModal.backToHome")}
                         </button>

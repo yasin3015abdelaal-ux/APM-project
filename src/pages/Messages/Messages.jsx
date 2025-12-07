@@ -1,467 +1,635 @@
-import { useState, useEffect, useMemo, memo } from "react";
+import { useState, useEffect, useMemo, memo, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
+import { useLocation } from "react-router-dom";
 import Loader from "../../components/Ui/Loader/Loader";
+import { chatAPI } from "../../api";
+import { useChat } from "../../contexts/ChatContext";
+import ChatView from "./ChatView";
 
-const MessageCard = memo(({ message, isSelected, onSelect }) => (
-    <div 
-        className={`flex items-start gap-3 p-4 hover:bg-gray-50 cursor-pointer border-b border-gray-200 transition ${
-            isSelected ? 'bg-green-50 border-l-4 border-l-main' : ''
-        }`}
-        onClick={onSelect}
-    >
-        <div className="flex-shrink-0">
-            {message.userImage ? (
-                <img
-                    src={message.userImage}
-                    alt={message.userName}
-                    className="w-12 h-12 rounded-full object-cover border-2 border-main"
-                />
-            ) : (
-                <div className="w-12 h-12 rounded-full bg-gray-200 border-2 border-main flex items-center justify-center">
-                    <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                </div>
-            )}
-        </div>
+const MessageCard = memo(({ conversation, isSelected, onSelect }) => {
+    const { t, i18n } = useTranslation();
+    const lastMessage = conversation.last_message;
+    const unreadCount = conversation.unread_count || 0;
+    const otherUser = conversation.other_user;
+    const isRTL = i18n.language === "ar";
 
-        <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between gap-2 mb-1">
-                <h4 className="font-semibold text-gray-900 truncate">{message.userName}</h4>
-                <span className="text-xs text-gray-500 flex-shrink-0">{message.time}</span>
-            </div>
-            <p className="text-sm text-gray-600 mb-1 truncate">{message.adTitle}</p>
-            <div className="flex items-center justify-between">
-                <p className={`text-sm truncate ${message.unread > 0 ? 'font-semibold text-gray-900' : 'text-gray-500'}`}>
-                    {message.lastMessage}
-                </p>
-                {message.unread > 0 && (
-                    <span className="flex-shrink-0 ml-2 bg-main text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                        {message.unread}
-                    </span>
+    const formatTime = useCallback((dateString) => {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffMs = now - date;
+        const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+        
+        if (diffDays === 0) {
+            return date.toLocaleTimeString(isRTL ? 'ar-EG' : 'en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+        } else if (diffDays === 1) {
+            return t('messages.yesterday');
+        } else if (diffDays < 7) {
+            return isRTL ? `منذ ${diffDays} أيام` : `${diffDays} ${t('messages.daysAgo')}`;
+        } else {
+            return date.toLocaleDateString(isRTL ? 'ar-EG' : 'en-US');
+        }
+    }, [isRTL, t]);
+
+    return (
+        <div 
+            className={`flex items-center gap-3 p-4 hover:bg-gray-50/80 cursor-pointer transition-all duration-200 border-b border-gray-100/50 ${
+                isSelected ? 'bg-green-50/50 border-r-[3px] border-r-main' : ''
+            }`}
+            onClick={onSelect}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    onSelect();
+                }
+            }}
+        >
+            <div className="flex-shrink-0 relative">
+                {otherUser?.image ? (
+                    <img
+                        src={otherUser.image}
+                        alt={otherUser.name}
+                        className="w-12 h-12 rounded-full object-cover ring-2 ring-gray-200"
+                        loading="lazy"
+                    />
+                ) : (
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center ring-2 ring-gray-200">
+                        <span className="text-base font-bold text-white">
+                            {otherUser?.name?.charAt(0) || (isRTL ? 'م' : 'U')}
+                        </span>
+                    </div>
+                )}
+                {unreadCount > 0 && (
+                    <div className="absolute -top-1 -left-1 min-w-[20px] h-5 bg-red-500 rounded-full flex items-center justify-center px-1.5">
+                        <span className="text-white text-xs font-bold">{unreadCount > 99 ? '99+' : unreadCount}</span>
+                    </div>
                 )}
             </div>
+
+            <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-2 mb-1">
+                    <h4 className="font-bold text-gray-900 truncate text-base">
+                        {otherUser?.name || t('messages.noUser')}
+                    </h4>
+                    {lastMessage && (
+                        <span className="text-xs text-gray-400 flex-shrink-0">
+                            {formatTime(lastMessage.created_at)}
+                        </span>
+                    )}
+                </div>
+                
+                <p className={`text-sm truncate ${
+                    unreadCount > 0 
+                        ? 'font-semibold text-gray-800' 
+                        : 'text-gray-500'
+                }`}>
+                    {lastMessage?.message || t('messages.noMessages')}
+                </p>
+            </div>
         </div>
-    </div>
-));
+    );
+});
+
+MessageCard.displayName = 'MessageCard';
 
 const Messages = () => {
     const { t, i18n } = useTranslation();
+    const location = useLocation();
     const [loading, setLoading] = useState(true);
-    const [messages, setMessages] = useState([]);
-    const [selectedChatId, setSelectedChatId] = useState(null);
-    const [selectedTab, setSelectedTab] = useState("all"); 
+    const [conversations, setConversations] = useState([]);
+    const [selectedConversationId, setSelectedConversationId] = useState(null);
     const [searchQuery, setSearchQuery] = useState("");
-    const [chatMessages, setChatMessages] = useState([]);
+    const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState("");
+    const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+    const [isSendingMessage, setIsSendingMessage] = useState(false);
+    const [currentUserId, setCurrentUserId] = useState(null);
+    const [toast, setToast] = useState(null);
+    const [activeFilter, setActiveFilter] = useState("all");
+    const [showChatOptions, setShowChatOptions] = useState(false);
+    const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
+
+    const isRTL = i18n.language === "ar";
 
     useEffect(() => {
-        const handleEscape = (e) => {
-            if (e.key === 'Escape') {
-                setSelectedChatId(null);
+        const timer = setTimeout(() => {
+            setDebouncedSearchQuery(searchQuery);
+        }, 300);
+
+        return () => clearTimeout(timer);
+    }, [searchQuery]);
+
+    const { updateUnreadCount, decrementUnreadCount } = useChat();
+    
+    const fetchMessagesAbortController = useRef(null);
+    const autoRefreshInterval = useRef(null);
+    const messageRefreshInterval = useRef(null);
+    const chatOptionsRef = useRef(null);
+
+    const showToast = useCallback((message, type = "success") => {
+        setToast({ message, type });
+        setTimeout(() => setToast(null), 4000);
+    }, []);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (chatOptionsRef.current && !chatOptionsRef.current.contains(event.target)) {
+                setShowChatOptions(false);
+            }
+        };
+
+        if (showChatOptions) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [showChatOptions]);
+
+    useEffect(() => {
+        const userData = localStorage.getItem("userData");
+        if (userData) {
+            try {
+                const user = JSON.parse(userData);
+                if (user && user.id) {
+                    setCurrentUserId(user.id);
+                } else {
+                    console.error("Invalid user data structure");
+                    showToast(t('messages.errorLoadingUserData'), "error");
+                }
+            } catch (error) {
+                console.error("Error parsing user data:", error);
+                showToast(t('messages.errorLoadingUserData'), "error");
+                localStorage.removeItem("userData");
+            }
+        } else {
+            console.warn("No user data found");
+        }
+    }, [showToast, t]);
+
+    const fetchConversations = useCallback(async (page = 1, silent = false) => {
+        try {
+            if (!silent) setLoading(true);
+            const response = await chatAPI.getConversations({ page, limit: 50 });
+            if (response.data.success) {
+                setConversations(response.data.data);
+            } else {
+                throw new Error(response.data.message || t('messages.errorLoadingConversations'));
+            }
+        } catch (error) {
+            console.error("Error fetching conversations:", error);
+            if (!silent) {
+                showToast(t('messages.errorLoadingConversations'), "error");
+            }
+        } finally {
+            if (!silent) setLoading(false);
+        }
+    }, [showToast, t]); 
+
+    const fetchUnreadCount = useCallback(async () => {
+        try {
+            const response = await chatAPI.getUnreadCount();
+            if (response.data.success) {
+                updateUnreadCount(response.data.count || 0);
+            }
+        } catch (error) {
+            console.error("Error fetching unread count:", error);
+        }
+    }, [updateUnreadCount]);
+
+    const fetchMessages = useCallback(async (conversationId, silent = false) => {
+        if (fetchMessagesAbortController.current) {
+            fetchMessagesAbortController.current.abort();
+        }
+
+        fetchMessagesAbortController.current = new AbortController();
+
+        try {
+            if (!silent) setIsLoadingMessages(true);
+            const response = await chatAPI.getMessages(
+                conversationId, 
+                { page: 1, limit: 50 },
+                { signal: fetchMessagesAbortController.current.signal }
+            );
+            
+            if (response.data.success) {
+                const newMessages = response.data.data;
+                
+                setMessages(prev => {
+                    const prevIds = prev.map(m => m.id).join(',');
+                    const newIds = newMessages.map(m => m.id).join(',');
+                    
+                    if (prevIds === newIds && prev.length === newMessages.length) {
+                        return prev; 
+                    }
+                    return newMessages;
+                });
+
+                if (silent && conversationId === selectedConversationId) {
+                    const conversation = conversations.find(c => c.id === conversationId);
+                    if (conversation?.unread_count > 0) {
+                        markAsRead(conversationId);
+                    }
+                }
+            } else {
+                throw new Error(response.data.message || t('messages.errorLoadingMessages'));
+            }
+        } catch (error) {
+            if (error.name !== 'AbortError') {
+                console.error("Error fetching messages:", error);
+                if (!silent) {
+                    showToast(t('messages.errorLoadingMessages'), "error");
+                }
+            }
+        } finally {
+            if (!silent) setIsLoadingMessages(false);
+        }
+    }, [showToast, t, selectedConversationId, conversations]);
+
+    const markAsRead = useCallback(async (conversationId) => {
+        try {
+            const conversation = conversations.find(c => c.id === conversationId);
+            const unreadAmount = conversation?.unread_count || 0;
+            
+            if (unreadAmount === 0) return;
+
+            setConversations(prev => prev.map(conv => 
+                conv.id === conversationId ? { ...conv, unread_count: 0 } : conv
+            ));
+            
+            decrementUnreadCount(unreadAmount);
+            
+            await chatAPI.markAsRead(conversationId);
+        } catch (error) {
+            console.error("Error marking as read:", error);
+            const conversation = conversations.find(c => c.id === conversationId);
+            if (conversation) {
+                setConversations(prev => prev.map(conv => 
+                    conv.id === conversationId ? conversation : conv
+                ));
+            }
+        }
+    }, [conversations, decrementUnreadCount]);
+
+    const handleSendMessage = useCallback(async (messageText) => {
+        if (!messageText.trim() || isSendingMessage || !selectedConversationId) return;
+
+        const tempId = `temp-${Date.now()}-${Math.random()}`;
+        const optimisticMessage = {
+            id: tempId,
+            message: messageText,
+            sender_id: currentUserId,
+            conversation_id: selectedConversationId,
+            created_at: new Date().toISOString(),
+            is_read: false,
+            status: 'sending'
+        };
+
+        try {
+            setIsSendingMessage(true);
+            
+            setMessages(prev => [...prev, optimisticMessage]);
+            setNewMessage("");
+            
+            const response = await chatAPI.sendMessage(selectedConversationId, messageText);
+            
+            if (response.data.success) {
+                const realMessage = response.data.data || optimisticMessage;
+                
+                setMessages(prev => 
+                    prev.map(msg => 
+                        msg.id === tempId 
+                            ? { ...realMessage, id: realMessage.id || tempId, status: 'sent' }
+                            : msg
+                    )
+                );
+                
+                setConversations(prev => 
+                    prev.map(conv => 
+                        conv.id === selectedConversationId 
+                            ? { ...conv, last_message: realMessage }
+                            : conv
+                    )
+                );
+
+                fetchUnreadCount();
+            } else {
+                throw new Error(response.data.message || t('messages.errorSendingMessage'));
+            }
+        } catch (error) {
+            console.error("Error sending message:", error);
+            showToast(t('messages.errorSendingMessage'), "error");
+            
+            setMessages(prev => prev.filter(msg => msg.id !== tempId));
+            setNewMessage(messageText);
+        } finally {
+            setIsSendingMessage(false);
+        }
+    }, [selectedConversationId, isSendingMessage, currentUserId, showToast, fetchUnreadCount, t]);
+
+    const handleChatSelect = useCallback((conversation) => {
+        if (selectedConversationId === conversation.id) return;
+        
+        setSelectedConversationId(conversation.id);
+        fetchMessages(conversation.id);
+        
+        if (conversation.unread_count > 0) {
+            markAsRead(conversation.id);
+        }
+    }, [selectedConversationId, fetchMessages, markAsRead]);
+
+    const handleCloseChat = useCallback(() => {
+        setSelectedConversationId(null);
+        setMessages([]);
+        setNewMessage("");
+        setShowChatOptions(false);
+        
+        if (fetchMessagesAbortController.current) {
+            fetchMessagesAbortController.current.abort();
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchConversations();
+        fetchUnreadCount();
+        
+        return () => {
+            if (fetchMessagesAbortController.current) {
+                fetchMessagesAbortController.current.abort();
+                fetchMessagesAbortController.current = null;
+            }
+            
+            if (autoRefreshInterval.current) {
+                clearInterval(autoRefreshInterval.current);
+                autoRefreshInterval.current = null; 
+            }
+
+            if (messageRefreshInterval.current) {
+                clearInterval(messageRefreshInterval.current);
+                messageRefreshInterval.current = null;
+            }
+        };
+    }, []);
+
+    useEffect(() => {
+        const handleEscKey = (event) => {
+            if (event.key === 'Escape' || event.keyCode === 27) {
+                if (selectedConversationId) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    handleCloseChat();
+                }
             }
         };
         
-        window.addEventListener('keydown', handleEscape);
-        return () => window.removeEventListener('keydown', handleEscape);
-    }, []);
+        document.addEventListener('keydown', handleEscKey, true);
+        
+        return () => {
+            document.removeEventListener('keydown', handleEscKey, true);
+        };
+    }, [selectedConversationId, handleCloseChat]);
 
     useEffect(() => {
-        setTimeout(() => {
-            const dummyMessages = [
-                {
-                    id: 1,
-                    userName: "محمد إبراهيم",
-                    userImage: null,
-                    lastMessage: "السلام عليكم، الذبيحة لسه متاحة؟",
-                    time: "10:00 am",
-                    unread: 2,
-                    adTitle: "خروف بلدي للبيع - وزن 45 كجم",
-                    type: "sell"
-                },
-                {
-                    id: 2,
-                    userName: "أحمد علي",
-                    userImage: null,
-                    lastMessage: "ممكن أشوف الدجاج البلدي؟",
-                    time: "8:02 am",
-                    unread: 0,
-                    adTitle: "دجاج بلدي بياض - 20 فرخة",
-                    type: "buy"
-                },
-                {
-                    id: 3,
-                    userName: "سارة محمود",
-                    userImage: null,
-                    lastMessage: "كم سعر الكيلو لحم الضاني؟",
-                    time: "أمس",
-                    unread: 1,
-                    adTitle: "لحم ضاني طازج - للبيع بالكيلو",
-                    type: "sell"
-                },
-                {
-                    id: 4,
-                    userName: "عمر حسن",
-                    userImage: null,
-                    lastMessage: "المزاد النهارده الساعة كام؟",
-                    time: "أمس",
-                    unread: 0,
-                    adTitle: "مزاد ماشية - عجول وجاموس",
-                    type: "buy"
-                },
-                {
-                    id: 5,
-                    userName: "فاطمة أحمد",
-                    userImage: null,
-                    lastMessage: "البط متاح للحجز؟",
-                    time: "منذ يومين",
-                    unread: 3,
-                    adTitle: "بط مسكوفي للبيع - 15 بطة",
-                    type: "sell"
-                },
-                {
-                    id: 6,
-                    userName: "خالد محمد",
-                    userImage: null,
-                    lastMessage: "عايز أحجز 5 كيلو لحم بقري",
-                    time: "منذ يومين",
-                    unread: 0,
-                    adTitle: "لحم بقري طازج - جزارة الأمانة",
-                    type: "buy"
-                },
-                {
-                    id: 7,
-                    userName: "نور الدين",
-                    userImage: null,
-                    lastMessage: "الأرانب لسه موجودة؟",
-                    time: "منذ 3 أيام",
-                    unread: 0,
-                    adTitle: "أرانب للبيع - نيوزلندي أبيض",
-                    type: "sell"
-                },
-                {
-                    id: 8,
-                    userName: "ياسمين سعيد",
-                    userImage: null,
-                    lastMessage: "في توصيل للقاهرة؟",
-                    time: "منذ 3 أيام",
-                    unread: 1,
-                    adTitle: "عجل جاموسي - وزن 250 كجم",
-                    type: "buy"
-                }
-            ];
-            setMessages(dummyMessages);
-            setLoading(false);
-        }, 1000);
-    }, []);
-
-    const selectedChat = useMemo(() => {
-        return messages.find(m => m.id === selectedChatId);
-    }, [messages, selectedChatId]);
-
-    const handleChatSelect = (message) => {
-        setSelectedChatId(message.id);
-        setMessages(prevMessages => prevMessages.map(msg => 
-            msg.id === message.id ? { ...msg, unread: 0 } : msg
-        ));
-        
-        const dummyChatMessages = message.type === "sell" ? [
-            {
-                id: 1,
-                text: "السلام عليكم ورحمة الله",
-                time: "10:00 am",
-                sender: "other"
-            },
-            {
-                id: 2,
-                text: "وعليكم السلام ورحمة الله وبركاته، أهلاً وسهلاً",
-                time: "10:01 am",
-                sender: "me"
-            },
-            {
-                id: 3,
-                text: message.lastMessage,
-                time: "10:02 am",
-                sender: "other"
-            },
-            {
-                id: 4,
-                text: "نعم متاح والحمد لله، تقدر تيجي تشوفه",
-                time: "10:03 am",
-                sender: "me"
-            },
-            {
-                id: 5,
-                text: "ممتاز، السعر النهائي كام؟",
-                time: "10:04 am",
-                sender: "other"
+        if (location.state?.conversationId && conversations.length > 0) {
+            const convId = location.state.conversationId;
+            const conv = conversations.find(c => c.id === convId);
+            
+            if (conv) {
+                handleChatSelect(conv);
             }
-        ] : [
-            {
-                id: 1,
-                text: "صباح الخير",
-                time: "8:00 am",
-                sender: "me"
-            },
-            {
-                id: 2,
-                text: "صباح النور، أهلاً بيك",
-                time: "8:01 am",
-                sender: "other"
-            },
-            {
-                id: 3,
-                text: message.lastMessage,
-                time: "8:02 am",
-                sender: "me"
-            },
-            {
-                id: 4,
-                text: "طبعاً، تعال في أي وقت",
-                time: "8:03 am",
-                sender: "other"
-            }
-        ];
-        setChatMessages(dummyChatMessages);
-    };
-
-    const handleSendMessage = (e) => {
-        e.preventDefault();
-        if (newMessage.trim()) {
-            const newMsg = {
-                id: chatMessages.length + 1,
-                text: newMessage,
-                time: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
-                sender: "me"
-            };
-            setChatMessages(prev => [...prev, newMsg]);
-            setNewMessage("");
         }
-    };
+    }, [location.state?.conversationId, conversations, handleChatSelect]);
 
-    const filteredMessages = useMemo(() => {
-        return messages.filter(msg => {
-            const matchesTab = selectedTab === "all" || msg.type === selectedTab;
-            const matchesSearch = msg.userName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                                 msg.lastMessage.toLowerCase().includes(searchQuery.toLowerCase());
-            return matchesTab && matchesSearch;
-        });
-    }, [messages, selectedTab, searchQuery]);
+    useEffect(() => {
+        if (autoRefreshInterval.current) {
+            clearInterval(autoRefreshInterval.current);
+        }
+        if (messageRefreshInterval.current) {
+            clearInterval(messageRefreshInterval.current);
+        }
+
+        autoRefreshInterval.current = setInterval(() => {
+            if (document.visibilityState === 'visible') {
+                fetchConversations(1, true); 
+                fetchUnreadCount();
+            }
+        }, 10000);
+
+        if (selectedConversationId) {
+            messageRefreshInterval.current = setInterval(() => {
+                if (document.visibilityState === 'visible') {
+                    fetchMessages(selectedConversationId, true); 
+                }
+            }, 5000);
+        }
+
+        return () => {
+            if (autoRefreshInterval.current) {
+                clearInterval(autoRefreshInterval.current);
+            }
+            if (messageRefreshInterval.current) {
+                clearInterval(messageRefreshInterval.current);
+            }
+        };
+    }, [selectedConversationId]); 
+
+    const filteredConversations = useMemo(() => {
+        let filtered = [...conversations];
+        
+        if (activeFilter === "buy") {
+            filtered = filtered.filter(conv => conv.type === "buy");
+        } else if (activeFilter === "sell") {
+            filtered = filtered.filter(conv => conv.type === "sell");
+        }
+        
+        if (debouncedSearchQuery.trim()) {
+            const query = debouncedSearchQuery.toLowerCase().trim();
+            filtered = filtered.filter(conv => 
+                conv.other_user?.name?.toLowerCase().includes(query)
+            );
+        }
+        
+        return filtered;
+    }, [conversations, debouncedSearchQuery, activeFilter]);
+
+    const selectedConversation = useMemo(() => {
+        return conversations.find(c => c.id === selectedConversationId);
+    }, [conversations, selectedConversationId]);
 
     const EmptyState = () => (
-        <div className="flex flex-col items-center justify-center h-full py-16 px-4">
-            <svg width="100" height="100" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M10 30H30V25H10V30ZM10 22.5H40V17.5H10V22.5ZM10 15H40V10H10V15ZM0 50V5C0 3.625 0.49 2.44833 1.47 1.47C2.45 0.491667 3.62667 0.00166667 5 0H45C46.375 0 47.5525 0.49 48.5325 1.47C49.5125 2.45 50.0017 3.62667 50 5V35C50 36.375 49.5108 37.5525 48.5325 38.5325C47.5542 39.5125 46.3767 40.0017 45 40H10L0 50ZM7.875 35H45V5H5V37.8125L7.875 35Z" fill="#4CAF50"/>
-            </svg>
-            <h3 className="text-xl font-semibold text-gray-700 mt-6 mb-2">
-                {t("messages.noMessages")}
-            </h3>
-            <p className="text-gray-500 text-center max-w-md">
-                {t("messages.startConversation")}
-            </p>
-        </div>
-    );
-
-    const ChatView = () => (
-        <div className="flex flex-col h-full bg-white">
-            <div className="flex items-center gap-3 p-4 border-b-2 border-gray-200 bg-gray-50">
-                <button
-                    onClick={() => setSelectedChatId(null)}
-                    className="lg:hidden text-main hover:bg-gray-200 p-2 rounded-lg cursor-pointer"
-                >
-                    <i className="fas fa-arrow-right"></i>
-                </button>
-                <div className="flex-shrink-0">
-                    {selectedChat.userImage ? (
-                        <img
-                            src={selectedChat.userImage}
-                            alt={selectedChat.userName}
-                            className="w-12 h-12 rounded-full object-cover border-2 border-main"
-                        />
-                    ) : (
-                        <div className="w-12 h-12 rounded-full bg-gray-200 border-2 border-main flex items-center justify-center">
-                            <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                            </svg>
-                        </div>
-                    )}
-                </div>
-                <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-gray-900">{selectedChat.userName}</h3>
-                    <p className="text-sm text-gray-600 truncate">{selectedChat.adTitle}</p>
-                </div>
+        <div className="flex flex-col items-center justify-center h-full py-12 px-4">
+            <div className="w-24 h-24 bg-gradient-to-br from-green-100 to-green-200 rounded-3xl flex items-center justify-center mb-6">
+                <svg className="w-12 h-12 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                </svg>
             </div>
-
-            <div className="flex-1 overflow-y-auto p-4 bg-gray-50" style={{ backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0,0,0,.02) 10px, rgba(0,0,0,.02) 20px)' }}>
-                {chatMessages.length === 0 ? (
-                    <div className="flex items-center justify-center h-full text-gray-500">
-                        <p>{t("messages.startChatNow")}</p>
-                    </div>
-                ) : (
-                    <div className="space-y-3">
-                        {chatMessages.map((msg) => (
-                            <div
-                                key={msg.id}
-                                className={`flex ${msg.sender === 'me' ? 'justify-end' : 'justify-start'}`}
-                            >
-                                <div className={`max-w-[70%] ${msg.sender === 'me' ? 'order-2' : 'order-1'}`}>
-                                    <div
-                                        className={`px-4 py-2 rounded-2xl ${
-                                            msg.sender === 'me'
-                                                ? 'bg-main text-white rounded-br-none'
-                                                : 'bg-white border border-gray-200 text-gray-900 rounded-bl-none'
-                                        }`}
-                                    >
-                                        <p className="text-sm">{msg.text}</p>
-                                    </div>
-                                    <span className={`text-xs text-gray-500 mt-1 block ${msg.sender === 'me' ? 'text-left' : 'text-right'}`}>
-                                        {msg.time}
-                                    </span>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </div>
-
-            <div className="p-4 border-t-2 border-gray-200 bg-white">
-                <form onSubmit={handleSendMessage} className="flex gap-2 items-center">
-                    <input
-                        type="text"
-                        name="message"
-                        id="message-input"
-                        value={newMessage}
-                        onChange={(e) => setNewMessage(e.target.value)}
-                        placeholder={t("messages.typePlaceholder")}
-                        className="flex-1 px-4 py-2.5 border-2 border-gray-300 rounded-full outline-none focus:border-main transition"
-                        autoComplete="off"
-                    />
-                    <button
-                        type="submit"
-                        className="bg-main text-white p-3 rounded-full hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 cursor-pointer"
-                        disabled={!newMessage.trim()}
-                    >
-                        <i className="fas fa-paper-plane"></i>
-                    </button>
-                </form>
-            </div>
+            <h3 className="text-lg font-bold text-gray-800 mb-2">{t('messages.noMessages')}</h3>
         </div>
     );
 
     if (loading) {
-        return (
-            <Loader />
-        );
+        return <Loader />;
     }
 
     return (
-        <div className="h-screen flex flex-col" dir={i18n.language === "ar" ? "rtl" : "ltr"}>
-            <div className={`flex-1 flex ${selectedChat ? 'gap-0' : ''} overflow-hidden`}>
-                {/* Sidebar - Messages List */}
-                <div className={`${
-                    selectedChat 
-                        ? 'hidden lg:flex lg:w-[400px] xl:w-[450px] border-l-2 border-gray-200' 
-                        : 'w-full lg:w-[400px] xl:w-[450px] lg:border-l-2 border-gray-200'
-                } bg-white flex flex-col flex-shrink-0`}>
-                    <div className="border-b-2 border-gray-200 p-4 bg-white">
-                        <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2 mb-4">
-                            <svg width="28" height="28" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M10 30H30V25H10V30ZM10 22.5H40V17.5H10V22.5ZM10 15H40V10H10V15ZM0 50V5C0 3.625 0.49 2.44833 1.47 1.47C2.45 0.491667 3.62667 0.00166667 5 0H45C46.375 0 47.5525 0.49 48.5325 1.47C49.5125 2.45 50.0017 3.62667 50 5V35C50 36.375 49.5108 37.5525 48.5325 38.5325C47.5542 39.5125 46.3767 40.0017 45 40H10L0 50ZM7.875 35H45V5H5V37.8125L7.875 35Z" fill="#4CAF50"/>
+        <div className="h-[calc(100vh-90px)] flex bg-gradient-to-br from-gray-50 to-green-50/20 p-4 gap-4" dir={isRTL ? "rtl" : "ltr"}>
+            {toast && (
+                <div className={`fixed top-6 ${isRTL ? "left-6" : "right-6"} z-50 animate-slide-in max-w-sm`}>
+                    <div className={`px-4 py-3 rounded-xl shadow-lg flex items-center gap-2 ${
+                        toast.type === "success" 
+                            ? "bg-gradient-to-r from-main to-green-600 text-white" 
+                            : "bg-gradient-to-r from-red-500 to-red-600 text-white"
+                    }`}>
+                        {toast.type === "success" ? (
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                             </svg>
-                            {t("messages.title")}
-                        </h2>
-    
-                        <div className="relative mb-4">
-                            <input
-                                type="text"
-                                name="search"
-                                id="search-messages"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                placeholder={t("messages.searchPlaceholder")}
-                                className="w-full px-4 py-2 pr-10 border-2 border-gray-300 rounded-lg outline-none focus:border-main transition"
-                                autoComplete="off"
-                            />
-                            <i className="fas fa-search absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                        </div>
-    
-                        <div className="flex gap-4">
-                            <label className="flex items-center gap-2 cursor-pointer">
-                                <input
-                                    type="radio"
-                                    name="messageType"
-                                    value="all"
-                                    checked={selectedTab === "all"}
-                                    onChange={(e) => setSelectedTab(e.target.value)}
-                                    className="w-4 h-4 text-main focus:ring-main accent-main cursor-pointer"
-                                />
-                                <span className="text-sm font-medium text-gray-700">
-                                    {t("messages.tabs.all")}
-                                </span>
-                            </label>
-                            <label className="flex items-center gap-2 cursor-pointer">
-                                <input
-                                    type="radio"
-                                    name="messageType"
-                                    value="buy"
-                                    checked={selectedTab === "buy"}
-                                    onChange={(e) => setSelectedTab(e.target.value)}
-                                    className="w-4 h-4 text-main focus:ring-main accent-main cursor-pointer"
-                                />
-                                <span className="text-sm font-medium text-gray-700">
-                                    {t("messages.tabs.buy")}
-                                </span>
-                            </label>
-                            <label className="flex items-center gap-2 cursor-pointer">
-                                <input
-                                    type="radio"
-                                    name="messageType"
-                                    value="sell"
-                                    checked={selectedTab === "sell"}
-                                    onChange={(e) => setSelectedTab(e.target.value)}
-                                    className="w-4 h-4 text-main focus:ring-main accent-main cursor-pointer"
-                                />
-                                <span className="text-sm font-medium text-gray-700">
-                                    {t("messages.tabs.sell")}
-                                </span>
-                            </label>
-                        </div>
-                    </div>
-    
-                    <div className="flex-1 overflow-y-auto">
-                        {filteredMessages.length === 0 ? (
-                            <EmptyState />
                         ) : (
-                            filteredMessages.map((message) => (
-                                <MessageCard 
-                                    key={message.id} 
-                                    message={message} 
-                                    isSelected={message.id === selectedChatId}
-                                    onSelect={() => handleChatSelect(message)}
-                                />
-                            ))
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
                         )}
+                        <span className="text-sm font-medium">{toast.message}</span>
                     </div>
                 </div>
-    
-                {/* Chat Area */}
-                {selectedChat ? (
-                    <div className="flex-1">
-                        <ChatView />
-                    </div>
-                ) : (
-                    messages.length > 0 && (
-                        <div className="hidden lg:flex flex-1 items-center justify-center bg-gray-50">
-                            <div className="text-center text-gray-500">
-                                <svg width="120" height="120" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg" className="mx-auto mb-4 opacity-50">
-                                    <path d="M10 30H30V25H10V30ZM10 22.5H40V17.5H10V22.5ZM10 15H40V10H10V15ZM0 50V5C0 3.625 0.49 2.44833 1.47 1.47C2.45 0.491667 3.62667 0.00166667 5 0H45C46.375 0 47.5525 0.49 48.5325 1.47C49.5125 2.45 50.0017 3.62667 50 5V35C50 36.375 49.5108 37.5525 48.5325 38.5325C47.5542 39.5125 46.3767 40.0017 45 40H10L0 50ZM7.875 35H45V5H5V37.8125L7.875 35Z" fill="#4CAF50"/>
-                                </svg>
-                                <p className="text-xl font-semibold">{t("messages.selectChat")}</p>
-                            </div>
+            )}
+            
+            <div className={`${
+                selectedConversation 
+                    ? 'hidden lg:flex lg:w-96' 
+                    : 'w-full lg:w-96'
+            } bg-white rounded-2xl shadow-xl border border-gray-100 flex flex-col flex-shrink-0 overflow-hidden`}>
+                <div className="p-5 border-b border-gray-100 bg-gradient-to-r from-white to-green-50/30 flex-shrink-0">
+                    <div className="flex items-center gap-3 mb-4">
+                        <div className="w-10 h-10 bg-gradient-to-br from-main to-green-600 rounded-xl flex items-center justify-center shadow-lg">
+                            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                            </svg>
                         </div>
-                    )
-                )}
+                        <div className="flex-1">
+                            <h2 className="text-xl font-bold text-gray-900">{t('messages.title')}</h2>
+                        </div>
+                        <span className="px-3 py-1 bg-green-100 text-green-700 text-sm font-bold rounded-full">
+                            {conversations.length}
+                        </span>
+                    </div>
+
+                    <div className="flex gap-2 mb-4">
+                        <button
+                            onClick={() => setActiveFilter("all")}
+                            className={`flex-1 cursor-pointer px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                                activeFilter === "all"
+                                    ? "bg-main text-white shadow-md"
+                                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                            }`}
+                        >
+                            {t('messages.tabs.all')}
+                        </button>
+                        <button
+                            onClick={() => setActiveFilter("buy")}
+                            className={`flex-1 cursor-pointer px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                                activeFilter === "buy"
+                                    ? "bg-main text-white shadow-md"
+                                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                            }`}
+                        >
+                            {t('messages.tabs.buy')}
+                        </button>
+                        <button
+                            onClick={() => setActiveFilter("sell")}
+                            className={`flex-1 cursor-pointer px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                                activeFilter === "sell"
+                                    ? "bg-main text-white shadow-md"
+                                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                            }`}
+                        >
+                            {t('messages.tabs.sell')}
+                        </button>
+                    </div>
+
+                    <div className="relative">
+                        <input
+                            type="text"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            placeholder={t('messages.searchPlaceholder')}
+                            className="w-full px-5 py-3 pr-11 text-sm border border-gray-200 rounded-xl outline-none focus:border-main focus:ring-2 focus:ring-main/20 transition-all bg-gray-50"
+                            autoComplete="off"
+                            dir="auto"
+                            aria-label={t('messages.searchPlaceholder')}
+                        />
+                        <svg className={`absolute ${isRTL ? 'right-4' : 'left-4'} top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </div>
+                </div>
+                
+                <div className="flex-1 overflow-y-auto">
+                    {filteredConversations.length === 0 ? (
+                        searchQuery ? (
+                            <div className="flex flex-col items-center justify-center h-full py-12 px-4">
+                                <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mb-4">
+                                    <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                    </svg>
+                                </div>
+                                <p className="text-sm font-semibold text-gray-700 mb-1">{t('messages.noResults')}</p>
+                                <p className="text-xs text-gray-500">{t('messages.tryAnotherSearch')}</p>
+                            </div>
+                        ) : (
+                            <EmptyState />
+                        )
+                    ) : (
+                        filteredConversations.map((conversation) => (
+                            <MessageCard 
+                                key={conversation.id} 
+                                conversation={conversation} 
+                                isSelected={conversation.id === selectedConversationId}
+                                onSelect={() => handleChatSelect(conversation)}
+                            />
+                        ))
+                    )}
+                </div>
             </div>
+
+            {selectedConversation ? (
+                <div className="flex-1 h-full overflow-hidden">
+                    <ChatView 
+                        conversation={selectedConversation}
+                        messages={messages}
+                        onSendMessage={handleSendMessage}
+                        onBack={handleCloseChat}
+                        isLoadingMessages={isLoadingMessages}
+                        newMessage={newMessage}
+                        setNewMessage={setNewMessage}
+                        currentUserId={currentUserId}
+                        showChatOptions={showChatOptions}
+                        setShowChatOptions={setShowChatOptions}
+                        chatOptionsRef={chatOptionsRef}
+                        isSendingMessage={isSendingMessage}
+                    />
+                </div>
+            ) : (
+                conversations.length > 0 && (
+                    <div className="hidden lg:flex flex-1 items-center justify-center bg-white rounded-2xl border border-gray-100 shadow-xl overflow-hidden">
+                        <div className="text-center p-8">
+                            <div className="w-32 h-32 bg-gradient-to-br from-green-100 to-green-200 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+                                <svg className="w-16 h-16 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                </svg>
+                            </div>
+                            <h3 className="text-xl font-bold text-gray-800 mb-3">{t('messages.selectChat')}</h3>
+                            <p className="text-sm text-gray-500 max-w-md">{t('messages.selectChatToStart')}</p>
+                        </div>
+                    </div>
+                )
+            )}
         </div>
     );
 };

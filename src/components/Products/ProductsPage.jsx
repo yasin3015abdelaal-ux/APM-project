@@ -1,17 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import { Heart, MapPin, Filter, X } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Heart, MapPin, Filter, X, ChevronDown, ChevronUp } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { adminAPI, userAPI } from '../../api';
+import { adminAPI, chatAPI, getCachedGovernorates, userAPI } from '../../api';
 import Loader from '../Ui/Loader/Loader';
-import PlaceholderSVG from '../../assets/PlaceholderSVG';
+import ProductCard from '../ProductCard/ProductCard';
 
 const ProductsPage = () => {
     const { categoryId } = useParams();
     const navigate = useNavigate();
     const { t, i18n } = useTranslation();
     const isRTL = i18n.language === 'ar';
-    
+
     const [products, setProducts] = useState([]);
     const [categories, setCategories] = useState([]);
     const [governorates, setGovernorates] = useState([]);
@@ -22,8 +22,7 @@ const ProductsPage = () => {
 
     const [selectedCategory, setSelectedCategory] = useState('');
     const [selectedGovernorate, setSelectedGovernorate] = useState('');
-    const [minPrice, setMinPrice] = useState('');
-    const [maxPrice, setMaxPrice] = useState('');
+    const [priceRange, setPriceRange] = useState([0, 10000]);
     const [genderMale, setGenderMale] = useState(false);
     const [genderFemale, setGenderFemale] = useState(false);
     const [deliveryAvailable, setDeliveryAvailable] = useState(false);
@@ -33,6 +32,23 @@ const ProductsPage = () => {
     const [contactPhone, setContactPhone] = useState(false);
     const [contactChat, setContactChat] = useState(false);
     const [contactBoth, setContactBoth] = useState(false);
+
+    // Collapsible filter sections
+    const [openSections, setOpenSections] = useState({
+        categories: false,
+        governorates: false,
+        price: false,
+        gender: false,
+        saleOptions: false,
+        contactMethod: false
+    });
+
+    const toggleSection = (section) => {
+        setOpenSections(prev => ({
+            ...prev,
+            [section]: !prev[section]
+        }));
+    };
 
     const showToast = (message, type = "success") => {
         setToast({ message, type });
@@ -56,9 +72,8 @@ const ProductsPage = () => {
 
     useEffect(() => {
         fetchProducts();
-    }, [selectedCategory, selectedGovernorate]);
+    }, [selectedCategory, selectedGovernorate, priceRange]);
 
-    // إغلاق الفيلتر عند الضغط على Escape
     useEffect(() => {
         const handleEscape = (e) => {
             if (e.key === 'Escape') {
@@ -73,7 +88,7 @@ const ProductsPage = () => {
         try {
             const response = await userAPI.get('/favorites');
             let favoritesArray = [];
-            
+
             if (Array.isArray(response.data)) {
                 favoritesArray = response.data;
             } else if (response.data.data && Array.isArray(response.data.data)) {
@@ -88,7 +103,7 @@ const ProductsPage = () => {
                     return product.id;
                 })
             );
-            
+
             setFavorites(favoriteIds);
         } catch (error) {
             console.error('Error fetching favorites:', error);
@@ -107,32 +122,32 @@ const ProductsPage = () => {
         }
     };
 
-    const fetchGovernorates = async () => {
-        try {
-            const response = await userAPI.get(`/governorates?country_id=${countryId}`);
-            const data = response.data;
-            let governoratesArray = Array.isArray(data) ? data : (data.data?.governorates) || (data.data) || [];
-            setGovernorates(governoratesArray);
-        } catch (error) {
-            console.error('Error fetching governorates:', error);
-            setGovernorates([]);
-        }
-    };
+const fetchGovernorates = async () => {
+    try {
+        const { data, fromCache } = await getCachedGovernorates(countryId);
+        console.log(fromCache ? '📦 Governorates من الكاش' : '🌐 Governorates من API');
+        
+        setGovernorates(data);
+    } catch (error) {
+        console.error('Error fetching governorates:', error);
+        setGovernorates([]);
+    }
+};
 
     const fetchProducts = async () => {
         try {
             setLoading(true);
             const params = new URLSearchParams();
-            
+
             if (selectedCategory) params.append('subcategory_id', selectedCategory);
             if (selectedGovernorate) params.append('governorate_id', selectedGovernorate);
-    
+
             const url = `/products${params.toString() ? '?' + params.toString() : ''}`;
             console.log('Fetching products with URL:', url);
-            
+
             const response = await userAPI.get(url);
             const data = response.data;
-    
+
             let productsArray = Array.isArray(data) ? data : (data.data && Array.isArray(data.data)) ? data.data : [];
             console.log('Products fetched:', productsArray.length);
             setProducts(productsArray);
@@ -147,7 +162,7 @@ const ProductsPage = () => {
 
     const toggleFavorite = async (productId) => {
         const isFavorite = favorites.has(productId);
-        
+
         try {
             if (isFavorite) {
                 await userAPI.delete(`/favorites/${productId}`);
@@ -176,32 +191,67 @@ const ProductsPage = () => {
         navigate(`/product-details/${productId}`);
     };
 
+    const handleContactSeller = async (product) => {
+        try {
+            const sellerId = product.user_id || product.seller_id;
+
+            if (!sellerId) {
+                showToast(isRTL ? 'لا يمكن التواصل مع البائع' : 'Cannot contact seller', 'error');
+                return;
+            }
+
+            const response = await chatAPI.createConversation({
+                user_id: sellerId,
+                type: "auction"
+            });
+
+            if (response.data) {
+                const conversationId = response.data.id || response.data.data?.id;
+                navigate(`/chat/${conversationId}`);
+                showToast(isRTL ? 'جاري فتح المحادثة...' : 'Opening conversation...', 'success');
+            }
+        } catch (error) {
+            console.error('Error creating conversation:', error);
+
+            if (error.response?.status === 409 || error.response?.data?.conversation_id) {
+                const existingConversationId = error.response.data.conversation_id;
+                navigate(`/chat/${existingConversationId}`);
+                showToast(isRTL ? 'جاري فتح المحادثة...' : 'Opening conversation...', 'success');
+            } else {
+                showToast(isRTL ? 'حدث خطأ، حاول مرة أخرى' : 'Error occurred, try again', 'error');
+            }
+        }
+    };
     const handleCategoryChange = (categoryId) => {
         setSelectedCategory(categoryId);
+    };
+
+    const handlePriceRangeChange = (newRange) => {
+        setPriceRange(newRange);
     };
 
     const filteredProducts = products.filter(product => {
         const productSubCategoryId = product.sub_category?.id || product.subcategory_id || product.sub_category_id;
         const matchesCategory = !selectedCategory || String(productSubCategoryId) === String(selectedCategory);
-    
+
         const productGovernorateId = product.governorate?.id || product.governorate_id;
         const matchesGovernorate = !selectedGovernorate || String(productGovernorateId) === String(selectedGovernorate);
-    
-        const matchesMinPrice = !minPrice || (product.price && parseFloat(product.price) >= parseFloat(minPrice));
-        const matchesMaxPrice = !maxPrice || (product.price && parseFloat(product.price) <= parseFloat(maxPrice));
-    
+
+        const productPrice = product.price ? parseFloat(product.price) : 0;
+        const matchesPrice = productPrice >= priceRange[0] && productPrice <= priceRange[1];
+
         const matchesGender = (() => {
             if (!genderMale && !genderFemale) return true;
             if (genderMale && product.gender === 'male') return true;
             if (genderFemale && product.gender === 'female') return true;
             return false;
         })();
-    
+
         const matchesDelivery = !deliveryAvailable || product.delivery_available === true;
         const matchesRetailSale = !retailSaleAvailable || product.retail_sale_available === true;
         const matchesPriceNegotiable = !priceNegotiable || product.price_negotiable === true;
         const matchesVaccinations = !needsVaccinations || product.needs_vaccinations === true;
-    
+
         const matchesContactMethod = (() => {
             if (!contactPhone && !contactChat && !contactBoth) return true;
             if (contactPhone && product.contact_method === 'phone') return true;
@@ -209,8 +259,8 @@ const ProductsPage = () => {
             if (contactBoth && product.contact_method === 'both') return true;
             return false;
         })();
-    
-        return matchesCategory && matchesGovernorate && matchesMinPrice && matchesMaxPrice &&
+
+        return matchesCategory && matchesGovernorate && matchesPrice &&
             matchesGender && matchesDelivery && matchesRetailSale && matchesPriceNegotiable &&
             matchesVaccinations && matchesContactMethod;
     });
@@ -218,8 +268,7 @@ const ProductsPage = () => {
     const clearFilters = () => {
         setSelectedCategory('');
         setSelectedGovernorate('');
-        setMinPrice('');
-        setMaxPrice('');
+        setPriceRange([0, 10000]);
         setGenderMale(false);
         setGenderFemale(false);
         setDeliveryAvailable(false);
@@ -229,25 +278,86 @@ const ProductsPage = () => {
         setContactPhone(false);
         setContactChat(false);
         setContactBoth(false);
-        navigate('/products');
-    };
-
-    const applyFilters = () => {
-        showToast(isRTL ? 'تم تطبيق الفلاتر' : 'Filters applied', 'success');
-        setIsFilterOpen(false);
     };
 
     const currentCategory = categories.find(c => c?.id && String(c.id) === String(selectedCategory)) || null;
 
-    const hasActiveFilters = selectedCategory || selectedGovernorate || minPrice || maxPrice || genderMale || genderFemale || 
-        deliveryAvailable || retailSaleAvailable || priceNegotiable || needsVaccinations || 
+    const hasActiveFilters = selectedCategory || selectedGovernorate || priceRange[0] > 0 || priceRange[1] < 10000 || genderMale || genderFemale ||
+        deliveryAvailable || retailSaleAvailable || priceNegotiable || needsVaccinations ||
         contactPhone || contactChat || contactBoth;
 
-    if (loading) {
-        return <Loader />;
-    }
+    const PriceRangeFilter = () => {
+        const [minValue, setMinValue] = useState(priceRange[0]);
+        const [maxValue, setMaxValue] = useState(priceRange[1]);
+        const maxPrice = 10000;
 
-    // مكون الفيلتر
+        useEffect(() => {
+            setMinValue(priceRange[0]);
+            setMaxValue(priceRange[1]);
+        }, [priceRange]);
+
+        const handleMinChange = (e) => {
+            const value = Math.min(Number(e.target.value), maxValue - 100);
+            setMinValue(value);
+            handlePriceRangeChange([value, maxValue]);
+        };
+
+        const handleMaxChange = (e) => {
+            const value = Math.max(Number(e.target.value), minValue + 100);
+            setMaxValue(value);
+            handlePriceRangeChange([minValue, value]);
+        };
+
+        const minPosition = (minValue / maxPrice) * 100;
+        const maxPosition = (maxValue / maxPrice) * 100;
+
+        return (
+            <div className="space-y-6 mt-4">
+                <div className="relative h-2 bg-gray-200 rounded-full">
+                    <div
+                        className="absolute h-full bg-main rounded-full"
+                        style={{
+                            left: `${minPosition}%`,
+                            right: `${100 - maxPosition}%`
+                        }}
+                    />
+
+                    <input
+                        type="range"
+                        min="0"
+                        max={maxPrice}
+                        value={minValue}
+                        onChange={handleMinChange}
+                        className="absolute w-full h-2 opacity-0 cursor-pointer z-20"
+                    />
+                    <div
+                        className="absolute w-6 h-6 bg-white border-2 border-main rounded-full shadow-lg cursor-pointer hover:scale-110 transition-transform z-10"
+                        style={{ left: `${minPosition}%`, top: '50%', transform: 'translate(-50%, -50%)' }}
+                    />
+
+                    <input
+                        type="range"
+                        min="0"
+                        max={maxPrice}
+                        value={maxValue}
+                        onChange={handleMaxChange}
+                        className="absolute w-full h-2 opacity-0 cursor-pointer z-20"
+                    />
+                    <div
+                        className="absolute w-6 h-6 bg-white border-2 border-main rounded-full shadow-lg cursor-pointer hover:scale-110 transition-transform z-10"
+                        style={{ left: `${maxPosition}%`, top: '50%', transform: 'translate(-50%, -50%)' }}
+                    />
+                </div>
+
+                <div className="flex items-center justify-between text-sm text-gray-600">
+                    <span>{minValue} {t('ads.concurrency')}</span>
+                    <span>-</span>
+                    <span>{maxValue} {t('ads.concurrency')}</span>
+                </div>
+            </div>
+        );
+    };
+
     const FilterSidebar = () => (
         <div className="bg-white h-full shadow-sm p-6 overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
@@ -272,211 +382,252 @@ const ProductsPage = () => {
                 </div>
             </div>
 
-            <div className="mb-6">
-                <h3 className="font-bold text-gray-800 mb-3">
-                    {isRTL ? 'الفئات' : 'Categories'}
-                </h3>
-                <div className="space-y-2">
-                    {categories.map(category => (
-                        <label 
-                            key={category.id} 
-                            className={`flex items-center cursor-pointer p-3 rounded-lg transition-all ${
-                                String(selectedCategory) === String(category.id)
-                                    ? 'bg-main text-white shadow-md scale-[1.02]' 
-                                    : 'hover:bg-gray-50 border border-gray-200'
-                            }`}
-                        >
-                            <input
-                                type="radio"
-                                name="category"
-                                checked={String(selectedCategory) === String(category.id)}
-                                onChange={() => handleCategoryChange(String(category.id))}
-                                className="w-4 h-4 cursor-pointer accent-white"
-                            />
-                            <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm font-medium`}>
-                                {isRTL ? category.name_ar : category.name_en}
-                            </span>
-                        </label>
-                    ))}
-                </div>
+            {/* Categories Section */}
+            <div className="mb-4 border-b border-gray-200 pb-4">
+                <button
+                    onClick={() => toggleSection('categories')}
+                    className="flex items-center justify-between w-full text-left font-bold text-gray-800 mb-2 cursor-pointer"
+                >
+                    <span>{isRTL ? 'الفئات' : 'Categories'}</span>
+                    {openSections.categories ?
+                        <ChevronUp size={20} className="text-gray-500" /> :
+                        <ChevronDown size={20} className="text-gray-500" />
+                    }
+                </button>
+                {openSections.categories && (
+                    <div className="space-y-2 mt-3">
+                        {categories.map(category => (
+                            <label
+                                key={category.id}
+                                className={`flex items-center cursor-pointer p-3 rounded-lg transition-all ${String(selectedCategory) === String(category.id)
+                                        ? 'bg-main text-white shadow-md scale-[1.02]'
+                                        : 'hover:bg-gray-50 border border-gray-200'
+                                    }`}
+                            >
+                                <input
+                                    type="radio"
+                                    name="category"
+                                    checked={String(selectedCategory) === String(category.id)}
+                                    onChange={() => handleCategoryChange(String(category.id))}
+                                    className="w-4 h-4 cursor-pointer accent-white"
+                                />
+                                <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm font-medium`}>
+                                    {isRTL ? category.name_ar : category.name_en}
+                                </span>
+                            </label>
+                        ))}
+                    </div>
+                )}
             </div>
 
-            <div className="mb-6">
-                <h3 className="font-bold text-gray-800 mb-3">
-                    {isRTL ? 'المحافظات' : 'Governorates'}
-                </h3>
-                <div className="space-y-2 max-h-48 overflow-y-auto">
-                    {governorates.map(gov => (
-                        <label key={gov.id} className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
+            {/* Governorates Section */}
+            <div className="mb-4 border-b border-gray-200 pb-4">
+                <button
+                    onClick={() => toggleSection('governorates')}
+                    className="flex items-center justify-between w-full text-left font-bold text-gray-800 mb-2 cursor-pointer"
+                >
+                    <span>{isRTL ? 'المحافظات' : 'Governorates'}</span>
+                    {openSections.governorates ?
+                        <ChevronUp size={20} className="text-gray-500" /> :
+                        <ChevronDown size={20} className="text-gray-500" />
+                    }
+                </button>
+                {openSections.governorates && (
+                    <div className="space-y-2 max-h-48 overflow-y-auto mt-3">
+                        {governorates.map(gov => (
+                            <label key={gov.id} className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
+                                <input
+                                    type="checkbox"
+                                    checked={String(selectedGovernorate) === String(gov.id)}
+                                    onChange={() => setSelectedGovernorate(
+                                        String(selectedGovernorate) === String(gov.id) ? '' : String(gov.id)
+                                    )}
+                                    className="w-4 h-4 text-main border-gray-300 rounded focus:ring-green-500 cursor-pointer"
+                                />
+                                <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm text-gray-700`}>
+                                    {isRTL ? gov.name_ar : gov.name_en}
+                                </span>
+                            </label>
+                        ))}
+                    </div>
+                )}
+            </div>
+
+            {/* Price Section */}
+            <div className="mb-4 border-b border-gray-200 pb-4">
+                <button
+                    onClick={() => toggleSection('price')}
+                    className="flex items-center justify-between w-full text-left font-bold text-gray-800 mb-2 cursor-pointer"
+                >
+                    <span>{t('ads.price')}</span>
+                    {openSections.price ?
+                        <ChevronUp size={20} className="text-gray-500" /> :
+                        <ChevronDown size={20} className="text-gray-500" />
+                    }
+                </button>
+                {openSections.price && (
+                    <PriceRangeFilter />
+                )}
+            </div>
+
+            {/* Gender Section */}
+            <div className="mb-4 border-b border-gray-200 pb-4">
+                <button
+                    onClick={() => toggleSection('gender')}
+                    className="flex items-center justify-between w-full text-left font-bold text-gray-800 mb-2 cursor-pointer"
+                >
+                    <span>{t('ads.gender')}</span>
+                    {openSections.gender ?
+                        <ChevronUp size={20} className="text-gray-500" /> :
+                        <ChevronDown size={20} className="text-gray-500" />
+                    }
+                </button>
+                {openSections.gender && (
+                    <div className="space-y-2 mt-3">
+                        <label className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
                             <input
                                 type="checkbox"
-                                checked={String(selectedGovernorate) === String(gov.id)}
-                                onChange={() => setSelectedGovernorate(
-                                    String(selectedGovernorate) === String(gov.id) ? '' : String(gov.id)
-                                )}
+                                checked={genderMale}
+                                onChange={() => setGenderMale(!genderMale)}
                                 className="w-4 h-4 text-main border-gray-300 rounded focus:ring-green-500 cursor-pointer"
                             />
                             <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm text-gray-700`}>
-                                {isRTL ? gov.name_ar : gov.name_en}
+                                {t('ads.male')}
                             </span>
                         </label>
-                    ))}
-                </div>
+                        <label className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
+                            <input
+                                type="checkbox"
+                                checked={genderFemale}
+                                onChange={() => setGenderFemale(!genderFemale)}
+                                className="w-4 h-4 text-main border-gray-300 rounded focus:ring-green-500 cursor-pointer"
+                            />
+                            <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm text-gray-700`}>
+                                {t('ads.female')}
+                            </span>
+                        </label>
+                    </div>
+                )}
             </div>
 
+            {/* Sale Options Section */}
+            <div className="mb-4 border-b border-gray-200 pb-4">
+                <button
+                    onClick={() => toggleSection('saleOptions')}
+                    className="flex items-center justify-between w-full text-left font-bold text-gray-800 mb-2 cursor-pointer"
+                >
+                    <span>{isRTL ? 'خيارات البيع' : 'Sale Options'}</span>
+                    {openSections.saleOptions ?
+                        <ChevronUp size={20} className="text-gray-500" /> :
+                        <ChevronDown size={20} className="text-gray-500" />
+                    }
+                </button>
+                {openSections.saleOptions && (
+                    <div className="space-y-2 mt-3">
+                        <label className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
+                            <input
+                                type="checkbox"
+                                checked={deliveryAvailable}
+                                onChange={() => setDeliveryAvailable(!deliveryAvailable)}
+                                className="w-4 h-4 text-main border-gray-300 rounded focus:ring-green-500 cursor-pointer"
+                            />
+                            <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm text-gray-700`}>
+                                {t('ads.deliveryAvailable')}
+                            </span>
+                        </label>
+                        <label className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
+                            <input
+                                type="checkbox"
+                                checked={retailSaleAvailable}
+                                onChange={() => setRetailSaleAvailable(!retailSaleAvailable)}
+                                className="w-4 h-4 text-main border-gray-300 rounded focus:ring-green-500 cursor-pointer"
+                            />
+                            <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm text-gray-700`}>
+                                {t('ads.retailSaleAvailable')}
+                            </span>
+                        </label>
+                        <label className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
+                            <input
+                                type="checkbox"
+                                checked={priceNegotiable}
+                                onChange={() => setPriceNegotiable(!priceNegotiable)}
+                                className="w-4 h-4 text-main border-gray-300 rounded focus:ring-green-500 cursor-pointer"
+                            />
+                            <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm text-gray-700`}>
+                                {t('ads.priceNegotiable')}
+                            </span>
+                        </label>
+                        <label className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
+                            <input
+                                type="checkbox"
+                                checked={needsVaccinations}
+                                onChange={() => setNeedsVaccinations(!needsVaccinations)}
+                                className="w-4 h-4 text-main border-gray-300 rounded focus:ring-green-500 cursor-pointer"
+                            />
+                            <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm text-gray-700`}>
+                                {t('ads.needsVaccinations')}
+                            </span>
+                        </label>
+                    </div>
+                )}
+            </div>
+
+            {/* Contact Method Section */}
             <div className="mb-6">
-                <h3 className="font-bold text-gray-800 mb-3">
-                    {t('ads.price')}
-                </h3>
-                <div className="space-y-2">
-                    <input
-                        type="number"
-                        value={minPrice}
-                        onChange={(e) => setMinPrice(e.target.value)}
-                        placeholder={isRTL ? 'من' : 'Min'}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    />
-                    <input
-                        type="number"
-                        value={maxPrice}
-                        onChange={(e) => setMaxPrice(e.target.value)}
-                        placeholder={isRTL ? 'إلى' : 'Max'}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    />
-                </div>
+                <button
+                    onClick={() => toggleSection('contactMethod')}
+                    className="flex items-center justify-between w-full text-left font-bold text-gray-800 mb-2 cursor-pointer"
+                >
+                    <span>{t('ads.contactMethod')}</span>
+                    {openSections.contactMethod ?
+                        <ChevronUp size={20} className="text-gray-500" /> :
+                        <ChevronDown size={20} className="text-gray-500" />
+                    }
+                </button>
+                {openSections.contactMethod && (
+                    <div className="space-y-2 mt-3">
+                        <label className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
+                            <input
+                                type="checkbox"
+                                checked={contactPhone}
+                                onChange={() => setContactPhone(!contactPhone)}
+                                className="w-4 h-4 text-main border-gray-300 rounded focus:ring-green-500 cursor-pointer"
+                            />
+                            <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm text-gray-700`}>
+                                {t('ads.call')}
+                            </span>
+                        </label>
+                        <label className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
+                            <input
+                                type="checkbox"
+                                checked={contactChat}
+                                onChange={() => setContactChat(!contactChat)}
+                                className="w-4 h-4 text-main border-gray-300 rounded focus:ring-green-500 cursor-pointer"
+                            />
+                            <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm text-gray-700`}>
+                                {t('ads.chat')}
+                            </span>
+                        </label>
+                        <label className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
+                            <input
+                                type="checkbox"
+                                checked={contactBoth}
+                                onChange={() => setContactBoth(!contactBoth)}
+                                className="w-4 h-4 text-main border-gray-300 rounded focus:ring-green-500 cursor-pointer"
+                            />
+                            <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm text-gray-700`}>
+                                {t('ads.both')}
+                            </span>
+                        </label>
+                    </div>
+                )}
             </div>
-
-            <div className="mb-6">
-                <h3 className="font-bold text-gray-800 mb-3">
-                    {t('ads.gender')}
-                </h3>
-                <div className="space-y-2">
-                    <label className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
-                        <input
-                            type="checkbox"
-                            checked={genderMale}
-                            onChange={() => setGenderMale(!genderMale)}
-                            className="w-4 h-4 text-main border-gray-300 rounded focus:ring-green-500 cursor-pointer"
-                        />
-                        <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm text-gray-700`}>
-                            {t('ads.male')}
-                        </span>
-                    </label>
-                    <label className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
-                        <input
-                            type="checkbox"
-                            checked={genderFemale}
-                            onChange={() => setGenderFemale(!genderFemale)}
-                            className="w-4 h-4 text-main border-gray-300 rounded focus:ring-green-500 cursor-pointer"
-                        />
-                        <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm text-gray-700`}>
-                            {t('ads.female')}
-                        </span>
-                    </label>
-                </div>
-            </div>
-
-            <div className="mb-6">
-                <h3 className="font-bold text-gray-800 mb-3">
-                    {isRTL ? 'خيارات البيع' : 'Sale Options'}
-                </h3>
-                <div className="space-y-2">
-                    <label className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
-                        <input
-                            type="checkbox"
-                            checked={deliveryAvailable}
-                            onChange={() => setDeliveryAvailable(!deliveryAvailable)}
-                            className="w-4 h-4 text-main border-gray-300 rounded focus:ring-green-500 cursor-pointer"
-                        />
-                        <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm text-gray-700`}>
-                            {t('ads.deliveryAvailable')}
-                        </span>
-                    </label>
-                    <label className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
-                        <input
-                            type="checkbox"
-                            checked={retailSaleAvailable}
-                            onChange={() => setRetailSaleAvailable(!retailSaleAvailable)}
-                            className="w-4 h-4 text-main border-gray-300 rounded focus:ring-green-500 cursor-pointer"
-                        />
-                        <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm text-gray-700`}>
-                            {t('ads.retailSaleAvailable')}
-                        </span>
-                    </label>
-                    <label className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
-                        <input
-                            type="checkbox"
-                            checked={priceNegotiable}
-                            onChange={() => setPriceNegotiable(!priceNegotiable)}
-                            className="w-4 h-4 text-main border-gray-300 rounded focus:ring-green-500 cursor-pointer"
-                        />
-                        <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm text-gray-700`}>
-                            {t('ads.priceNegotiable')}
-                        </span>
-                    </label>
-                    <label className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
-                        <input
-                            type="checkbox"
-                            checked={needsVaccinations}
-                            onChange={() => setNeedsVaccinations(!needsVaccinations)}
-                            className="w-4 h-4 text-main border-gray-300 rounded focus:ring-green-500 cursor-pointer"
-                        />
-                        <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm text-gray-700`}>
-                            {t('ads.needsVaccinations')}
-                        </span>
-                    </label>
-                </div>
-            </div>
-
-            <div className="mb-6">
-                <h3 className="font-bold text-gray-800 mb-3">
-                    {t('ads.contactMethod')}
-                </h3>
-                <div className="space-y-2">
-                    <label className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
-                        <input
-                            type="checkbox"
-                            checked={contactPhone}
-                            onChange={() => setContactPhone(!contactPhone)}
-                            className="w-4 h-4 text-main border-gray-300 rounded focus:ring-green-500 cursor-pointer"
-                        />
-                        <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm text-gray-700`}>
-                            {t('ads.call')}
-                        </span>
-                    </label>
-                    <label className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
-                        <input
-                            type="checkbox"
-                            checked={contactChat}
-                            onChange={() => setContactChat(!contactChat)}
-                            className="w-4 h-4 text-main border-gray-300 rounded focus:ring-green-500 cursor-pointer"
-                        />
-                        <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm text-gray-700`}>
-                            {t('ads.chat')}
-                        </span>
-                    </label>
-                    <label className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
-                        <input
-                            type="checkbox"
-                            checked={contactBoth}
-                            onChange={() => setContactBoth(!contactBoth)}
-                            className="w-4 h-4 text-main border-gray-300 rounded focus:ring-green-500 cursor-pointer"
-                        />
-                        <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm text-gray-700`}>
-                            {t('ads.both')}
-                        </span>
-                    </label>
-                </div>
-            </div>
-
-            <button
-                onClick={applyFilters}
-                className="w-full bg-main hover:bg-green-800 text-white py-2.5 rounded-lg font-medium transition cursor-pointer"
-            >
-                {isRTL ? 'تطبيق' : 'Apply'}
-            </button>
         </div>
     );
+
+    if (loading) {
+        return <Loader />;
+    }
 
     return (
         <div className="min-h-screen bg-gray-50" dir={isRTL ? 'rtl' : 'ltr'}>
@@ -498,12 +649,10 @@ const ProductsPage = () => {
             )}
 
             <div className="flex relative">
-                {/* Sidebar للشاشات الكبيرة */}
                 <div className="hidden lg:block w-64 min-h-screen sticky top-0 max-h-screen">
                     <FilterSidebar />
                 </div>
 
-                {/* Overlay للشاشات الصغيرة */}
                 {isFilterOpen && (
                     <div
                         className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity duration-300"
@@ -511,18 +660,14 @@ const ProductsPage = () => {
                     />
                 )}
 
-                {/* Sidebar للشاشات الصغيرة (منبثق من الجانب) */}
                 <div
-                    className={`lg:hidden fixed top-0 ${isRTL ? 'right-0' : 'left-0'} h-full w-80 max-w-[85vw] bg-white z-50 transform transition-transform duration-300 ease-in-out ${
-                        isFilterOpen ? 'translate-x-0' : isRTL ? 'translate-x-full' : '-translate-x-full'
-                    }`}
+                    className={`lg:hidden fixed top-0 ${isRTL ? 'right-0' : 'left-0'} h-full w-80 max-w-[85vw] bg-white z-50 transform transition-transform duration-300 ease-in-out ${isFilterOpen ? 'translate-x-0' : isRTL ? 'translate-x-full' : '-translate-x-full'
+                        }`}
                 >
                     <FilterSidebar />
                 </div>
 
-                {/* المحتوى الرئيسي */}
                 <div className="flex-1 p-4 lg:p-6">
-                    {/* زر الفيلتر للشاشات الصغيرة */}
                     <div className="lg:hidden mb-4">
                         <button
                             onClick={() => setIsFilterOpen(true)}
@@ -532,7 +677,7 @@ const ProductsPage = () => {
                             <span>{isRTL ? 'الفلاتر' : 'Filters'}</span>
                             {hasActiveFilters && (
                                 <span className="bg-white text-main rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">
-                                    {[selectedCategory, selectedGovernorate, minPrice, maxPrice, genderMale, genderFemale,
+                                    {[selectedCategory, selectedGovernorate, priceRange[0] > 0, priceRange[1] < 10000, genderMale, genderFemale,
                                         deliveryAvailable, retailSaleAvailable, priceNegotiable, needsVaccinations,
                                         contactPhone, contactChat, contactBoth].filter(Boolean).length}
                                 </span>
@@ -567,94 +712,17 @@ const ProductsPage = () => {
                             </p>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
-                            {filteredProducts.map((product) => {
-                                const imageUrl = product.image || product.images?.[0];
-                                const isFavorite = favorites.has(product.id);
-                                
-                                return (
-                                    <div
-                                        key={product.id}
-                                        className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all overflow-hidden border border-gray-100"
-                                    >
-                                        <div
-                                            className="relative h-56 bg-gray-100 cursor-pointer group"
-                                            onClick={() => handleProductClick(product.id)}
-                                        >
-                                            {imageUrl ? (
-                                                <img
-                                                    src={imageUrl}
-                                                    alt={isRTL ? product.name_ar : product.name_en}
-                                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                                    onError={(e) => {
-                                                        e.target.style.display = 'none';
-                                                        e.target.nextElementSibling.style.display = 'block';
-                                                    }}
-                                                />
-                                            ) : null}
-                                            <div 
-                                                className={`${imageUrl ? 'hidden' : 'block'} w-full h-full`}
-                                                style={{ display: imageUrl ? 'none' : 'block' }}
-                                            >
-                                                <PlaceholderSVG />
-                                            </div>
-
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    toggleFavorite(product.id);
-                                                }}
-                                                className={`absolute top-3 right-3 cursor-pointer rounded-full p-2 shadow-md hover:scale-110 transition-all z-10 ${
-                                                    isFavorite 
-                                                        ? 'bg-red-500 hover:bg-red-600' 
-                                                        : 'bg-white hover:bg-gray-50'
-                                                }`}
-                                            >
-                                                <Heart
-                                                    size={20}
-                                                    className={isFavorite ? 'fill-white text-white' : 'text-gray-400'}
-                                                />
-                                            </button>
-                                        </div>
-
-                                        <div className="p-4">
-                                            <h3
-                                                className="text-lg font-bold text-gray-800 mb-2 cursor-pointer hover:text-main transition line-clamp-2 min-h-[3.5rem]"
-                                                onClick={() => handleProductClick(product.id)}
-                                            >
-                                                {isRTL ? product.name_ar : product.name_en}
-                                            </h3>
-
-                                            {product.governorate && (
-                                                <div className="flex items-center text-sm text-main mb-3">
-                                                    <MapPin size={16} className={isRTL ? 'ml-1' : 'mr-1'} />
-                                                    <span className="font-medium">
-                                                        {isRTL ? product.governorate.name_ar : product.governorate.name_en}
-                                                    </span>
-                                                </div>
-                                            )}
-
-                                            {product.description && (
-                                                <p className="text-xs text-gray-600 mb-3 line-clamp-2">
-                                                    {isRTL ? product.description_ar : product.description_en}
-                                                </p>
-                                            )}
-
-                                            <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-                                                <div className="text-2xl font-bold text-main">
-                                                    {product.price} <span className="text-sm">{t('ads.concurrency')}</span>
-                                                </div>
-                                                <button
-                                                    onClick={() => handleProductClick(product.id)}
-                                                    className="bg-main hover:bg-green-800 text-white px-5 py-2 rounded-lg text-sm font-medium transition shadow-sm hover:shadow-md cursor-pointer"
-                                                >
-                                                    {isRTL ? 'اطلب الان' : 'Order Now'}
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                );
-                            })}
+                        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
+                            {filteredProducts.map((product) => (
+                                <ProductCard
+                                    key={product.id}
+                                    product={product}
+                                    isFavorite={favorites.has(product.id)}
+                                    onToggleFavorite={toggleFavorite}
+                                    onProductClick={handleProductClick}
+                                    onContactSeller={handleContactSeller} 
+                                />
+                            ))}
                         </div>
                     )}
                 </div>

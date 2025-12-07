@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { userAPI } from "../../api";
-import { CheckCircle2 } from "lucide-react";
+import { VerifiedIcon } from "lucide-react";
 import Loader from "../../components/Ui/Loader/Loader";
 
 const ProfilePage = () => {
@@ -64,7 +64,12 @@ const ProfilePage = () => {
                     )}
                 </div>
 
-                <h3 className="text-lg font-bold text-gray-800 mb-1">{profile.name}</h3>
+                <div className="flex items-center justify-center gap-2 mb-1">
+                    <h3 className="text-lg font-bold text-gray-800">{profile.name}</h3>
+                    {profile.verified_account === 1 && (
+                        <VerifiedIcon className="w-5 h-5 text-main flex-shrink-0" />
+                    )}
+                </div>
                 <p className="text-sm text-gray-500 mb-4">{profile.email}</p>
 
                 <div className="grid grid-cols-2 gap-3 text-right" dir={dir}>
@@ -117,26 +122,42 @@ const ProfilePage = () => {
                     </div>
                 </div>
 
-                <div className="flex justify-center">
-                    <div className="mt-6 border w-[60%] border-gray-200 rounded-xl p-4 text-center">
-                        <div className="flex items-center justify-center gap-2 mb-2 text-main">
-                            <CheckCircle2 className="w-5 h-5" />
+                {profile.verified_account === 1 ? (
+                    <div className="flex justify-center">
+                        <div className="mt-6 border w-[60%] border-green-200 bg-green-50 rounded-xl p-4 text-center">
+                            <div className="flex items-center justify-center gap-2 mb-2 text-main">
+                                <span className="text-sm font-bold">
+                                    {t("profile.accountVerified")}
+                                </span>
+                                <VerifiedIcon className="w-5 h-5" />
+                            </div>
+                            <p className="text-sm text-main leading-relaxed">
+                                {t("profile.verificationComplete")}
+                            </p>
                         </div>
-                        <p className="text-sm font-bold leading-relaxed">
-                            {t("profile.verificationInfo")}
-                        </p>
-                        <button
-                            onClick={() => navigate("/profile/verify")}
-                            className="mt-3 cursor-pointer bg-main text-white px-4 py-2 rounded-lg text-sm hover:bg-green-700 transition"
-                        >
-                            {t("profile.verifyAccount")}
-                        </button>
                     </div>
-                </div>
+                ) : (
+                    <div className="flex justify-center">
+                        <div className="mt-6 border w-[60%] border-gray-200 rounded-xl p-4 text-center">
+                            <div className="flex items-center justify-center gap-2 mb-2 text-main">
+                                <VerifiedIcon className="w-5 h-5" />
+                            </div>
+                            <p className="text-sm font-bold leading-relaxed">
+                                {t("profile.verificationInfo")}
+                            </p>
+                            <button
+                                onClick={() => navigate("/profile/verify")}
+                                className="mt-3 cursor-pointer bg-main text-white px-4 py-2 rounded-lg text-sm hover:bg-main transition"
+                            >
+                                {t("profile.verifyAccount")}
+                            </button>
+                        </div>
+                    </div>
+                )}
 
                 <button
                     onClick={() => navigate("/profile/edit")}
-                    className="mt-6 cursor-pointer bg-main text-white w-full py-2 rounded-lg font-semibold hover:bg-green-700 transition"
+                    className="mt-6 cursor-pointer bg-main text-white w-full py-2 rounded-lg font-semibold hover:bg-main transition"
                 >
                     {t("profile.editProfile")}
                 </button>

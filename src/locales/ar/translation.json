@@ -119,7 +119,11 @@
     },
     "countries": {
       "title": "الدول",
-      "country": ["مصر", "السعودية", "البحرين"]
+      "country": [
+        "مصر",
+        "السعودية",
+        "الكويت"
+      ]
     },
     "copyRight": "جميع الحقوق محفوظة ل سوق الانتاج الحيوانى (ِAPM) 2025",
     "development": "تم التطوير بواسطة Soft Forte"
@@ -164,8 +168,6 @@
     "governorate": "المحافظة",
     "selectGovernorate": "اختر المحافظة",
     "location": "العنوان",
-
-    
     "locationPlaceholder": "أدخل العنوان التفصيلي",
     "quantity": "عدد الرؤوس",
     "health": "خيارات إضافية",
@@ -185,8 +187,7 @@
     "deleteConfirmMessage": "هل أنت متأكد من حذف هذا الإعلان؟ لا يمكن التراجع عن هذا الإجراء.",
     "yes": "نعم",
     "no": "لا",
-    "deleteSuccess":"تم حذف الإعلان بنجاح"
-
+    "deleteSuccess": "تم حذف الإعلان بنجاح"
   },
   "profile": {
     "title": "الملف الشخصي",
@@ -208,6 +209,8 @@
     "uploadPersonalPhoto": "رفع صورة شخصية",
     "submitVerification": "إرسال طلب التوثيق",
     "verificationInfo": "لتوثيق حسابك لبيع أسرع وزيادة مصداقيتك، قم برفع صورة البطاقة وصورة شخصية ورقم الموبايل والإيميل.",
+    "accountVerified": "حسابك موثّق",
+    "verificationComplete": "تم التحقق من حسابك بنجاح",
     "confirmPassword": "تأكيد كلمة المرور",
     "confirmPasswordPlaceholder": "تأكيد كلمة المرور الجديدة",
     "passwordPlaceholder": "اتركه فارغاً إذا لم ترد تغيير كلمة المرور",
@@ -235,19 +238,64 @@
     "error": "خطأ",
     "retry": "إعادة المحاولة"
   },
+
+  "article": {
+    "title": "مكتبة المقالات",
+    "subtitle": "اكتشف مجموعة متنوعة من المقالات المفيدة والمعلومات القيمة",
+    "searchPlaceholder": "ابحث عن مقال...",
+    "readMore": "اقرأ المزيد",
+    "noArticles": "لا توجد مقالات متاحة حالياً",
+    "loading": "جاري تحميل المقالات...",
+    "close": "إغلاق"
+  },
   "messages": {
     "title": "الرسائل",
-    "noMessages": "لا توجد رسائل في الوقت الحالي",
-    "startConversation": "اضغط على المنتجات لتبدأ محادثة مع البائعين",
-    "searchPlaceholder": "ابحث في الرسائل...",
+    "noMessages": "لا توجد رسائل",
+    "searchPlaceholder": "ابحث عن اسم...",
     "tabs": {
       "all": "الكل",
       "buy": "شراء",
       "sell": "بيع"
     },
     "typePlaceholder": "اكتب رسالتك...",
-    "startChatNow": "ابدأ المحادثة الآن",
-    "selectChat": "اختر محادثة لعرضها"
+    "startChatNow": "أرسل أول رسالة الآن",
+    "selectChat": "اختر محادثة لبدء الدردشة",
+    "back": "رجوع",
+    "online": "متصل",
+    "chatOptions": "خيارات المحادثة",
+    "rateSeller": "تقييم البائع",
+    "rateSellerTitle": "تقييم البائع",
+    "editReview": "تعديل التقييم",
+    "honestyRating": "تقييم الأمانة",
+    "easyToDealRating": "تقييم سهولة التعامل",
+    "commentOptional": "تعليق (اختياري)",
+    "shareExperience": "شارك رأيك عن البائع...",
+    "maxCharacters": "الحد الأقصى 1000 حرف",
+    "cancel": "إلغاء",
+    "submitReview": "إرسال التقييم",
+    "updateReview": "تحديث التقييم",
+    "submitting": "جاري الإرسال...",
+    "reviewSubmitted": "تم إرسال التقييم بنجاح!",
+    "selectBothRatings": "من فضلك اختر التقييمين",
+    "commentTooLong": "التعليق طويل جداً (الحد الأقصى 1000 حرف)",
+    "errorSubmittingReview": "حدث خطأ أثناء إرسال التقييم",
+    "existingReviewNote": "لديك تقييم سابق لهذا البائع. يمكنك تعديله هنا.",
+    "note": "ملحوظة:",
+    "loading": "جاري التحميل...",
+    "writeMessage": "كتابة الرسالة",
+    "sendMessage": "إرسال الرسالة",
+    "noResults": "لا توجد نتائج",
+    "tryAnotherSearch": "جرب البحث بكلمة أخرى",
+    "allChats": "جميع محادثاتك",
+    "conversationsCount": "محادثة",
+    "yesterday": "أمس",
+    "daysAgo": "أيام",
+    "noUser": "مستخدم",
+    "selectChatToStart": "حدد محادثة من القائمة الجانبية لعرض الرسائل والمحادثة معهم",
+    "errorLoadingConversations": "خطأ في تحميل المحادثات",
+    "errorLoadingMessages": "خطأ في تحميل الرسائل",
+    "errorSendingMessage": "خطأ في إرسال الرسالة",
+    "errorLoadingUserData": "خطأ في تحميل بيانات المستخدم"
   },
   "notifications": {
     "title": "الإشعارات",
@@ -317,26 +365,26 @@
     "no": "لا"
   },
   "prices": {
-      "submitPrices": "أسعار اللحوم اليوم",
-      "governorate": "المحافظة",
-      "selectGovernorate": "اختر المحافظة",
-      "cowPrices": "أسعار الأبقار",
-      "sheepPrices": "أسعار الأغنام",
-      "camelPrices": "أسعار الإبل",
-      "netPrice": "السعر الصافي",
-      "standingPrice": "السعر القائم",
-      "priceNote": "ملاحظة مهمة",
-      "priceNoteDescription": "يرجى إدخال الأسعار الحالية بدقة. ستساعد هذه المعلومات المستخدمين الآخرين في معرفة أسعار السوق.",
-      "submit": "إرسال الأسعار"
+    "submitPrices": "أسعار اللحوم اليوم",
+    "governorate": "المحافظة",
+    "selectGovernorate": "اختر المحافظة",
+    "cowPrices": "أسعار الأبقار",
+    "sheepPrices": "أسعار الأغنام",
+    "camelPrices": "أسعار الإبل",
+    "netPrice": "السعر الصافي",
+    "standingPrice": "السعر القايم",
+    "priceNote": "ملاحظة مهمة",
+    "priceNoteDescription": "يرجى إدخال الأسعار الحالية بدقة. ستساعد هذه المعلومات المستخدمين الآخرين في معرفة أسعار السوق.",
+    "submit": "إرسال الأسعار"
   },
   "contact": {
-      "contactUs": "تواصل معنا",
-      "suggestion": "اقتراح",
-      "complaint": "شكوى",
-      "subscriptionIssue": "مشكلة في الاشتراك",
-      "other": "أخرى",
-      "message": "الطلب",
-      "submit": "إرسال الطلب"
+    "contactUs": "تواصل معنا",
+    "suggestion": "اقتراح",
+    "complaint": "شكوى",
+    "subscriptionIssue": "مشكلة في الاشتراك",
+    "other": "أخرى",
+    "message": "الطلب",
+    "submit": "إرسال الطلب"
   },
   "dashboard": {
     "sidebar": {
@@ -794,4 +842,3 @@
     }
   }
 }
-
