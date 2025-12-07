@@ -237,7 +237,7 @@ const Sidebar = () => {
                 {/* Logout Button */}
                 <div className="p-4">
                     <button
-                        onClick={logout}
+                        onClick={()=>logout()}
                         className="w-full cursor-pointer bg-main text-white py-1.5 rounded-md text-md hover:bg-green-700 flex items-center justify-center gap-2 transition"
                     >
                         <IoLogOutOutline size={18} />

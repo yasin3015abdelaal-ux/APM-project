@@ -35,7 +35,7 @@ userAPI.interceptors.response.use(
 
 // ADMIN API
 const ADMIN_BASE = "https://api.world-apm.com/admin";
-const ADMIN_CHAT_BASE = "https://api.world-apm.com/api/admin/chat";
+const ADMIN_CHAT_BASE = "https://api.world-apm.com/admin/chat";
 
 export const adminAPI = axios.create({
     baseURL: ADMIN_BASE,
