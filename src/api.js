@@ -6,7 +6,7 @@ const BASE_URL = "https://api.world-apm.com";
 
 const USER_BASE = `${BASE_URL}/api`;
 const ADMIN_BASE = `${BASE_URL}/admin`;
-const ADMIN_CHAT_BASE = `${BASE_URL}/api/api/admin/chat`;
+const ADMIN_CHAT_BASE = `${BASE_URL}/api/admin/chat`;
 
 // ==================== AXIOS INSTANCES ====================
 
@@ -22,6 +22,16 @@ export const adminAPI = axios.create({
 
 export const adminChatAPI = axios.create({
     baseURL: ADMIN_CHAT_BASE,
+    headers: { "Content-Type": "application/json" },
+});
+
+export const adminChatMessagesAPI = axios.create({
+    baseURL: `${BASE_URL}/admin/chat`,
+    headers: { "Content-Type": "application/json" },
+});
+
+export const chatMessagesAPI = axios.create({
+    baseURL: `${BASE_URL}/api`,
     headers: { "Content-Type": "application/json" },
 });
 
@@ -42,8 +52,6 @@ userAPI.interceptors.response.use(
         if (err.response?.status === 401) {
             const isAuthRequest = err.config?.url?.includes('/login') ||
                 err.config?.url?.includes('/register');
-
-            // Check if user has token
             const hasToken = localStorage.getItem("authToken");
 
             if (!isAuthRequest && hasToken) {
@@ -68,7 +76,6 @@ adminAPI.interceptors.request.use((config) => {
     return config;
 });
 
-// Admin API Interceptors
 adminAPI.interceptors.response.use(
     (res) => res,
     (err) => {
@@ -87,22 +94,60 @@ adminAPI.interceptors.response.use(
 );
 
 // Admin Chat API Interceptors
+adminChatAPI.interceptors.request.use((config) => {
+    const token = localStorage.getItem("adminToken");
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+    if (config.data instanceof FormData) {
+        delete config.headers["Content-Type"];
+    }
+    return config;
+});
+
 adminChatAPI.interceptors.response.use(
     (res) => res,
     (err) => {
         if (err.response?.status === 401) {
-            const isInDashboard = window.location.pathname.startsWith('/dashboard');
-            
-            if (isInDashboard) {
-                localStorage.removeItem("adminToken");
-                localStorage.removeItem("adminData");
-                window.location.href = "/admin/login";
-            }
+            localStorage.removeItem("adminToken");
+            localStorage.removeItem("adminData");
+            window.location.href = "/admin/login";
         }
         return Promise.reject(err);
     }
 );
-adminChatAPI.interceptors.response.use(
+
+// Admin Chat Messages API Interceptors
+adminChatMessagesAPI.interceptors.request.use((config) => {
+    const token = localStorage.getItem("adminToken");
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+    if (config.data instanceof FormData) {
+        delete config.headers["Content-Type"];
+    }
+    return config;
+});
+
+adminChatMessagesAPI.interceptors.response.use(
+    (res) => res,
+    (err) => {
+        if (err.response?.status === 401) {
+            localStorage.removeItem("adminToken");
+            localStorage.removeItem("adminData");
+            window.location.href = "/admin/login";
+        }
+        return Promise.reject(err);
+    }
+);
+
+// Chat Messages API Interceptors
+chatMessagesAPI.interceptors.request.use((config) => {
+    const token = localStorage.getItem("adminToken");
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+    if (config.data instanceof FormData) {
+        delete config.headers["Content-Type"];
+    }
+    return config;
+});
+
+chatMessagesAPI.interceptors.response.use(
     (res) => res,
     (err) => {
         if (err.response?.status === 401) {
@@ -186,7 +231,7 @@ export const reviewAPI = {
         userAPI.get(`/seller-reviews/my-review/${sellerId}`),
 };
 
-//Articles
+// Articles
 export const articlesAPI = {
     getAllArticles: (params = {}) => 
         userAPI.get('/articles', { params }),
@@ -380,6 +425,7 @@ export const getCachedAuctions = async () => {
         { ttl: 5 * 60 * 1000 } 
     );
 };
+
 // Cached My Auction Products
 export const getCachedMyAuctionProducts = async (auctionId) => {
     return await cachedAPICall(
@@ -413,7 +459,7 @@ export const getCachedArticles = async (params = {}) => {
             const response = await articlesAPI.getAllArticles(params);
             return response.data.data?.articles || [];
         },
-        { ttl: 10 * 60 * 1000 } // 10 minutes cache
+        { ttl: 10 * 60 * 1000 }
     );
 };
 
@@ -425,7 +471,7 @@ export const getCachedArticleDetails = async (articleId) => {
             const response = await articlesAPI.getArticleDetails(articleId);
             return response.data.data;
         },
-        { ttl: 15 * 60 * 1000 } // 15 minutes cache
+        { ttl: 15 * 60 * 1000 }
     );
 };
 
@@ -438,9 +484,10 @@ export const getCachedTopSellers = async (params = { limit: 10, min_reviews: 5 }
             const response = await topSellersAPI.getTopSellers(params);
             return response.data?.data || [];
         },
-        { ttl: 10 * 60 * 1000 } // 10 minutes
+        { ttl: 10 * 60 * 1000 }
     );
 };
+
 // ==================== CACHE UTILITIES ====================
 
 // Clear specific cache

@@ -553,44 +553,6 @@
       },
       "imagesCount": "عدد الصور"
     },
-    "packages": {
-      "title": "تسعير الباقات",
-      "currency": "جنيه",
-      "empty": "لا توجد باقات في هذه الفئة.",
-      "actions": {
-        "add": "اضافة باقة جديدة",
-        "edit": "تعديل",
-        "delete": "حذف",
-        "cancel": "إلغاء",
-        "save": "حفظ",
-        "update": "تحديث"
-      },
-      "fields": {
-        "category": "فئة الباقة",
-        "choose": "اختر الفئة",
-        "name": "اسم الباقة",
-        "namePlaceholder": "ادخل اسم الباقة",
-        "description": "تفاصيل الباقة",
-        "descriptionPlaceholder": "اكتب وصفاً مختصراً",
-        "price": "سعر الباقة"
-      },
-      "errors": {
-        "fetchCategories": "فشل في تحميل فئات الباقات",
-        "fetchPackages": "فشل في تحميل الباقات",
-        "required": "يرجى ملء جميع الحقول المطلوبة",
-        "saveFailed": "تعذر حفظ الباقة، حاول مرة أخرى",
-        "deleteFailed": "تعذر حذف الباقة"
-      },
-      "messages": {
-        "created": "تم إضافة الباقة بنجاح",
-        "updated": "تم تحديث الباقة بنجاح",
-        "deleted": "تم حذف الباقة بنجاح"
-      },
-      "delete": {
-        "confirmTitle": "هل أنت متأكد من حذف الباقة؟",
-        "confirmMessage": "سيتم حذف هذه الباقة نهائياً ولا يمكن التراجع."
-      }
-    },
     "additions": {
       "title": "الإضافات",
       "addProduct": "إضافة منتج",

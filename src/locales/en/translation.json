@@ -1,98 +1,60 @@
 {
-    "welcome": "welcome to our website",
-    "language": "language",
-    "auctions": "auction",
-    "menu": "Menu",
-    "shareAdv": "post your ad",
-    "search": "search",
-    "notification": "notifications",
-    "viewProfile": "view profile",
-    "favorite ads": "favorite ads",
-    "subscriptions": "packages",
-    "contact us": "contact us",
-    "share the app": "share the app",
-    "my ads": "my ads",
-    "subscriptions and invoices": "packages and invoices",
-    "today's meat price": "today's meat price",
-    "about us": "about us",
-    "privacy, terms, and conditions": "privacy, terms, and conditions",
-    "log out": "log out",
-    "country": "country",
-    "create account": "create account",
-    "log in": "log in",
-    "sign up": "sign up",
-    "sign in": "sign in",
-    "products": "products",
-    "sacrifice": "sacrifice",
-    "animals": "animals",
-    "pure breeds": "pure breeds",
-    "butchery": "butchery",
-    "birds": "birds",
-    "animal products": "animal products",
-    "fodder": "fodder",
-    "farming supplies": "farming supplies",
-    "veterinary supervision services": "veterinary supervision services",
-    "fish and others": "fish and others",
-    "articles": "articles",
-    "veterinary medicines": "veterinary medicines",
-    "leather and fur": "leather and fur",
-    "veterinary testing laboratories": "veterinary testing laboratories",
-    "auth": {
-        "login": {
-            "title": "Login",
-            "email": "Email",
-            "phone": "Phone Number",
-            "emailRequired": "Email is required",
-            "password": "Password",
-            "loginButton": "Login",
-            "loggingIn": "Logging in...",
-            "loggingOut": "Logging out...",
-            "noAccount": "Don't have an account?",
-            "createAccount": "Create new account",
-            "error": "An error occurred during login. Please check your credentials.",
-            "phoneRequired": "Phone number is required",
-            "passwordRequired": "Password is required",
-            "fillAllFields": "Please fill in all fields",
-            "loginSuccess": "Logged in successfully!",
-            "forgotPassword": "Forgot your password?"
-        },
-        "register": {
-            "title": "Create Account",
-            "chooseCountry": "Choose Country",
-            "selectCountry": "Select Country",
-            "uploadProfileImage": "Upload Profile Image",
-            "countryRequired": "Please select a country",
-            "selectCountryFirst": "Please select a country first",
-            "name": "Full Name",
-            "nameRequired": "Name is required",
-            "phone": "Phone Number",
-            "phoneRequired": "Phone number is required",
-            "email": "Email Address",
-            "governorate": "Select Governorate",
-            "governorateRequired": "Governorate is required",
-            "activityType": "Activity Type",
-            "activityRequired": "Activity type is required",
-            "address": "Address",
-            "addressRequired": "Address is required",
-            "password": "Password",
-            "passwordRequired": "Password is required",
-            "passwordLength": "Password must be at least 8 characters",
-            "passwordConfirmation": "Confirm Password",
-            "confirmPasswordRequired": "Password confirmation is required",
-            "passwordMismatch": "Passwords do not match",
-            "accountType": "Account Type",
-            "individual": "Individual",
-            "organization": "Organizations",
-            "next": "Next",
-            "back": "Back",
-            "createButton": "Create Account",
-            "creating": "Creating...",
-            "haveAccount": "Already have an account?",
-            "loginLink": "Login",
-            "successMessage": "Account created successfully",
-            "error": "An error occurred while creating account",
-            "fillAllFields": "Please fill all required fields"
-        }
+  "welcome": "welcome to our website",
+  "language": "language",
+  "auctions": "auction",
+  "menu": "Menu",
+  "shareAdv": "post your ad",
+  "search": "search",
+  "notification": "notifications",
+  "viewProfile": "view profile",
+  "favorite ads": "favorite ads",
+  "subscriptions": "packages",
+  "contact us": "contact us",
+  "share the app": "share the app",
+  "my ads": "my ads",
+  "subscriptions and invoices": "packages and invoices",
+  "today's meat price": "today's meat price",
+  "about us": "about us",
+  "privacy, terms, and conditions": "privacy, terms, and conditions",
+  "log out": "log out",
+  "country": "country",
+  "create account": "create account",
+  "log in": "log in",
+  "sign up": "sign up",
+  "sign in": "sign in",
+  "products": "products",
+  "sacrifice": "sacrifice",
+  "animals": "animals",
+  "pure breeds": "pure breeds",
+  "butchery": "butchery",
+  "birds": "birds",
+  "animal products": "animal products",
+  "fodder": "fodder",
+  "farming supplies": "farming supplies",
+  "veterinary supervision services": "veterinary supervision services",
+  "fish and others": "fish and others",
+  "articles": "articles",
+  "veterinary medicines": "veterinary medicines",
+  "leather and fur": "leather and fur",
+  "veterinary testing laboratories": "veterinary testing laboratories",
+  "auth": {
+    "login": {
+      "title": "Login",
+      "email": "Email",
+      "phone": "Phone Number",
+      "emailRequired": "Email is required",
+      "password": "Password",
+      "loginButton": "Login",
+      "loggingIn": "Logging in...",
+      "loggingOut": "Logging out...",
+      "noAccount": "Don't have an account?",
+      "createAccount": "Create new account",
+      "error": "An error occurred during login. Please check your credentials.",
+      "phoneRequired": "Phone number is required",
+      "passwordRequired": "Password is required",
+      "fillAllFields": "Please fill in all fields",
+      "loginSuccess": "Logged in successfully!",
+      "forgotPassword": "Forgot your password?"
     },
     "register": {
       "title": "Create Account",
@@ -243,6 +205,8 @@
     "uploadPersonalPhoto": "Upload Personal Photo",
     "submitVerification": "Submit Verification Request",
     "verificationInfo": "To verify your account for faster selling and increased credibility, please upload your ID card photo, personal photo, mobile number, and email.",
+    "accountVerified": "Account Verified",
+    "verificationComplete": "Your account has been successfully verified",
     "confirmPassword": "Confirm Password",
     "confirmPasswordPlaceholder": "Confirm new password",
     "passwordPlaceholder": "Leave blank if you don't want to change password",
@@ -282,7 +246,42 @@
     },
     "typePlaceholder": "Type your message...",
     "startChatNow": "Start the conversation now",
-    "selectChat": "Select a chat to view"
+    "selectChat": "Select a chat to view",
+    "back": "Back",
+    "online": "Online",
+    "chatOptions": "Chat Options",
+    "rateSeller": "Rate Seller",
+    "writeMessage": "Write message",
+    "sendMessage": "Send message",
+    "noResults": "No results found",
+    "tryAnotherSearch": "Try searching with different keywords",
+    "allChats": "All your conversations",
+    "conversationsCount": "conversations",
+    "yesterday": "Yesterday",
+    "daysAgo": "days ago",
+    "noUser": "User",
+    "selectChatToStart": "Select a conversation from the sidebar to view messages and chat with them",
+    "errorLoadingConversations": "Error loading conversations",
+    "errorLoadingMessages": "Error loading messages",
+    "errorSendingMessage": "Error sending message",
+    "errorLoadingUserData": "Error loading user data",
+    "rateSellerTitle": "Rate Seller",
+    "editReview": "Edit Review",
+    "honestyRating": "Honesty Rating",
+    "easyToDealRating": "Easy to Deal Rating",
+    "commentOptional": "Comment (Optional)",
+    "shareExperience": "Share your experience with the seller...",
+    "maxCharacters": "Max 1000 characters",
+    "cancel": "Cancel",
+    "submitReview": "Submit Review",
+    "updateReview": "Update Review",
+    "submitting": "Submitting...",
+    "reviewSubmitted": "Review submitted successfully!",
+    "selectBothRatings": "Please select both ratings",
+    "commentTooLong": "Comment is too long (max 1000 characters)",
+    "errorSubmittingReview": "Error submitting review",
+    "existingReviewNote": "You have an existing review for this seller. You can update it here.",
+    "note": "Note:"
   },
   "notifications": {
     "title": "Notifications",
@@ -352,7 +351,7 @@
     "no": "No"
   },
   "prices": {
-    "submitPrices": "Today’s Meat Prices",
+    "submitPrices": "Today's Meat Prices",
     "governorate": "Governorate",
     "selectGovernorate": "Select Governorate",
     "cowPrices": "Cow Prices",
@@ -536,44 +535,6 @@
       "messages": {
         "created": "Advertisement created successfully",
         "deleted": "Advertisement deleted successfully"
-      }
-    },
-    "packages": {
-      "title": "Packages Pricing",
-      "currency": "EGP",
-      "empty": "No packages available in this category.",
-      "actions": {
-        "add": "Add new package",
-        "edit": "Edit",
-        "delete": "Delete",
-        "cancel": "Cancel",
-        "save": "Save",
-        "update": "Update"
-      },
-      "fields": {
-        "category": "Package category",
-        "choose": "Choose category",
-        "name": "Package name",
-        "namePlaceholder": "Enter package name",
-        "description": "Package description",
-        "descriptionPlaceholder": "Add a short description",
-        "price": "Package price"
-      },
-      "errors": {
-        "fetchCategories": "Failed to load package categories",
-        "fetchPackages": "Failed to load packages",
-        "required": "Please fill all required fields",
-        "saveFailed": "Unable to save package, try again",
-        "deleteFailed": "Unable to delete package"
-      },
-      "messages": {
-        "created": "Package created successfully",
-        "updated": "Package updated successfully",
-        "deleted": "Package deleted successfully"
-      },
-      "delete": {
-        "confirmTitle": "Are you sure you want to delete this package?",
-        "confirmMessage": "This action is irreversible and will delete the package."
       }
     },
     "additions": {
@@ -848,644 +809,14 @@
         "noSellers": "No registered sellers",
         "name": "Name",
         "email": "Email",
-<<<<<<< HEAD
-        "phone": "Phone Number",
-        "country": "Country",
-        "governorate": "Governorate",
-        "password": "Password",
-        "editProfile": "Edit Profile",
-        "verifyAccount": "Verify Your Account",
-        "saveChanges": "Save Changes",
-        "verificationTitle": "Account Verification",
-        "idCardFront": "ID Card Front",
-        "idCardBack": "ID Card Back",
-        "personalPhoto": "Personal Photo",
-        "uploadIdFront": "Upload ID Front",
-        "uploadIdBack": "Upload ID Back",
-        "uploadPersonalPhoto": "Upload Personal Photo",
-        "submitVerification": "Submit Verification Request",
-        "verificationInfo": "To verify your account for faster selling and increased credibility, please upload your ID card photo, personal photo, mobile number, and email.",
-        "accountVerified": "Account Verified",
-        "verificationComplete": "Your account has been successfully verified",
-        "confirmPassword": "Confirm Password",
-        "confirmPasswordPlaceholder": "Confirm new password",
-        "passwordPlaceholder": "Leave blank if you don't want to change password",
-        "passwordMismatch": "Passwords do not match",
-        "saveSuccess": "Changes saved successfully",
-        "saveError": "An error occurred while saving changes",
-        "uploadRequired": "Please upload all required images",
-        "submitError": "An error occurred while submitting the request",
-        "loading": "Loading...",
-        "error": "An error occurred while loading the profile",
-        "emailReadOnly": "Email",
-        "phoneReadOnly": "Phone Number",
-        "id": "ID Card",
-        "businessDocs": "Business Documents",
-        "uploadCommercialRecord": "Upload Commercial Record Image",
-        "uploadTaxCard": "Upload Tax Card Image",
-        "successModal": {
-            "title": "Request Submitted",
-            "message": "Your request has been submitted and will be reviewed as soon as possible",
-            "backToHome": "Back to Home Page"
-        }
-    },
-    "common": {
-        "loading": "Loading...",
-        "error": "Error",
-        "retry": "Retry"
-    },
-    "messages": {
-        "title": "Messages",
-        "noMessages": "No messages at the moment",
-        "searchPlaceholder": "Search ...",
-        "tabs": {
-            "all": "All",
-            "buy": "Buy",
-            "sell": "Sell"
-        },
-        "typePlaceholder": "Type your message...",
-        "startChatNow": "Send your first message now",
-        "selectChat": "Select a chat to view",
-        "back": "Back",
-        "online": "Online",
-        "chatOptions": "Chat Options",
-        "rateSeller": "Rate Seller",
-        "loading": "Loading...",
-        "writeMessage": "Write message",
-        "sendMessage": "Send message",
-        "noResults": "No results found",
-        "tryAnotherSearch": "Try searching with different keywords",
-        "allChats": "All your conversations",
-        "conversationsCount": "conversations",
-        "yesterday": "Yesterday",
-        "daysAgo": "days ago",
-        "noUser": "User",
-        "selectChatToStart": "Select a conversation from the sidebar to view messages and chat with them",
-        "errorLoadingConversations": "Error loading conversations",
-        "errorLoadingMessages": "Error loading messages",
-        "errorSendingMessage": "Error sending message",
-        "errorLoadingUserData": "Error loading user data",
-        "rateSellerTitle": "Rate Seller",
-        "editReview": "Edit Review",
-        "honestyRating": "Honesty Rating",
-        "easyToDealRating": "Easy to Deal Rating",
-        "commentOptional": "Comment (Optional)",
-        "shareExperience": "Share your experience with the seller...",
-        "maxCharacters": "Max 1000 characters",
-        "cancel": "Cancel",
-        "submitReview": "Submit Review",
-        "updateReview": "Update Review",
-        "submitting": "Submitting...",
-        "reviewSubmitted": "Review submitted successfully!",
-        "selectBothRatings": "Please select both ratings",
-        "commentTooLong": "Comment is too long (max 1000 characters)",
-        "errorSubmittingReview": "Error submitting review",
-        "existingReviewNote": "You have an existing review for this seller. You can update it here.",
-        "note": "Note:"
-    },
-    "notifications": {
-        "title": "Notifications",
-        "noNotifications": "No notifications",
-        "noNotificationsDesc": "Your notifications will appear here when available",
-        "unread": "unread",
-        "markAsRead": "Mark as read",
-        "markAllAsRead": "Mark all as read",
-        "delete": "Delete",
-        "clearAll": "Clear all",
-        "autoDelete": "Notifications will be automatically deleted after 30 days",
-        "filter": {
-            "all": "All",
-            "unread": "Unread",
-            "read": "Read"
-        }
-    },
-    "auction": {
-        "myAuctions": "My Auctions",
-        "auctionProducts": "Auction Products",
-        "upcomingAuctions": "Upcoming Auctions",
-        "pastAuctions": "Past Auctions",
-        "currentAuction": "Current Auction",
-        "noAuctions": "No auctions available",
-        "noProducts": "No products in the auction",
-        "auctionClosed": "Auction Closed",
-        "auctionOpen": "Auction Open",
-        "startDate": "Start Date",
-        "endDate": "End Date",
-        "startingPrice": "Starting Price",
-        "currentPrice": "Current Price",
-        "reservePrice": "Reserve Price",
-        "yourOffer": "Your Offer",
-        "updatePrice": "Update Price",
-        "removeProduct": "Remove Product",
-        "makeOffer": "Make Offer",
-        "cannotEditOpen": "Cannot edit price after auction opens",
-        "productRemoved": "Product removed from auction successfully",
-        "priceUpdated": "Price updated successfully",
-        "offerSubmitted": "Offer submitted successfully",
-        "enterNewPrice": "Enter new price",
-        "enterOfferPrice": "Enter offer price",
-        "filter": {
-            "all": "All",
-            "upcoming": "Upcoming",
-            "past": "Past",
-            "allCategories": "All Categories"
-        },
-        "status": {
-            "upcoming": "Upcoming",
-            "open": "Open",
-            "closed": "Closed"
-        },
-        "reserveAuction": "Reserve now to participate in the upcoming auction",
-        "bookNow": "Book Now",
-        "auctionDetails": "Auction Details",
-        "timeRemaining": "Time Remaining",
-        "bids": "Bids",
-        "highestBid": "Highest Bid",
-        "category": "Category",
-        "seller": "Seller",
-        "loading": "Loading...",
-        "error": "Error loading data",
-        "retry": "Retry",
-        "confirmRemove": "Are you sure you want to remove this product from the auction?",
-        "yes": "Yes",
-        "no": "No"
-    },
-    "prices": {
-        "submitPrices": "Today’s Meat Prices",
-        "governorate": "Governorate",
-        "selectGovernorate": "Select Governorate",
-        "cowPrices": "Cow Prices",
-        "sheepPrices": "Sheep Prices",
-        "camelPrices": "Camel Prices",
-        "netPrice": "Net Price",
-        "standingPrice": "Live Weight Price",
-        "priceNote": "Important Note",
-        "priceNoteDescription": "Please enter current prices accurately. This information will help other users know market prices.",
-        "submit": "Submit Prices"
-    },
-    "contact": {
-        "contactUs": "Contact Us",
-        "suggestion": "Suggestion",
-        "complaint": "Complaint",
-        "subscriptionIssue": "Subscription Issue",
-        "other": "Other",
-        "message": "Request",
-        "submit": "Send Message"
-    },
-    "dashboard": {
-        "sidebar": {
-            "accounts": "Accounts",
-            "posts": "Posts",
-            "auctions": "Auctions",
-            "additions": "Additions",
-            "products": "Products",
-            "packages": "Packages",
-            "reports": "Reports",
-            "verification": "Account Verification",
-            "logos": "Logos",
-            "articles": "Articles",
-            "ads": "Advertisements",
-            "messages": "Customer Chat",
-            "admins": "Admins",
-            "subscriptions": "Subscriptions",
-            "invoices": "Invoices",
-            "todayPrice": "Today's Price",
-            "logout": "Logout",
-            "Egypt": "Egypt"
-        },
-        "verifications": {
-            "sectionLabel": "Account Verification",
-            "title": "Account Verification Requests",
-            "detailsTitle": "Verify Account",
-            "searchPlaceholder": "Search by user name or account number",
-            "status": {
-                "pending": "Pending",
-                "approved": "Approved",
-                "rejected": "Rejected"
-            },
-            "table": {
-                "accountNumber": "Account #",
-                "submittedAt": "Submitted At",
-                "name": "Name",
-                "phone": "Phone",
-                "accountType": "Account Type",
-                "email": "Email"
-            },
-            "empty": "No verification requests match your filters.",
-            "fields": {
-                "email": "Email",
-                "phone": "Phone",
-                "accountType": "Account Type",
-                "submittedAt": "Submitted At"
-            },
-            "attachments": {
-                "front": "View Front ID",
-                "back": "View Back ID",
-                "selfie": "View Selfie"
-            },
-            "actions": {
-                "approve": "Approve",
-                "reject": "Reject"
-            },
-            "viewProfile": "View Profile",
-            "rejectModal": {
-                "title": "Rejection Reason",
-                "placeholder": "Write the rejection reason",
-                "cancel": "Cancel",
-                "submit": "Send",
-                "sending": "Sending..."
-            },
-            "errors": {
-                "fetch": "Failed to load verification requests",
-                "fetchOne": "Failed to load the verification request",
-                "notFound": "No data available for this request",
-                "approve": "Unable to approve verification",
-                "reject": "Unable to reject verification"
-            },
-            "messages": {
-                "approved": "Account verified successfully",
-                "rejected": "Verification request rejected"
-            }
-        },
-        "chat": {
-            "title": "Chat with customers",
-            "searchPlaceholder": "Search conversations...",
-            "empty": "No conversations available.",
-            "noMessagesYet": "No messages yet.",
-            "selectConversation": "Select a conversation to start chatting.",
-            "typePlaceholder": "Type your message...",
-            "unknownUser": "Unknown user",
-            "actions": {
-                "contactClient": "Contact client",
-                "send": "Send",
-                "cancel": "Cancel"
-            },
-            "messages": {
-                "initiated": "Conversation started successfully"
-            },
-            "errors": {
-                "fetchConversations": "Failed to load conversations",
-                "sendFailed": "Unable to send message",
-                "userRequired": "Please choose a client first",
-                "initiateFailed": "Unable to start a new conversation"
-            },
-            "modal": {
-                "title": "Contact the client",
-                "user": "Choose client",
-                "userPlaceholder": "Type a name to search",
-                "subject": "Subject",
-                "message": "Message",
-                "sending": "Sending..."
-            }
-        },
-        "todayPrices": {
-            "sectionLabel": "Daily Prices",
-            "title": "Today's Prices",
-            "count": "Records: {{count}}",
-            "export": "Export",
-            "categories": {
-                "sheep": "Sheep",
-                "cows": "Cows",
-                "camels": "Camels"
-            },
-            "table": {
-                "accountNumber": "Account #",
-                "predictionDate": "Prediction Date",
-                "name": "Name",
-                "accountType": "Account Type",
-                "expected": "Expected Price",
-                "current": "Current Price"
-            },
-            "empty": "No price entries available for this category."
-        },
-        "advertisements": {
-            "pageTitle": "Advertisements Manager",
-            "subtitle": "Add or remove hero and slider advertisements.",
-            "heroTitle": "Add Hero Advertisement",
-            "sliderTitle": "Add Slider Advertisements",
-            "emptyHeroSection": "No hero ads yet.",
-            "emptySliderSection": "No slider ads yet.",
-            "actions": {
-                "addHero": "Add hero ad",
-                "addSlider": "Add slider ad",
-                "confirmDelete": "Are you sure you want to delete this advertisement? This action cannot be undone."
-            },
-            "modal": {
-                "title": "Create new advertisement",
-                "imageLabel": "Advertisement image",
-                "orderLabel": "Display order",
-                "cancel": "Cancel",
-                "save": "Save",
-                "saving": "Saving..."
-            },
-            "errors": {
-                "fetch": "Failed to load advertisements.",
-                "upload": "Unable to upload the advertisement, please try again.",
-                "delete": "Unable to delete the advertisement.",
-                "fileRequired": "Please select an image first."
-            },
-            "messages": {
-                "created": "Advertisement created successfully",
-                "deleted": "Advertisement deleted successfully"
-            }
-        },
-        "packages": {
-            "title": "Packages Pricing",
-            "currency": "EGP",
-            "empty": "No packages available in this category.",
-            "actions": {
-                "add": "Add new package",
-                "edit": "Edit",
-                "delete": "Delete",
-                "cancel": "Cancel",
-                "save": "Save",
-                "update": "Update"
-            },
-            "fields": {
-                "category": "Package category",
-                "choose": "Choose category",
-                "name": "Package name",
-                "namePlaceholder": "Enter package name",
-                "description": "Package description",
-                "descriptionPlaceholder": "Add a short description",
-                "price": "Package price"
-            },
-            "errors": {
-                "fetchCategories": "Failed to load package categories",
-                "fetchPackages": "Failed to load packages",
-                "required": "Please fill all required fields",
-                "saveFailed": "Unable to save package, try again",
-                "deleteFailed": "Unable to delete package"
-            },
-            "messages": {
-                "created": "Package created successfully",
-                "updated": "Package updated successfully",
-                "deleted": "Package deleted successfully"
-            },
-            "delete": {
-                "confirmTitle": "Are you sure you want to delete this package?",
-                "confirmMessage": "This action is irreversible and will delete the package."
-            }
-        },
-        "additions": {
-            "title": "Additions",
-            "addProduct": "Add Product",
-            "addProductTitle": "Add Product",
-            "productName": "Product Name",
-            "productNamePlaceholder": "Enter product name",
-            "productImage": "Product Image",
-            "chooseImage": "Choose Image",
-            "stop": "Stop",
-            "confirmStop": "Are you sure you want to stop this item?",
-            "yes": "Yes",
-            "no": "No",
-            "successMessage": "Item stopped successfully",
-            "productAdded": "Product added successfully",
-            "productNameAr": "Product Name (Arabic)",
-            "productNameEn": "Product Name (English)",
-            "addSubCategory": "Add Subcategory",
-            "addSubCategoryTitle": "Add New Subcategory",
-            "subCategoryNameAr": "Subcategory Name (Arabic)",
-            "subCategoryNameEn": "Subcategory Name (English)",
-            "subCategoryAdded": "Subcategory added successfully",
-            "categoryAdded": "Category added successfully"
-        },
-        "accounts": {
-            "title": "Accounts",
-            "export": "Export",
-            "verification": "Verification",
-            "email": "Email",
-            "phone": "Phone Number",
-            "name": "Name",
-            "accountType": "Account Type",
-            "registrationDate": "Registration Date",
-            "accountNumber": "Account Number",
-            "verified": "Verified",
-            "notVerified": "Not Verified",
-            "noAccounts": "No accounts found",
-            "totalAccounts": "Total Accounts",
-            "refreshData": "Refresh Data",
-            "fetchError": "Failed to fetch data",
-            "accountDetails": {
-                "title": "Account",
-                "email": "Email",
-                "phoneNumber": "Phone Number",
-                "address": "Address",
-                "governorate": "Governorate",
-                "accountType": "Account Type",
-                "individual": "Individual",
-                "company": "Company",
-                "publishedAdsCount": "Published Ads Count",
-                "rejectedAdsCount": "Rejected Ads Count",
-                "underReviewAdsCount": "Under Review Ads Count",
-                "reservedAdsCount": "Reserved Ads Count",
-                "expiredAdsCount": "Expired Ads Count",
-                "subscriptionsCount": "Subscriptions Count",
-                "noSubscriptions": "No subscriptions",
-                "servicesCount": "Services Count",
-                "activateAccount": "Verify Account",
-                "deactivateAccount": "Unverify Account",
-                "deleteAccount": "Delete Account",
-                "accountVerified": "Account verified successfully",
-                "accountUnverified": "Account unverified successfully",
-                "accountDeleted": "Account deleted successfully",
-                "errorVerifying": "Error verifying account",
-                "errorDeleting": "Error deleting account",
-                "errorFetching": "Error fetching data",
-                "confirmVerify": "Are you sure you want to verify this account?",
-                "confirmUnverify": "Are you sure you want to unverify this account?",
-                "confirmDelete": "Are you sure you want to delete this account?"
-            }
-        },
-        "invoices": {
-            "title": "Invoices",
-            "export": "Export",
-            "fetchError": "Failed to load invoices",
-            "exportSuccess": "Export successful",
-            "exportError": "Export failed",
-            "noInvoices": "No invoices found",
-            "noFilterResults": "No results match your filter",
-            "currency": "EGP",
-            "stats": {
-                "totalInvoices": "Total Invoices",
-                "totalAmount": "Total Amount"
-            },
-            "table": {
-                "invoiceNumber": "Invoice Number",
-                "date": "Payment Date",
-                "userName": "Name",
-                "subscriptionType": "Subscription Type",
-                "paymentMethod": "Payment Method",
-                "requestInvoice": "Request Invoice",
-                "status": "Invoice Value"
-            },
-            "status": {
-                "paid": "Paid",
-                "pending": "Pending",
-                "cancelled": "Cancelled"
-            },
-            "paymentMethods": {
-                "credit_card": "Credit Card",
-                "bank_transfer": "Bank Transfer",
-                "cash": "Cash",
-                "wallet": "E-Wallet"
-            },
-            "filterTitle": "Filter Invoices",
-            "filter": {
-                "status": "Status",
-                "dateFrom": "From Date",
-                "dateTo": "To Date",
-                "all": "All",
-                "reset": "Reset",
-                "apply": "Apply"
-            },
-            "errors": {
-                "missingId": "Error: Invoice ID is missing"
-            }
-        },
-        "products": {
-            "title": "Products Review",
-            "export": "Export",
-            "noProducts": "No products found",
-            "stats": {
-                "totalProducts": "Total Products",
-                "pending": "Pending Review",
-                "accepted": "Accepted",
-                "rejected": "Rejected"
-            },
-            "table": {
-                "seller": "Seller"
-            },
-            "details": {
-                "category": "Category",
-                "governorate": "Governorate"
-            },
-            "actions": {
-                "accept": "Accept",
-                "reject": "Reject",
-                "delete": "Delete"
-            },
-            "messages": {
-                "loadError": "Error loading products",
-                "acceptSuccess": "Product accepted successfully",
-                "rejectSuccess": "Product rejected successfully",
-                "deleteSuccess": "Product deleted successfully",
-                "deleteError": "Error deleting product",
-                "updateError": "Error updating status",
-                "exportSuccess": "Exported successfully"
-            }
-        },
-        "articles": {
-            "title": "Articles",
-            "addArticle": "Add Article",
-            "editArticle": "Edit Article",
-            "delete": "Delete",
-            "cancel": "Cancel",
-            "send": "Send",
-            "addImage": "Add Image",
-            "articleTitle": "Article Title",
-            "articleTitlePlaceholder": "Enter article title",
-            "articleContent": "Article",
-            "articleContentPlaceholder": "Enter article content",
-            "noArticles": "No articles found",
-            "fetchError": "Failed to load articles",
-            "addSuccess": "Article added successfully",
-            "addError": "Error adding article",
-            "updateSuccess": "Article updated successfully",
-            "updateError": "Error updating article",
-            "deleteSuccess": "Article deleted successfully",
-            "deleteError": "Error deleting article",
-            "deleteConfirmTitle": "Are you sure you want to delete the article?",
-            "deleteConfirmMessage": "Are you sure you want to delete this article? This action cannot be undone.",
-            "fillAllFields": "Please fill all required fields"
-        },
-        "packages": {
-            "title": "Packages",
-            "currency": "EGP",
-            "empty": "No packages available in this category.",
-            "actions": {
-                "add": "Add Package",
-                "edit": "Edit",
-                "update": "Update",
-                "save": "Save",
-                "cancel": "Cancel",
-                "delete": "Delete Package"
-            },
-            "fields": {
-                "category": "Package Category",
-                "choose": "Choose category",
-                "name": "Package Name",
-                "namePlaceholder": "Enter package name",
-                "description": "Package Description",
-                "descriptionPlaceholder": "Write a short description for the package",
-                "price": "Package Price"
-            },
-            "delete": {
-                "confirmTitle": "Are you sure you want to delete this package?",
-                "confirmMessage": "Deleting the package will remove it permanently from the system."
-            },
-            "errors": {
-                "fetchCategories": "Failed to load package categories",
-                "fetchPackages": "Failed to load packages",
-                "required": "Please fill all required fields",
-                "saveFailed": "Unable to save package",
-                "deleteFailed": "Unable to delete package"
-            },
-            "messages": {
-                "created": "Package added successfully",
-                "updated": "Package updated successfully",
-                "deleted": "Package deleted successfully"
-            }
-        },
-        "auctions": {
-            "title": "Auctions",
-            "subtitle": "View and manage all auctions and participants",
-            "loading": "Loading...",
-            "friday": "Friday",
-            "sellers": "sellers",
-            "buyers": "buyers",
-            "noAuctions": "No auctions found",
-            "timer": {
-                "closing": "Time Until Auction Closes",
-                "opening": "Time Until Auction Opens",
-                "days": "Days",
-                "hours": "Hours",
-                "minutes": "Minutes",
-                "seconds": "Seconds"
-            },
-            "cards": {
-                "buyers": "Buyers",
-                "sellers": "Sellers",
-                "registered": "Registered in auction",
-                "maxLimit": "Max Limit"
-            },
-            "modal": {
-                "title": "Set Auction Limits",
-                "maxSellers": "Number of Sellers",
-                "maxBuyers": "Number of Buyers",
-                "unlimited": "Unlimited",
-                "update": "Update"
-            },
-            "actions": {
-                "editParticipants": "Edit Participants Count"
-            },
-            "messages": {
-                "updateSuccess": "Participants count updated successfully"
-            },
-            "participantsTable": {
-                "noBuyers": "No registered buyers",
-                "noSellers": "No registered sellers",
-                "name": "Name",
-                "email": "Email",
-                "phone": "Phone",
-                "joinedAt": "Joined At"
-            },
-            "errors": {
-                "fetchError": "Error loading auctions",
-                "updateError": "Error updating",
-                "participantsError": "Error loading participants"
-            }
-        }
+        "phone": "Phone",
+        "joinedAt": "Joined At"
+      },
+      "errors": {
+        "fetchError": "Error loading auctions",
+        "updateError": "Error updating",
+        "participantsError": "Error loading participants"
+      }
     }
   }
 }
