@@ -9,6 +9,7 @@ import Login from "../components/Login/Login";
 import ProductsPage from "../components/Products/ProductsPage";
 import ProductDetails from "../components/Products/ProductDetails";
 import DashboardHome from "../pages/Dashboard/Home";
+import SettingsPage from "../pages/Dashboard/SettingsPage";
 import { ProtectedRoute, PublicRoute } from "../RouteGuards/RouteGuards";
 import { ProtectedAdminRoute } from "../contexts/AdminContext";
 import Additions from "../components/Dashboard/Additions/Additions";
@@ -26,6 +27,7 @@ import TodayPrices from "../pages/Dashboard/TodayPrices";
 import AdvertisementsPage from "../pages/Dashboard/AdvertisementsPage";
 import PackagesPage from "../pages/Dashboard/PackagesPage";
 import ArticlesPage from "../pages/Dashboard/ArticlesPage";
+import ReportsPage from "../pages/Dashboard/ReportsPage";
 import ChatPage from "../pages/Dashboard/ChatPage";
 import VerifyAccountPage from "../pages/Profile/VerifyAccount";
 import EditProfilePage from "../pages/Profile/EditProfilePage";
@@ -54,6 +56,9 @@ import Articles from "../pages/Articles/ArticlesPage";
 import SellerReviews from "../pages/SellerReviews/SellerReviews";
 import ArticleDetailsPage from "../pages/Articles/ArticleDetails";
 import SellerDetails from "../components/Products/SellerDetails";
+// import AuctionsList from "../pages/Auctions/AuctionsList";
+// import Prices from "../pages/Prices/Prices";
+// import ContactUs from "../pages/Contact/ContactUs";
 
 export const routers = createBrowserRouter([
   {
@@ -185,6 +190,22 @@ export const routers = createBrowserRouter([
             ),
           },
           {
+            path: "contact",
+            element: (
+              <ProtectedRoute>
+                <ContactUs />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "prices",
+            element: (
+              <ProtectedRoute>
+                <Prices />
+              </ProtectedRoute>
+            ),
+          },
+          {
             path: "ads/:id/edit",
             element: (
               <ProtectedRoute>
@@ -205,22 +226,6 @@ export const routers = createBrowserRouter([
             element: (
               <ProtectedRoute>
                 <Notifications />
-              </ProtectedRoute>
-            ),
-          },
-          {
-            path: "contact",
-            element: (
-              <ProtectedRoute>
-                <ContactUs />
-              </ProtectedRoute>
-            ),
-          },
-          {
-            path: "prices",
-            element: (
-              <ProtectedRoute>
-                <Prices />
               </ProtectedRoute>
             ),
           },
@@ -338,7 +343,8 @@ export const routers = createBrowserRouter([
           </ProtectedAdminRoute>
         ),
         children: [
-          { index: true, element: <DashboardHome /> },
+          { index: true, element: <SettingsPage /> },
+          { path: "home", element: <DashboardHome /> },
           { path: "additions", element: <Additions /> },
           { path: "additions/category/:categoryId", element: <Category /> },
           { path: "accounts", element: <Accounts /> },
@@ -346,6 +352,7 @@ export const routers = createBrowserRouter([
           { path: "auctions/:id", element: <AuctionDetails /> },
           { path: "ads", element: <AdvertisementsPage /> },
           { path: "packages", element: <PackagesPage /> },
+          { path: "reports", element: <ReportsPage /> },
           { path: "articles", element: <ArticlesPage /> },
           { path: "messages", element: <ChatPage /> },
           { path: "verification", element: <VerificationsList /> },

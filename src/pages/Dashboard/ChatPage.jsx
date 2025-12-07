@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { adminChatAPI } from "../../api";
+import { useSearchParams } from "react-router-dom";
+import { adminChatAPI, chatMessagesAPI, adminAPI } from "../../api";
 import Loader from "../../components/Ui/Loader/Loader";
 
 const parseArray = (payload) => {
@@ -17,36 +18,212 @@ const formatMessage = (msg) => ({
   sender_type: msg.sender_type || msg.sender || msg.author || "user",
 });
 
+const MessageCard = React.memo(({ conversation, isSelected, onSelect }) => {
+  const { i18n } = useTranslation();
+  const name =
+    conversation.user?.name ||
+    conversation.user?.full_name ||
+    conversation.user?.username ||
+    "Unknown user";
+  const timestamp = conversation.last_message?.created_at || conversation.last_message?.time;
+  const preview =
+    conversation.last_message?.body ||
+    conversation.last_message?.message ||
+    conversation.last_message?.text ||
+    "";
+
+  return (
+    <div
+      className={`flex items-start gap-3 p-4 hover:bg-gray-50 cursor-pointer border-b border-gray-200 transition ${
+        isSelected ? "bg-green-50 border-l-4 border-l-main" : ""
+      }`}
+      onClick={onSelect}
+    >
+      <div className="flex-shrink-0">
+        {conversation.user?.image ? (
+          <img
+            src={conversation.user.image}
+            alt={name}
+            className="w-12 h-12 rounded-full object-cover border-2 border-main"
+          />
+        ) : (
+          <div className="w-12 h-12 rounded-full bg-gray-200 border-2 border-main flex items-center justify-center">
+            <span className="text-lg font-semibold text-gray-600">
+              {name.charAt(0).toUpperCase()}
+            </span>
+          </div>
+        )}
+      </div>
+
+      <div className="flex-1 min-w-0">
+        <div className="flex items-start justify-between gap-2 mb-1">
+          <h4 className="font-semibold text-gray-900 truncate">{name}</h4>
+          {timestamp && (
+            <span className="text-xs text-gray-500 flex-shrink-0">
+              {new Date(timestamp).toLocaleTimeString(
+                i18n.language === "ar" ? "ar-EG" : "en-US",
+                { hour: "2-digit", minute: "2-digit" }
+              )}
+            </span>
+          )}
+        </div>
+        <div className="flex items-center justify-between">
+          <p
+            className={`text-sm truncate ${
+              conversation.unread > 0 ? "font-semibold text-gray-900" : "text-gray-500"
+            }`}
+          >
+            {conversation.isNewUser ? "Start conversation" : (preview || "No messages yet")}
+          </p>
+          {conversation.unread > 0 && !conversation.isNewUser && (
+            <span className="flex-shrink-0 ml-2 bg-main text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+              {conversation.unread}
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+});
+
 const ChatPage = () => {
   const { t, i18n } = useTranslation();
+  const [searchParams] = useSearchParams();
   const isRTL = i18n.language === "ar";
+  const messagesEndRef = useRef(null);
+  const messagesContainerRef = useRef(null);
 
   const [conversations, setConversations] = useState([]);
+  const [allUsers, setAllUsers] = useState([]);
   const [conversationsLoading, setConversationsLoading] = useState(true);
+  const [usersLoading, setUsersLoading] = useState(true);
   const [conversationsError, setConversationsError] = useState(null);
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [messages, setMessages] = useState([]);
+  const [messagesLoading, setMessagesLoading] = useState(false);
   const [newMessage, setNewMessage] = useState("");
-
+  const [sendingMessage, setSendingMessage] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filteredConversations, setFilteredConversations] = useState([]);
-
-  const [toast, setToast] = useState(null);
-
-  const [contactModalOpen, setContactModalOpen] = useState(false);
-  const [contactUserQuery, setContactUserQuery] = useState("");
-  const [contactUserResults, setContactUserResults] = useState([]);
-  const [contactSelectedUser, setContactSelectedUser] = useState(null);
-  const [contactSubject, setContactSubject] = useState("");
-  const [contactMessage, setContactMessage] = useState("");
-  const [contactLoading, setContactLoading] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  // Track if we're initiating a conversation to avoid duplicate message fetches
+  const initiatingRef = useRef(false);
 
   const showToast = (message, type = "success") => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 3500);
+    // Toast implementation can be added if needed
+    console.log(`${type}: ${message}`);
   };
 
-  const fetchConversations = useCallback(async () => {
+  // Auto-scroll to bottom when new messages arrive
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  // Fetch unread count
+  const fetchUnreadCount = useCallback(async () => {
+    try {
+      const response = await chatMessagesAPI.get("/messages/unread-count");
+      setUnreadCount(response.data?.data?.count || response.data?.count || 0);
+    } catch (err) {
+      console.error("Error fetching unread count:", err);
+    }
+  }, []);
+
+  // Fetch all users
+  const fetchAllUsers = useCallback(async () => {
+    try {
+      setUsersLoading(true);
+      const response = await adminAPI.get("/users");
+      let usersData = [];
+      if (Array.isArray(response.data)) {
+        usersData = response.data;
+      } else if (response.data?.data && Array.isArray(response.data.data)) {
+        usersData = response.data.data;
+      } else if (response.data) {
+        usersData = [response.data];
+      }
+      setAllUsers(usersData);
+    } catch (err) {
+      console.error("Error fetching users:", err);
+    } finally {
+      setUsersLoading(false);
+    }
+  }, []);
+
+  // Fetch messages for a conversation (defined first to avoid hoisting issues)
+  const fetchMessages = useCallback(
+    async (conversationId, page = 1) => {
+      if (!conversationId) return;
+      try {
+        setMessagesLoading(true);
+        // Use chatMessagesAPI for GET messages endpoint
+        const response = await chatMessagesAPI.get(`/conversations/${conversationId}/messages`, {
+          params: { page, limit: 50 },
+        });
+        const messagesList = parseArray(response.data).map(formatMessage);
+        setMessages(messagesList);
+        
+        // Mark messages as read
+        try {
+          await chatMessagesAPI.post(`/conversations/${conversationId}/mark-read`);
+          // Update unread count
+          fetchUnreadCount();
+          // Update conversation unread count
+          setConversations((prev) =>
+            prev.map((conv) =>
+              conv.id === conversationId ? { ...conv, unread: 0 } : conv
+            )
+          );
+        } catch (err) {
+          console.error("Error marking messages as read:", err);
+        }
+      } catch (err) {
+        console.error("Error fetching messages:", err);
+        showToast(t("dashboard.chat.errors.fetchMessages") || "Failed to load messages", "error");
+      } finally {
+        setMessagesLoading(false);
+      }
+    },
+    [t, fetchUnreadCount]
+  );
+
+  // Initiate conversation with a user
+  const initiateConversationWithUser = useCallback(async (userId) => {
+    try {
+      initiatingRef.current = true;
+      const response = await adminChatAPI.post("/conversations/initiate", {
+        user_id: userId,
+      });
+      const convData = response.data?.data || response.data;
+      const newConv = {
+        id: convData.id || convData.conversation_id,
+        user: convData.user || { id: userId },
+        last_message: null,
+        unread: 0,
+      };
+      setConversations((prev) => [newConv, ...prev]);
+      setSelectedConversation(newConv);
+      
+      // Immediately fetch messages after initiating conversation
+      // The useEffect will also trigger, but we want immediate loading
+      if (newConv.id) {
+        await fetchMessages(newConv.id);
+      }
+      
+      return newConv;
+    } catch (err) {
+      console.error("Error initiating conversation:", err);
+      showToast(t("dashboard.chat.errors.initiateFailed"), "error");
+      initiatingRef.current = false;
+      throw err;
+    }
+  }, [t, fetchMessages]);
+
+  // Fetch conversations list
+  const fetchConversations = useCallback(async (skipAutoSelect = false) => {
     try {
       setConversationsLoading(true);
       setConversationsError(null);
@@ -58,477 +235,395 @@ const ChatPage = () => {
         user: conv.user || conv.client || conv.participant || {},
         last_message: conv.last_message || conv.lastMessage || null,
         unread: conv.unread_count || conv.unread || 0,
-        messages: conv.messages ? conv.messages.map(formatMessage) : [],
       }));
       setConversations(list);
-      if (!selectedConversation && list.length) {
-        setSelectedConversation(list[0]);
-        const initialMessages =
-          list[0].messages.length > 0
-            ? list[0].messages
-            : list[0].last_message
-            ? [formatMessage(list[0].last_message)]
-            : [];
-        setMessages(initialMessages);
-      }
     } catch (err) {
       console.error("Error fetching conversations:", err);
       setConversationsError(t("dashboard.chat.errors.fetchConversations"));
     } finally {
       setConversationsLoading(false);
     }
-  }, [selectedConversation, t]);
+  }, [t]);
+
 
   useEffect(() => {
     fetchConversations();
-  }, [fetchConversations]);
+    fetchAllUsers();
+    fetchUnreadCount();
+  }, [fetchConversations, fetchAllUsers, fetchUnreadCount]);
 
+  // Fetch messages when conversation is selected
   useEffect(() => {
-    if (!searchTerm.trim()) {
-      setFilteredConversations(conversations);
-      return;
+    if (selectedConversation?.id && !initiatingRef.current) {
+      fetchMessages(selectedConversation.id);
+    } else if (!selectedConversation?.id) {
+      setMessages([]);
     }
-    const lower = searchTerm.toLowerCase();
-    setFilteredConversations(
-      conversations.filter((conv) => {
-        const name = conv.user?.name || conv.user?.full_name || "";
-        const preview =
-          conv.last_message?.body || conv.last_message?.message || "";
-        return (
-          name.toLowerCase().includes(lower) ||
-          preview.toLowerCase().includes(lower)
-        );
-      })
-    );
-  }, [conversations, searchTerm]);
+    // Reset the flag after a short delay
+    if (initiatingRef.current) {
+      setTimeout(() => {
+        initiatingRef.current = false;
+      }, 100);
+    }
+  }, [selectedConversation?.id, fetchMessages]);
 
-  const handleConversationSelect = (conversation) => {
-    setSelectedConversation(conversation);
-    const baseMessages =
-      conversation.messages.length > 0
-        ? conversation.messages
-        : conversation.last_message
-        ? [formatMessage(conversation.last_message)]
-        : [];
-    setMessages(baseMessages);
+  // Handle user selection from URL params (after users are loaded)
+  useEffect(() => {
+    const userIdParam = searchParams.get("user_id");
+    if (userIdParam && allUsers.length > 0 && !selectedConversation) {
+      const targetUser = allUsers.find((u) => u.id === parseInt(userIdParam));
+      if (targetUser) {
+        const existingConv = conversations.find((c) => c.user?.id === parseInt(userIdParam));
+        if (existingConv) {
+          setSelectedConversation(existingConv);
+        } else {
+          // Initiate conversation for this user
+          initiateConversationWithUser(parseInt(userIdParam));
+        }
+      }
+    }
+  }, [searchParams, allUsers, conversations, selectedConversation, initiateConversationWithUser]);
+
+  // Merge conversations with all users to show all users in sidebar
+  const allUsersWithConversations = useMemo(() => {
+    // Create a map of user_id to conversation for quick lookup
+    const convMap = new Map();
+    conversations.forEach((conv) => {
+      if (conv.user?.id) {
+        convMap.set(conv.user.id, conv);
+      }
+    });
+
+    // Map all users and merge with their conversations if they exist
+    return allUsers.map((user) => {
+      const existingConv = convMap.get(user.id);
+      if (existingConv) {
+        return existingConv;
+      }
+      // User without conversation - create a placeholder conversation object
+      return {
+        id: null, // No conversation ID yet
+        user: user,
+        last_message: null,
+        unread: 0,
+        isNewUser: true, // Flag to indicate this user doesn't have a conversation yet
+      };
+    });
+  }, [allUsers, conversations]);
+
+  const filteredConversations = useMemo(() => {
+    const itemsToFilter = allUsersWithConversations.length > 0 ? allUsersWithConversations : conversations;
+    if (!searchTerm.trim()) return itemsToFilter;
+    const lower = searchTerm.toLowerCase();
+    return itemsToFilter.filter((item) => {
+      const name =
+        item.user?.name || item.user?.full_name || item.user?.username || "";
+      const preview =
+        item.last_message?.body || item.last_message?.message || "";
+      return name.toLowerCase().includes(lower) || preview.toLowerCase().includes(lower);
+    });
+  }, [allUsersWithConversations, conversations, searchTerm]);
+
+  const handleConversationSelect = async (conversation) => {
+    // If this is a new user without a conversation, initiate one
+    if (conversation.isNewUser && conversation.user?.id) {
+      try {
+        await initiateConversationWithUser(conversation.user.id);
+      } catch (err) {
+        console.error("Error initiating conversation:", err);
+      }
+    } else {
+      setSelectedConversation(conversation);
+    }
   };
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
-    if (!newMessage.trim() || !selectedConversation) return;
+    if (!newMessage.trim() || !selectedConversation || !selectedConversation.id || sendingMessage) return;
 
+    const messageText = newMessage.trim();
     const optimisticMessage = {
       id: Date.now(),
-      body: newMessage.trim(),
+      body: messageText,
       created_at: new Date().toISOString(),
       sender_type: "admin",
     };
 
     try {
+      setSendingMessage(true);
       setMessages((prev) => [...prev, optimisticMessage]);
       setNewMessage("");
-      await adminChatAPI.post(
-        `/conversations/${selectedConversation.id}/messages`,
-        {
-          message: optimisticMessage.body,
-        }
-      );
+      
+      // Send message using chatMessagesAPI
+      await chatMessagesAPI.post(`/conversations/${selectedConversation.id}/messages`, {
+        message: messageText,
+      });
+
+      // Refresh messages to get the actual message from server
+      await fetchMessages(selectedConversation.id);
+      
+      // Refresh conversations to update last message
+      fetchConversations();
     } catch (err) {
       console.error("Error sending message:", err);
       showToast(t("dashboard.chat.errors.sendFailed"), "error");
       setMessages((prev) => prev.filter((msg) => msg.id !== optimisticMessage.id));
-      setNewMessage(optimisticMessage.body);
-    }
-  };
-
-  // Contact modal helpers
-  useEffect(() => {
-    if (!contactUserQuery.trim()) {
-      setContactUserResults([]);
-      return;
-    }
-
-    const controller = new AbortController();
-    const timeout = setTimeout(async () => {
-      try {
-        const response = await adminChatAPI.get("/users/search", {
-          signal: controller.signal,
-          params: { q: contactUserQuery },
-        });
-        setContactUserResults(parseArray(response.data));
-      } catch (err) {
-        if (err.name !== "CanceledError") {
-          console.error("Error searching users:", err);
-        }
-      }
-    }, 350);
-
-    return () => {
-      controller.abort();
-      clearTimeout(timeout);
-    };
-  }, [contactUserQuery]);
-
-  const handleInitiateConversation = async (e) => {
-    e.preventDefault();
-    if (!contactSelectedUser) {
-      showToast(t("dashboard.chat.errors.userRequired"), "error");
-      return;
-    }
-    try {
-      setContactLoading(true);
-      await adminChatAPI.post("/conversations/initiate", {
-        user_id: contactSelectedUser.id,
-        subject: contactSubject,
-        message: contactMessage,
-      });
-      showToast(t("dashboard.chat.messages.initiated"));
-      setContactModalOpen(false);
-      setContactUserQuery("");
-      setContactSelectedUser(null);
-      setContactSubject("");
-      setContactMessage("");
-      fetchConversations();
-    } catch (err) {
-      console.error("Error initiating conversation:", err);
-      showToast(t("dashboard.chat.errors.initiateFailed"), "error");
+      setNewMessage(messageText);
     } finally {
-      setContactLoading(false);
+      setSendingMessage(false);
     }
   };
 
   const renderedMessages = useMemo(() => {
-    return messages.map((message) => ({
-      ...message,
-      side:
-        message.sender_type === "admin" || message.sender_type === "support"
-          ? "me"
-          : "them",
-    }));
-  }, [messages]);
+    return messages.map((message) => {
+      const isAdmin = message.sender_type === "admin" || message.sender_type === "support";
+      return {
+        ...message,
+        sender: isAdmin ? "me" : "other",
+        text: message.body,
+        time: new Date(message.created_at).toLocaleTimeString(
+          i18n.language === "ar" ? "ar-EG" : "en-US",
+          { hour: "2-digit", minute: "2-digit" }
+        ),
+      };
+    });
+  }, [messages, i18n.language]);
 
-  if (conversationsLoading && !conversations.length) {
+  const EmptyState = () => (
+    <div className="flex flex-col items-center justify-center h-full py-16 px-4">
+      <svg width="100" height="100" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path
+          d="M10 30H30V25H10V30ZM10 22.5H40V17.5H10V22.5ZM10 15H40V10H10V15ZM0 50V5C0 3.625 0.49 2.44833 1.47 1.47C2.45 0.491667 3.62667 0.00166667 5 0H45C46.375 0 47.5525 0.49 48.5325 1.47C49.5125 2.45 50.0017 3.62667 50 5V35C50 36.375 49.5108 37.5525 48.5325 38.5325C47.5542 39.5125 46.3767 40.0017 45 40H10L0 50ZM7.875 35H45V5H5V37.8125L7.875 35Z"
+          fill="#4CAF50"
+        />
+      </svg>
+      <h3 className="text-xl font-semibold text-gray-700 mt-6 mb-2">
+        {t("dashboard.chat.empty")}
+      </h3>
+      <p className="text-gray-500 text-center max-w-md">
+        {t("dashboard.chat.selectConversation")}
+      </p>
+    </div>
+  );
+
+  const ChatView = () => {
+    if (!selectedConversation) return null;
+    
+    // Don't show chat view if conversation doesn't have an ID yet (new user)
+    if (!selectedConversation.id && selectedConversation.isNewUser) {
+      return (
+        <div className="flex flex-col h-full bg-white items-center justify-center p-8">
+          <p className="text-gray-500 text-center">
+            {t("dashboard.chat.selectConversation")}
+          </p>
+        </div>
+      );
+    }
+
+    const userName =
+      selectedConversation.user?.name ||
+      selectedConversation.user?.full_name ||
+      selectedConversation.user?.username ||
+      t("dashboard.chat.unknownUser");
+
+    return (
+      <div className="flex flex-col h-full bg-white">
+        <div className="flex items-center gap-3 p-4 border-b-2 border-gray-200 bg-gray-50">
+          <button
+            onClick={() => setSelectedConversation(null)}
+            className="lg:hidden text-main hover:bg-gray-200 p-2 rounded-lg cursor-pointer"
+          >
+            <i className="fas fa-arrow-right"></i>
+          </button>
+          <div className="flex-shrink-0">
+            {selectedConversation.user?.image ? (
+              <img
+                src={selectedConversation.user.image}
+                alt={userName}
+                className="w-12 h-12 rounded-full object-cover border-2 border-main"
+              />
+            ) : (
+              <div className="w-12 h-12 rounded-full bg-gray-200 border-2 border-main flex items-center justify-center">
+                <span className="text-lg font-semibold text-gray-600">
+                  {userName.charAt(0).toUpperCase()}
+                </span>
+              </div>
+            )}
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-bold text-gray-900">{userName}</h3>
+            <p className="text-sm text-gray-600 truncate">
+              {selectedConversation.user?.email || selectedConversation.user?.phone || ""}
+            </p>
+          </div>
+        </div>
+
+        <div
+          ref={messagesContainerRef}
+          className="flex-1 overflow-y-auto p-4 bg-gray-50"
+          style={{
+            backgroundImage:
+              "repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0,0,0,.02) 10px, rgba(0,0,0,.02) 20px)",
+          }}
+        >
+          {messagesLoading ? (
+            <div className="flex items-center justify-center h-full">
+              <Loader />
+            </div>
+          ) : renderedMessages.length === 0 ? (
+            <div className="flex items-center justify-center h-full text-gray-500">
+              <p>{t("dashboard.chat.noMessagesYet")}</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {renderedMessages.map((msg) => (
+                <div
+                  key={msg.id}
+                  className={`flex ${msg.sender === "me" ? "justify-end" : "justify-start"}`}
+                >
+                  <div className={`max-w-[70%] ${msg.sender === "me" ? "order-2" : "order-1"}`}>
+                    <div
+                      className={`px-4 py-2 rounded-2xl ${
+                        msg.sender === "me"
+                          ? "bg-main text-white rounded-br-none"
+                          : "bg-white border border-gray-200 text-gray-900 rounded-bl-none"
+                      }`}
+                    >
+                      <p className="text-sm">{msg.text}</p>
+                    </div>
+                    <span
+                      className={`text-xs text-gray-500 mt-1 block ${
+                        msg.sender === "me" ? "text-left" : "text-right"
+                      }`}
+                    >
+                      {msg.time}
+                    </span>
+                  </div>
+                </div>
+              ))}
+              <div ref={messagesEndRef} />
+            </div>
+          )}
+        </div>
+
+        <div className="p-4 border-t-2 border-gray-200 bg-white">
+          <form onSubmit={handleSendMessage} className="flex gap-2 items-center">
+            <input
+              type="text"
+              name="message"
+              id="message-input"
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              placeholder={t("dashboard.chat.typePlaceholder")}
+              className="flex-1 px-4 py-2.5 border-2 border-gray-300 rounded-full outline-none focus:border-main transition"
+              autoComplete="off"
+              disabled={sendingMessage}
+            />
+            <button
+              type="submit"
+              className="bg-main text-white p-3 rounded-full hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 cursor-pointer"
+              disabled={!newMessage.trim() || sendingMessage}
+            >
+              <i className="fas fa-paper-plane"></i>
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  };
+
+  if ((conversationsLoading || usersLoading) && !conversations.length && !allUsers.length) {
     return <Loader />;
   }
 
   return (
-    <section className="space-y-6" dir={isRTL ? "rtl" : "ltr"}>
-      {toast && (
-        <div
-          className={`fixed top-5 z-50 ${
-            isRTL ? "left-5" : "right-5"
-          } animate-slide-in`}
-        >
-          <div
-            className={`flex items-center gap-3 rounded-xl px-5 py-3 shadow-lg ${
-              toast.type === "success"
-                ? "bg-emerald-500 text-white"
-                : "bg-rose-500 text-white"
-            }`}
-          >
-            <span className="text-sm font-semibold">{toast.message}</span>
-          </div>
-        </div>
-      )}
-
-      <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <button
-          onClick={() => setContactModalOpen(true)}
-          className="inline-flex items-center justify-center rounded-lg bg-emerald-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-600"
-        >
-          {t("dashboard.chat.actions.contactClient")}
-        </button>
-        <h1 className="text-center text-2xl font-semibold text-emerald-700 sm:text-3xl">
-          {t("dashboard.chat.title")}
-        </h1>
-      </header>
-
+    <div className="h-screen flex flex-col" dir={isRTL ? "rtl" : "ltr"}>
       {conversationsError && (
-        <div className="rounded-lg border border-rose-200 bg-rose-50 p-4 text-center text-rose-600">
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-2 text-sm">
           {conversationsError}
         </div>
       )}
+      <div className={`flex-1 flex ${selectedConversation ? "gap-0" : ""} overflow-hidden`}>
+        {/* Sidebar - Conversations List */}
+        <div
+          className={`${
+            selectedConversation
+              ? "hidden lg:flex lg:w-[400px] xl:w-[450px] border-l-2 border-gray-200"
+              : "w-full lg:w-[400px] xl:w-[450px] lg:border-l-2 border-gray-200"
+          } bg-white flex flex-col flex-shrink-0`}
+        >
+          <div className="border-b-2 border-gray-200 p-4 bg-white">
+            <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2 mb-4">
+              <svg width="28" height="28" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path
+                  d="M10 30H30V25H10V30ZM10 22.5H40V17.5H10V22.5ZM10 15H40V10H10V15ZM0 50V5C0 3.625 0.49 2.44833 1.47 1.47C2.45 0.491667 3.62667 0.00166667 5 0H45C46.375 0 47.5525 0.49 48.5325 1.47C49.5125 2.45 50.0017 3.62667 50 5V35C50 36.375 49.5108 37.5525 48.5325 38.5325C47.5542 39.5125 46.3767 40.0017 45 40H10L0 50ZM7.875 35H45V5H5V37.8125L7.875 35Z"
+                  fill="#4CAF50"
+                />
+              </svg>
+              {t("dashboard.chat.title")}
+            </h2>
 
-      <div className="grid gap-4 lg:grid-cols-[320px,1fr]">
-        {/* Conversations list */}
-        <div className="rounded-2xl border border-emerald-100 bg-white shadow-sm">
-          <div className="border-b border-emerald-100 p-4">
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder={t("dashboard.chat.searchPlaceholder")}
-              className="w-full rounded-lg border border-emerald-200 px-3 py-2 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
-            />
+            <div className="relative mb-4">
+              <input
+                type="text"
+                name="search"
+                id="search-messages"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder={t("dashboard.chat.searchPlaceholder")}
+                className="w-full px-4 py-2 pr-10 border-2 border-gray-300 rounded-lg outline-none focus:border-main transition"
+                autoComplete="off"
+              />
+              <i className="fas fa-search absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+            </div>
           </div>
-          <div className="max-h-[70vh] overflow-y-auto">
+
+          <div className="flex-1 overflow-y-auto">
             {filteredConversations.length === 0 ? (
-              <div className="p-6 text-center text-sm text-slate-500">
-                {t("dashboard.chat.empty")}
-              </div>
+              <EmptyState />
             ) : (
-              filteredConversations.map((conv) => {
-                const name =
-                  conv.user?.name ||
-                  conv.user?.full_name ||
-                  conv.user?.username ||
-                  t("dashboard.chat.unknownUser");
-                const timestamp =
-                  conv.last_message?.created_at || conv.last_message?.time;
-                const preview =
-                  conv.last_message?.body ||
-                  conv.last_message?.message ||
-                  conv.last_message?.text ||
-                  t("dashboard.chat.noMessagesYet");
-                return (
-                  <button
-                    type="button"
-                    key={conv.id}
-                    onClick={() => handleConversationSelect(conv)}
-                    className={`flex w-full items-start gap-3 border-b border-emerald-50 px-4 py-3 text-left transition hover:bg-emerald-50 ${
-                      selectedConversation?.id === conv.id
-                        ? "bg-emerald-50"
-                        : "bg-white"
-                    }`}
-                  >
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
-                      {name.charAt(0)}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between">
-                        <p className="font-semibold text-slate-900">{name}</p>
-                        {timestamp && (
-                          <span className="text-xs text-slate-500">
-                            {new Date(timestamp).toLocaleTimeString(i18n.language === "ar" ? "ar-EG" : "en-US", {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-sm text-slate-500 line-clamp-1">
-                        {preview}
-                      </p>
-                    </div>
-                  </button>
-                );
-              })
+              filteredConversations.map((conversation) => (
+                <MessageCard
+                  key={conversation.id}
+                  conversation={conversation}
+                  isSelected={conversation.id === selectedConversation?.id}
+                  onSelect={() => handleConversationSelect(conversation)}
+                />
+              ))
             )}
           </div>
         </div>
 
-        {/* Chat window */}
-        <div className="rounded-2xl border border-emerald-100 bg-white shadow-sm">
-          {!selectedConversation ? (
-            <div className="flex h-full items-center justify-center p-8 text-center text-slate-500">
-              {t("dashboard.chat.selectConversation")}
-            </div>
-          ) : (
-            <div className="flex h-full flex-col">
-              <div className="flex items-center gap-3 border-b border-emerald-100 p-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-xl font-semibold text-emerald-600">
-                  {(selectedConversation.user?.name ||
-                    selectedConversation.user?.full_name ||
-                    t("dashboard.chat.unknownUser")
-                  ).charAt(0)}
-                </div>
-                <div>
-                  <p className="font-semibold text-slate-900">
-                    {selectedConversation.user?.name ||
-                      selectedConversation.user?.full_name ||
-                      t("dashboard.chat.unknownUser")}
-                  </p>
-                  <p className="text-sm text-slate-500">
-                    {selectedConversation.user?.email ||
-                      selectedConversation.user?.phone ||
-                      ""}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex-1 space-y-3 overflow-y-auto bg-emerald-50/30 p-4">
-                {renderedMessages.length === 0 ? (
-                  <p className="text-center text-sm text-slate-500">
-                    {t("dashboard.chat.noMessagesYet")}
-                  </p>
-                ) : (
-                  renderedMessages.map((msg) => (
-                    <div
-                      key={msg.id}
-                      className={`flex ${
-                        msg.side === "me" ? "justify-end" : "justify-start"
-                      }`}
-                    >
-                      <div
-                        className={`max-w-[75%] rounded-2xl px-4 py-2 text-sm ${
-                          msg.side === "me"
-                            ? "rounded-br-none bg-emerald-500 text-white"
-                            : "rounded-bl-none border border-emerald-100 bg-white text-slate-800"
-                        }`}
-                      >
-                        <p>{msg.body}</p>
-                        <span className="mt-1 block text-xs opacity-75">
-                          {new Date(msg.created_at).toLocaleTimeString(
-                            i18n.language === "ar" ? "ar-EG" : "en-US",
-                            { hour: "2-digit", minute: "2-digit" }
-                          )}
-                        </span>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-
-              <form
-                onSubmit={handleSendMessage}
-                className="flex items-center gap-2 border-t border-emerald-100 p-4"
-              >
-                <input
-                  type="text"
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  placeholder={t("dashboard.chat.typePlaceholder")}
-                  className="flex-1 rounded-full border border-emerald-200 px-4 py-2 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
-                />
-                <button
-                  type="submit"
-                  disabled={!newMessage.trim()}
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500 text-white transition hover:bg-emerald-600 disabled:opacity-50"
+        {/* Chat Area */}
+        {selectedConversation ? (
+          <div className="flex-1">
+            <ChatView />
+          </div>
+        ) : (
+          conversations.length > 0 && (
+            <div className="hidden lg:flex flex-1 items-center justify-center bg-gray-50">
+              <div className="text-center text-gray-500">
+                <svg
+                  width="120"
+                  height="120"
+                  viewBox="0 0 50 50"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="mx-auto mb-4 opacity-50"
                 >
-                  <svg
-                    className="h-4 w-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M5 12l14-8-5 8 5 8-14-8z"
-                    />
-                  </svg>
-                </button>
-              </form>
+                  <path
+                    d="M10 30H30V25H10V30ZM10 22.5H40V17.5H10V22.5ZM10 15H40V10H10V15ZM0 50V5C0 3.625 0.49 2.44833 1.47 1.47C2.45 0.491667 3.62667 0.00166667 5 0H45C46.375 0 47.5525 0.49 48.5325 1.47C49.5125 2.45 50.0017 3.62667 50 5V35C50 36.375 49.5108 37.5525 48.5325 38.5325C47.5542 39.5125 46.3767 40.0017 45 40H10L0 50ZM7.875 35H45V5H5V37.8125L7.875 35Z"
+                    fill="#4CAF50"
+                  />
+                </svg>
+                <p className="text-xl font-semibold">{t("dashboard.chat.selectConversation")}</p>
+              </div>
             </div>
-          )}
-        </div>
+          )
+        )}
       </div>
-
-      {/* Contact client modal */}
-      {contactModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-          <form
-            onSubmit={handleInitiateConversation}
-            className="w-full max-w-2xl space-y-4 rounded-2xl border border-emerald-200 bg-white p-6 shadow-xl"
-          >
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-emerald-700">
-                {t("dashboard.chat.modal.title")}
-              </h2>
-              <button
-                type="button"
-                onClick={() => setContactModalOpen(false)}
-                className="text-slate-500 hover:text-slate-700"
-              >
-                ×
-              </button>
-            </div>
-
-            <label className="block text-sm font-medium text-slate-700">
-              {t("dashboard.chat.modal.user")}
-              <input
-                type="text"
-                value={contactUserQuery}
-                onChange={(e) => {
-                  setContactUserQuery(e.target.value);
-                  setContactSelectedUser(null);
-                }}
-                placeholder={t("dashboard.chat.modal.userPlaceholder")}
-                className="mt-2 w-full rounded-md border border-emerald-300 px-3 py-2 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
-              />
-              {contactUserResults.length > 0 && (
-                <div className="mt-2 max-h-40 overflow-y-auto rounded-lg border border-emerald-200 bg-white text-sm">
-                  {contactUserResults.map((user) => (
-                    <button
-                      key={user.id}
-                      type="button"
-                      className={`flex w-full items-center justify-between px-3 py-2 text-left hover:bg-emerald-50 ${
-                        contactSelectedUser?.id === user.id
-                          ? "bg-emerald-50"
-                          : ""
-                      }`}
-                      onClick={() => {
-                        setContactSelectedUser(user);
-                        setContactUserQuery(
-                          user.name ||
-                            user.full_name ||
-                            user.username ||
-                            String(user.id)
-                        );
-                      }}
-                    >
-                      <span>
-                        {user.name ||
-                          user.full_name ||
-                          user.username ||
-                          `#${user.id}`}
-                      </span>
-                      <span className="text-xs text-slate-500">
-                        {user.email || user.phone || ""}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </label>
-
-            <label className="block text-sm font-medium text-slate-700">
-              {t("dashboard.chat.modal.subject")}
-              <input
-                type="text"
-                value={contactSubject}
-                onChange={(e) => setContactSubject(e.target.value)}
-                className="mt-2 w-full rounded-md border border-emerald-300 px-3 py-2 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
-              />
-            </label>
-
-            <label className="block text-sm font-medium text-slate-700">
-              {t("dashboard.chat.modal.message")}
-              <textarea
-                rows={5}
-                value={contactMessage}
-                onChange={(e) => setContactMessage(e.target.value)}
-                className="mt-2 w-full rounded-md border border-emerald-300 px-3 py-2 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
-              />
-            </label>
-
-            <div className="flex justify-end gap-3 pt-2">
-              <button
-                type="button"
-                onClick={() => setContactModalOpen(false)}
-                className="rounded-lg border border-slate-300 px-5 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50"
-              >
-                {t("dashboard.chat.actions.cancel")}
-              </button>
-              <button
-                type="submit"
-                disabled={contactLoading}
-                className="rounded-lg bg-emerald-500 px-6 py-2 text-sm font-semibold text-white hover:bg-emerald-600 disabled:opacity-50"
-              >
-                {contactLoading
-                  ? t("dashboard.chat.modal.sending")
-                  : t("dashboard.chat.actions.send")}
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
-    </section>
+    </div>
   );
 };
 
 export default ChatPage;
-
-
-
