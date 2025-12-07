@@ -12,6 +12,7 @@ const ArticleDetailsPage = () => {
 
     const [article, setArticle] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     useEffect(() => {
         if (articleId) {
@@ -22,11 +23,18 @@ const ArticleDetailsPage = () => {
     const fetchArticleDetails = async () => {
         try {
             setLoading(true);
-            const { data, fromCache } = await getCachedArticleDetails(articleId);
-            console.log(fromCache ? '📦 Article Details من الكاش' : '🌐 Article Details من API');
-            setArticle(data);
+            setError(null);
+            
+            const result = await getCachedArticleDetails(articleId);
+            console.log(result.fromCache ? '📦 Article Details من الكاش' : '🌐 Article Details من API');
+            
+            // التعامل مع الـ response structure
+            const articleData = result.data || result;
+            setArticle(articleData);
+            
         } catch (error) {
             console.error("Error fetching article details:", error);
+            setError(error.message || "Failed to load article");
         } finally {
             setLoading(false);
         }
@@ -34,6 +42,24 @@ const ArticleDetailsPage = () => {
 
     if (loading) {
         return <Loader />;
+    }
+
+    if (error) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="text-center">
+                    <p className="text-xl text-red-500 mb-4">
+                        {isRTL ? "حدث خطأ في تحميل المقال" : "Error loading article"}
+                    </p>
+                    <button
+                        onClick={() => navigate('/articles')}
+                        className="px-6 py-2 bg-main text-white rounded-lg hover:bg-main/90 transition"
+                    >
+                        {isRTL ? "العودة للمقالات" : "Back to Articles"}
+                    </button>
+                </div>
+            </div>
+        );
     }
 
     if (!article) {
@@ -57,11 +83,11 @@ const ArticleDetailsPage = () => {
             </div>
 
             {/* Article Content */}
-            <div className="max-w-4xl mx-auto px-4 md:px-6 py-6 md:py-8 ">
+            <div className="max-w-4xl mx-auto px-4 md:px-6 py-6 md:py-8">
                 <article className="overflow-hidden bg-white shadow-md rounded-lg">
                     {/* Article Image */}
                     {article.image_url && (
-                        <div className="w-full h-48">
+                        <div className="w-full h-48 md:h-64 lg:h-80">
                             <img
                                 src={article.image_url}
                                 alt={article.title}
@@ -78,9 +104,19 @@ const ArticleDetailsPage = () => {
 
                         <div className="w-12 h-1 bg-main mb-6"></div>
 
+                        {/* Article Metadata (optional) */}
+                        {article.created_at && (
+                            <div className="text-sm text-gray-500 mb-6">
+                                {new Date(article.created_at).toLocaleDateString(
+                                    isRTL ? 'ar-EG' : 'en-US',
+                                    { year: 'numeric', month: 'long', day: 'numeric' }
+                                )}
+                            </div>
+                        )}
+
                         {/* Article Body */}
                         <div
-                            className="text-gray-700 leading-relaxed"
+                            className="prose prose-lg max-w-none text-gray-700 leading-relaxed"
                             dangerouslySetInnerHTML={{ __html: article.content }}
                         />
                     </div>

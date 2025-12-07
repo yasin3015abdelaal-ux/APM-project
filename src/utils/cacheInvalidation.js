@@ -34,9 +34,12 @@ export const invalidateCacheById = (cacheType, id) => {
 export const withCacheInvalidation = async (apiCall, cacheTypes = []) => {
     try {
         const response = await apiCall();
+        
+        // Invalidate caches
         cacheTypes.forEach(type => {
             invalidateCache(type);
         });
+
         return response;
     } catch (error) {
         throw error;

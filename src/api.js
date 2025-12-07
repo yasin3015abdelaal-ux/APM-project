@@ -33,6 +33,7 @@ export const chatMessagesAPI = axios.create({
     headers: { "Content-Type": "application/json" },
 });
 
+// ====== Interceptors ======
 userAPI.interceptors.request.use((config) => {
     const token = localStorage.getItem("authToken");
     if (token) {
@@ -150,6 +151,7 @@ chatMessagesAPI.interceptors.response.use(
     }
 );
 
+// ====== Auth APIs ======
 export const authAPI = {
     login: (data) => userAPI.post("/login", data),
     register: (data) => userAPI.post("/register", data),
@@ -161,6 +163,7 @@ export const adminAuthAPI = {
     logout: () => adminAPI.post("/logout"),
 };
 
+// ====== Data APIs ======
 export const dataAPI = {
     getCountries: () => userAPI.get("/countries"),
     getGovernorates: (country_id) => userAPI.get(`/governorates?country_id=${country_id}`),
@@ -168,94 +171,187 @@ export const dataAPI = {
     getAboutUs: () => userAPI.get('/about-us'),
     getTerms: () => userAPI.get('/terms-and-conditions'),
     getAnnouncement: () => userAPI.get('/announcements'),
+    getSubCategories: (categoryId) => userAPI.get(`/categories/${categoryId}/subcategories`),
 };
 
+// ====== Auction APIs ======
 export const auctionAPI = {
     getAllAuctions: () => userAPI.get('/auctions'),
-    participate: (date, role) =>
-        withCacheInvalidation(
+    
+    participate: async (date, role) => {
+        const response = await withCacheInvalidation(
             () => userAPI.post(`/auctions/participate`, { date, role }),
             ['auctions']
-        ),
-    role: (auctionId) =>
-        userAPI.get(`/auctions/${auctionId}/my-role`),
-    getProducts: (auctionId) =>
-        userAPI.get(`/auctions/${auctionId}/products`),
-    getMyProducts: (auctionId) =>
-        userAPI.get(`/auctions/${auctionId}/my-products`),
+        );
+        return response;
+    },
+    
+    role: (auctionId) => userAPI.get(`/auctions/${auctionId}/my-role`),
+    
+    getProducts: (auctionId) => userAPI.get(`/auctions/${auctionId}/products`),
+    
+    getMyProducts: (auctionId) => userAPI.get(`/auctions/${auctionId}/my-products`),
+    
     getMyPrevProducts: (auctionId, userId) =>
         userAPI.get(`/auctions/${auctionId}/products?by_user=${userId}`),
-    addProductToAuction: (auctionId, data) =>
-        withCacheInvalidation(
+    
+    addProductToAuction: async (auctionId, data) => {
+        const response = await withCacheInvalidation(
             () => userAPI.post(`/auctions/${auctionId}/products`, data),
-            ['auctions', 'auction_products']
-        ).then(response => {
-            invalidateCacheById('auction_products', auctionId);
-            invalidateCacheById('my_auction_products', auctionId);
-            return response;
-        }),
+            ['auction_products', 'auctions']
+        );
+        
+        // مسح الكاش الخاص بالـ auction ده بالتحديد
+        invalidateCacheById('auction_products', auctionId);
+        invalidateCacheById('my_auction_products', auctionId);
+        
+        return response;
+    },
 };
 
+// ====== Chat APIs ======
 export const chatAPI = {
-    getConversations: (params = {}) =>
-        userAPI.get('/conversations', { params }),
-    createConversation: (data) =>
-        withCacheInvalidation(
+    getConversations: (params = {}) => userAPI.get('/conversations', { params }),
+    
+    createConversation: async (data) => {
+        const response = await withCacheInvalidation(
             () => userAPI.post('/conversations', data),
             ['conversations']
-        ),
+        );
+        return response;
+    },
+    
     getConversation: (conversationId) =>
         userAPI.get(`/conversations/${conversationId}`),
+    
     getMessages: (conversationId, params = { page: 1, limit: 50 }) =>
         userAPI.get(`/conversations/${conversationId}/messages`, { params }),
-    sendMessage: (conversationId, message) =>
-        withCacheInvalidation(
+    
+    sendMessage: async (conversationId, message) => {
+        const response = await withCacheInvalidation(
             () => userAPI.post(`/conversations/${conversationId}/messages`, { message }),
             ['conversations', 'messages']
-        ),
-    markAsRead: (conversationId) =>
-        withCacheInvalidation(
+        );
+        return response;
+    },
+    
+    markAsRead: async (conversationId) => {
+        const response = await withCacheInvalidation(
             () => userAPI.post(`/conversations/${conversationId}/mark-read`),
             ['conversations']
-        ),
-    getUnreadCount: () =>
-        userAPI.get('/messages/unread-count'),
+        );
+        return response;
+    },
+    
+    getUnreadCount: () => userAPI.get('/messages/unread-count'),
 };
 
+// ====== Review APIs ======
 export const reviewAPI = {
-    createReview: (data) =>
-        withCacheInvalidation(
+    createReview: async (data) => {
+        const response = await withCacheInvalidation(
             () => userAPI.post('/seller-reviews', data),
             ['reviews']
-        ),
-    updateReview: (reviewId, data) =>
-        withCacheInvalidation(
+        );
+        return response;
+    },
+    
+    updateReview: async (reviewId, data) => {
+        const response = await withCacheInvalidation(
             () => userAPI.put(`/seller-reviews/${reviewId}`, data),
             ['reviews']
-        ),
-    deleteReview: (reviewId) =>
-        withCacheInvalidation(
+        );
+        return response;
+    },
+    
+    deleteReview: async (reviewId) => {
+        const response = await withCacheInvalidation(
             () => userAPI.delete(`/seller-reviews/${reviewId}`),
             ['reviews']
-        ),
+        );
+        return response;
+    },
+    
     getMyReview: (sellerId) =>
         userAPI.get(`/seller-reviews/my-review/${sellerId}`),
 };
 
+// ====== Articles APIs ======
 export const articlesAPI = {
-    getAllArticles: (params = {}) => 
-        userAPI.get('/articles', { params }),
-    getArticleDetails: (articleId) => 
-        userAPI.get(`/articles/${articleId}`),
+    getAllArticles: (params = {}) => userAPI.get('/articles', { params }),
+    
+    getArticleDetails: (articleId) => userAPI.get(`/articles/${articleId}`),
+    
+    createArticle: async (data) => {
+        const response = await withCacheInvalidation(
+            () => userAPI.post('/articles', data),
+            ['articles']
+        );
+        return response;
+    },
+    
+    updateArticle: async (articleId, data) => {
+        const response = await withCacheInvalidation(
+            () => userAPI.put(`/articles/${articleId}`, data),
+            ['articles']
+        );
+        
+        // مسح الكاش الخاص بالمقال ده
+        invalidateCacheById('article', articleId);
+        
+        return response;
+    },
+    
+    deleteArticle: async (articleId) => {
+        const response = await withCacheInvalidation(
+            () => userAPI.delete(`/articles/${articleId}`),
+            ['articles']
+        );
+        return response;
+    },
 };
 
+// ====== Top Sellers APIs ======
 export const topSellersAPI = {
     getTopSellers: (params = { limit: 10, min_reviews: 5 }) =>
         userAPI.get('/top-sellers', { params }),
+    
     getSellerReviews: (sellerId, params = { page: 1 }) =>
         userAPI.get(`/seller-reviews/${sellerId}`, { params }),
 };
 
+// ====== Product APIs ======
+export const productAPI = {
+    getAllProducts: () => userAPI.get('/products'),
+    
+    getMyProducts: () => userAPI.get('/products/my-products'),
+    
+    createProduct: async (data) => {
+        const response = await withCacheInvalidation(
+            () => userAPI.post('/products', data),
+            ['products', 'my_products']
+        );
+        return response;
+    },
+    
+    updateProduct: async (productId, data) => {
+        const response = await withCacheInvalidation(
+            () => userAPI.put(`/products/${productId}`, data),
+            ['products', 'my_products']
+        );
+        return response;
+    },
+    
+    deleteProduct: async (productId) => {
+        const response = await withCacheInvalidation(
+            () => userAPI.delete(`/products/${productId}`),
+            ['products', 'my_products']
+        );
+        return response;
+    },
+};
+
+// ====== Cached APIs ======
 export const getCachedAdvertisements = async () => {
     return await cachedAPICall(
         'advertisements',
@@ -375,6 +471,17 @@ export const getCachedCategories = async () => {
     );
 };
 
+export const getCachedSubCategories = async (categoryId) => {
+    return await cachedAPICall(
+        `subcategories_${categoryId}`,
+        async () => {
+            const response = await dataAPI.getSubCategories(categoryId);
+            return response.data?.data || response.data?.subcategories || response.data || [];
+        },
+        { ttl: 60 * 60 * 1000 }
+    );
+};
+
 export const getCachedMyProducts = async () => {
     return await cachedAPICall(
         'my_products',
@@ -458,7 +565,7 @@ export const getCachedArticleDetails = async (articleId) => {
         `article_${articleId}`,
         async () => {
             const response = await articlesAPI.getArticleDetails(articleId);
-            return response.data.data;
+            return response.data?.data || response.data;
         },
         { ttl: 60 * 60 * 1000 }
     );
@@ -476,6 +583,7 @@ export const getCachedTopSellers = async (params = { limit: 10, min_reviews: 5 }
     );
 };
 
+// ====== Cache Management ======
 export const clearCache = (key) => {
     apiCache.delete(key);
 };
