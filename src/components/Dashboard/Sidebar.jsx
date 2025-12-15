@@ -1,18 +1,20 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { FaChevronDown, FaBars, FaTimes } from "react-icons/fa";
 import { IoLogOutOutline } from "react-icons/io5";
 import { dataAPI } from "../../api";
 import logo from "../../assets/images/logo.jpg";
-import { useAuth } from "../../contexts/AuthContext";
+import { useAdminAuth } from "../../contexts/AdminContext";
+import { adminAuthAPI } from "../../api";
 import { countriesFlags } from "../../data/flags";
 
 const Sidebar = () => {
     const { t, i18n } = useTranslation();
     const navigate = useNavigate();
     const location = useLocation();
-    const { logout } = useAuth();
+    const { logout } = useAdminAuth();
+    const [isLoggingOut, setIsLoggingOut] = useState(false);
 
     const [isOpen, setIsOpen] = useState(false);
     const [countries, setCountries] = useState([]);
@@ -87,6 +89,24 @@ const Sidebar = () => {
     const handleMenuClick = (path) => {
         setIsOpen(false);
         navigate(path);
+    };
+
+    const handleLogout = async () => {
+        try {
+            setIsLoggingOut(true);
+            // Call admin logout API
+            await adminAuthAPI.logout();
+            // Clear admin data and redirect
+            logout();
+            navigate("/admin/login");
+        } catch (error) {
+            console.error("Logout error:", error);
+            // Even if API call fails, clear local data and redirect
+            logout();
+            navigate("/admin/login");
+        } finally {
+            setIsLoggingOut(false);
+        }
     };
 
     // Check if menu item is active (supports nested routes)
@@ -237,11 +257,14 @@ const Sidebar = () => {
                 {/* Logout Button */}
                 <div className="p-4">
                     <button
-                        onClick={()=>logout()}
-                        className="w-full cursor-pointer bg-main text-white py-1.5 rounded-md text-md hover:bg-green-700 flex items-center justify-center gap-2 transition"
+                        onClick={handleLogout}
+                        disabled={isLoggingOut}
+                        className="w-full cursor-pointer bg-main text-white py-1.5 rounded-md text-md hover:bg-green-700 flex items-center justify-center gap-2 transition disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         <IoLogOutOutline size={18} />
-                        {t("dashboard.sidebar.logout")}
+                        {isLoggingOut 
+                            ? (t("dashboard.sidebar.loggingOut") || "جاري تسجيل الخروج...")
+                            : t("dashboard.sidebar.logout")}
                     </button>
                 </div>
             </aside>

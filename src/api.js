@@ -6,7 +6,7 @@ const BASE_URL = "https://api.world-apm.com";
 
 const USER_BASE = `${BASE_URL}/api`;
 const ADMIN_BASE = `${BASE_URL}/admin`;
-const ADMIN_CHAT_BASE = `${BASE_URL}/api/admin/chat`;
+const ADMIN_CHAT_BASE = `${BASE_URL}/admin`;
 
 export const userAPI = axios.create({
     baseURL: USER_BASE,
@@ -30,9 +30,26 @@ export const adminChatAPI = axios.create({
         "Content-Type": "application/json",
         "Accept": "application/json"
     },
+    paramsSerializer: (params) => {
+        // Custom serializer to include empty string params
+        const searchParams = new URLSearchParams();
+        Object.keys(params).forEach(key => {
+            const value = params[key];
+            if (value !== null && value !== undefined) {
+                searchParams.append(key, value === '' ? '' : String(value));
+            }
+        });
+        return searchParams.toString();
+    },
+    headers: { 
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+    },
 });
 
 export const adminChatMessagesAPI = axios.create({
+    baseURL: `${BASE_URL}/admin`,
+    headers: { "Content-Type": "application/json" },
     baseURL: `${BASE_URL}/admin/chat`,
     headers: { 
         "Content-Type": "application/json",
@@ -129,6 +146,16 @@ adminChatAPI.interceptors.request.use((config) => {
     if (config.data instanceof FormData) {
         delete config.headers["Content-Type"];
     }
+    // Log the exact URL being requested for debugging
+    const fullUrl = `${config.baseURL}${config.url}${config.params ? '?' + (typeof config.paramsSerializer === 'function' ? config.paramsSerializer(config.params) : new URLSearchParams(config.params).toString()) : ''}`;
+    console.log('Admin Chat API Request:', {
+        method: config.method?.toUpperCase(),
+        url: config.url,
+        baseURL: config.baseURL,
+        fullURL: fullUrl,
+        params: config.params,
+        headers: config.headers
+    });
     return config;
 });
 
@@ -667,6 +694,46 @@ export const getCachedTopSellers = async (params = { limit: 10, min_reviews: 5 }
         },
         { ttl: 60 * 60 * 1000 }
     );
+};
+
+// ====== Admin Management APIs ======
+export const adminManagementAPI = {
+    // Get all permissions
+    getPermissions: () => adminAPI.get("/permissions"),
+    
+    // Get all admins
+    getAdmins: (params = {}) => adminAPI.get("/admins", { params }),
+    
+    // Get single admin by ID
+    getAdmin: (adminId) => adminAPI.get(`/admins/${adminId}`),
+    
+    // Create new admin
+    createAdmin: async (data) => {
+        const response = await withCacheInvalidation(
+            () => adminAPI.post("/admins", data),
+            ['admins']
+        );
+        return response;
+    },
+    
+    // Update admin
+    updateAdmin: async (adminId, data) => {
+        const response = await withCacheInvalidation(
+            () => adminAPI.put(`/admins/${adminId}`, data),
+            ['admins']
+        );
+        invalidateCacheById('admin', adminId);
+        return response;
+    },
+    
+    // Delete admin
+    deleteAdmin: async (adminId) => {
+        const response = await withCacheInvalidation(
+            () => adminAPI.delete(`/admins/${adminId}`),
+            ['admins']
+        );
+        return response;
+    },
 };
 
 export const getCachedAllReviews = async (params = { page: 1, per_page: 50 }) => {

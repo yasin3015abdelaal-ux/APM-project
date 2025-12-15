@@ -197,13 +197,22 @@ const ChatPage = () => {
       const response = await adminChatAPI.post("/conversations/initiate", {
         user_id: userId,
       });
+      
+      // Extract conversation data from response
+      // Response structure: { success: true, data: { id, user_one, user_two, ... } }
       const convData = response.data?.data || response.data;
+      
+      // user_one is the regular user (the one admin is chatting with)
+      // user_two is the admin user
+      const userData = convData.user_one || convData.user || { id: userId };
+      
       const newConv = {
         id: convData.id || convData.conversation_id,
-        user: convData.user || { id: userId },
+        user: userData,
         last_message: null,
         unread: 0,
       };
+      
       setConversations((prev) => [newConv, ...prev]);
       setSelectedConversation(newConv);
       
@@ -227,18 +236,44 @@ const ChatPage = () => {
     try {
       setConversationsLoading(true);
       setConversationsError(null);
+      
+      // Use adminChatAPI with correct endpoint (baseURL is now /admin, path is /conversations)
       const response = await adminChatAPI.get("/conversations", {
-        params: { user_id: null, type: null, page: 1 },
+        params: {
+          user_id: '',
+          type: '',
+          page: 1
+        }
       });
-      const list = parseArray(response.data).map((conv) => ({
-        id: conv.id,
-        user: conv.user || conv.client || conv.participant || {},
-        last_message: conv.last_message || conv.lastMessage || null,
-        unread: conv.unread_count || conv.unread || 0,
-      }));
+      
+      // Handle response structure - check if response has success field
+      if (response.data && response.data.success === false) {
+        throw new Error(response.data.message || 'Failed to fetch conversations');
+      }
+      
+      // Extract conversations array from response
+      // Response might be: { success: true, data: [...] } or just [...]
+      const conversationsData = response.data?.data || response.data;
+      const conversationsArray = Array.isArray(conversationsData) ? conversationsData : [];
+      
+      const list = conversationsArray.map((conv) => {
+        // user_one is the regular user (the one admin is chatting with)
+        // user_two is the admin user
+        const userData = conv.user_one || conv.user || conv.client || conv.participant || {};
+        
+        return {
+          id: conv.id,
+          user: userData,
+          last_message: conv.last_message || conv.lastMessage || null,
+          unread: conv.unread_count || conv.unread || 0,
+        };
+      });
       setConversations(list);
     } catch (err) {
       console.error("Error fetching conversations:", err);
+      console.error("Request URL:", err.config?.url);
+      console.error("Full URL:", err.config?.baseURL + err.config?.url);
+      console.error("Response:", err.response?.data);
       setConversationsError(t("dashboard.chat.errors.fetchConversations"));
     } finally {
       setConversationsLoading(false);
@@ -337,7 +372,7 @@ const ChatPage = () => {
     }
   };
 
-  const handleSendMessage = async (e) => {
+  const handleSendMessage = useCallback(async (e) => {
     e.preventDefault();
     if (!newMessage.trim() || !selectedConversation || !selectedConversation.id || sendingMessage) return;
 
@@ -372,7 +407,7 @@ const ChatPage = () => {
     } finally {
       setSendingMessage(false);
     }
-  };
+  }, [newMessage, selectedConversation, sendingMessage, t, fetchMessages, fetchConversations]);
 
   const renderedMessages = useMemo(() => {
     return messages.map((message) => {
@@ -406,131 +441,10 @@ const ChatPage = () => {
     </div>
   );
 
-  const ChatView = () => {
-    if (!selectedConversation) return null;
-    
-    // Don't show chat view if conversation doesn't have an ID yet (new user)
-    if (!selectedConversation.id && selectedConversation.isNewUser) {
-      return (
-        <div className="flex flex-col h-full bg-white items-center justify-center p-8">
-          <p className="text-gray-500 text-center">
-            {t("dashboard.chat.selectConversation")}
-          </p>
-        </div>
-      );
-    }
-
-    const userName =
-      selectedConversation.user?.name ||
-      selectedConversation.user?.full_name ||
-      selectedConversation.user?.username ||
-      t("dashboard.chat.unknownUser");
-
-    return (
-      <div className="flex flex-col h-full bg-white">
-        <div className="flex items-center gap-3 p-4 border-b-2 border-gray-200 bg-gray-50">
-          <button
-            onClick={() => setSelectedConversation(null)}
-            className="lg:hidden text-main hover:bg-gray-200 p-2 rounded-lg cursor-pointer"
-          >
-            <i className="fas fa-arrow-right"></i>
-          </button>
-          <div className="flex-shrink-0">
-            {selectedConversation.user?.image ? (
-              <img
-                src={selectedConversation.user.image}
-                alt={userName}
-                className="w-12 h-12 rounded-full object-cover border-2 border-main"
-              />
-            ) : (
-              <div className="w-12 h-12 rounded-full bg-gray-200 border-2 border-main flex items-center justify-center">
-                <span className="text-lg font-semibold text-gray-600">
-                  {userName.charAt(0).toUpperCase()}
-                </span>
-              </div>
-            )}
-          </div>
-          <div className="flex-1 min-w-0">
-            <h3 className="font-bold text-gray-900">{userName}</h3>
-            <p className="text-sm text-gray-600 truncate">
-              {selectedConversation.user?.email || selectedConversation.user?.phone || ""}
-            </p>
-          </div>
-        </div>
-
-        <div
-          ref={messagesContainerRef}
-          className="flex-1 overflow-y-auto p-4 bg-gray-50"
-          style={{
-            backgroundImage:
-              "repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0,0,0,.02) 10px, rgba(0,0,0,.02) 20px)",
-          }}
-        >
-          {messagesLoading ? (
-            <div className="flex items-center justify-center h-full">
-              <Loader />
-            </div>
-          ) : renderedMessages.length === 0 ? (
-            <div className="flex items-center justify-center h-full text-gray-500">
-              <p>{t("dashboard.chat.noMessagesYet")}</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {renderedMessages.map((msg) => (
-                <div
-                  key={msg.id}
-                  className={`flex ${msg.sender === "me" ? "justify-end" : "justify-start"}`}
-                >
-                  <div className={`max-w-[70%] ${msg.sender === "me" ? "order-2" : "order-1"}`}>
-                    <div
-                      className={`px-4 py-2 rounded-2xl ${
-                        msg.sender === "me"
-                          ? "bg-main text-white rounded-br-none"
-                          : "bg-white border border-gray-200 text-gray-900 rounded-bl-none"
-                      }`}
-                    >
-                      <p className="text-sm">{msg.text}</p>
-                    </div>
-                    <span
-                      className={`text-xs text-gray-500 mt-1 block ${
-                        msg.sender === "me" ? "text-left" : "text-right"
-                      }`}
-                    >
-                      {msg.time}
-                    </span>
-                  </div>
-                </div>
-              ))}
-              <div ref={messagesEndRef} />
-            </div>
-          )}
-        </div>
-
-        <div className="p-4 border-t-2 border-gray-200 bg-white">
-          <form onSubmit={handleSendMessage} className="flex gap-2 items-center">
-            <input
-              type="text"
-              name="message"
-              id="message-input"
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              placeholder={t("dashboard.chat.typePlaceholder")}
-              className="flex-1 px-4 py-2.5 border-2 border-gray-300 rounded-full outline-none focus:border-main transition"
-              autoComplete="off"
-              disabled={sendingMessage}
-            />
-            <button
-              type="submit"
-              className="bg-main text-white p-3 rounded-full hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 cursor-pointer"
-              disabled={!newMessage.trim() || sendingMessage}
-            >
-              <i className="fas fa-paper-plane"></i>
-            </button>
-          </form>
-        </div>
-      </div>
-    );
-  };
+  // Memoize the onChange handler to prevent input from losing focus
+  const handleMessageChange = useCallback((e) => {
+    setNewMessage(e.target.value);
+  }, []);
 
   if ((conversationsLoading || usersLoading) && !conversations.length && !allUsers.length) {
     return <Loader />;
@@ -597,7 +511,126 @@ const ChatPage = () => {
         {/* Chat Area */}
         {selectedConversation ? (
           <div className="flex-1">
-            <ChatView />
+            {!selectedConversation.id && selectedConversation.isNewUser ? (
+              <div className="flex flex-col h-full bg-white items-center justify-center p-8">
+                <p className="text-gray-500 text-center">
+                  {t("dashboard.chat.selectConversation")}
+                </p>
+              </div>
+            ) : (
+              (() => {
+                const userName =
+                  selectedConversation.user?.name ||
+                  selectedConversation.user?.full_name ||
+                  selectedConversation.user?.username ||
+                  t("dashboard.chat.unknownUser");
+
+                return (
+                  <div className="flex flex-col h-full bg-white">
+                    <div className="flex items-center gap-3 p-4 border-b-2 border-gray-200 bg-gray-50">
+                      <button
+                        onClick={() => setSelectedConversation(null)}
+                        className="lg:hidden text-main hover:bg-gray-200 p-2 rounded-lg cursor-pointer"
+                      >
+                        <i className="fas fa-arrow-right"></i>
+                      </button>
+                      <div className="flex-shrink-0">
+                        {selectedConversation.user?.image ? (
+                          <img
+                            src={selectedConversation.user.image}
+                            alt={userName}
+                            className="w-12 h-12 rounded-full object-cover border-2 border-main"
+                          />
+                        ) : (
+                          <div className="w-12 h-12 rounded-full bg-gray-200 border-2 border-main flex items-center justify-center">
+                            <span className="text-lg font-semibold text-gray-600">
+                              {userName.charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-bold text-gray-900">{userName}</h3>
+                        <p className="text-sm text-gray-600 truncate">
+                          {selectedConversation.user?.email || selectedConversation.user?.phone || ""}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div
+                      ref={messagesContainerRef}
+                      className="flex-1 overflow-y-auto p-4 bg-gray-50"
+                      style={{
+                        backgroundImage:
+                          "repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0,0,0,.02) 10px, rgba(0,0,0,.02) 20px)",
+                      }}
+                    >
+                      {messagesLoading ? (
+                        <div className="flex items-center justify-center h-full">
+                          <Loader />
+                        </div>
+                      ) : renderedMessages.length === 0 ? (
+                        <div className="flex items-center justify-center h-full text-gray-500">
+                          <p>{t("dashboard.chat.noMessagesYet")}</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          {renderedMessages.map((msg) => (
+                            <div
+                              key={msg.id}
+                              className={`flex ${msg.sender === "me" ? "justify-end" : "justify-start"}`}
+                            >
+                              <div className={`max-w-[70%] ${msg.sender === "me" ? "order-2" : "order-1"}`}>
+                                <div
+                                  className={`px-4 py-2 rounded-2xl ${
+                                    msg.sender === "me"
+                                      ? "bg-main text-white rounded-br-none"
+                                      : "bg-white border border-gray-200 text-gray-900 rounded-bl-none"
+                                  }`}
+                                >
+                                  <p className="text-sm">{msg.text}</p>
+                                </div>
+                                <span
+                                  className={`text-xs text-gray-500 mt-1 block ${
+                                    msg.sender === "me" ? "text-left" : "text-right"
+                                  }`}
+                                >
+                                  {msg.time}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                          <div ref={messagesEndRef} />
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="p-4 border-t-2 border-gray-200 bg-white">
+                      <form onSubmit={handleSendMessage} className="flex gap-2 items-center">
+                        <input
+                          type="text"
+                          name="message"
+                          id="message-input"
+                          value={newMessage}
+                          onChange={handleMessageChange}
+                          placeholder={t("dashboard.chat.typePlaceholder")}
+                          className="flex-1 px-4 py-2.5 border-2 border-gray-300 rounded-full outline-none focus:border-main transition"
+                          autoComplete="off"
+                          disabled={sendingMessage}
+                        />
+                        <button
+                          type="submit"
+                          className="bg-main text-white p-3 rounded-full hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 cursor-pointer"
+                          disabled={!newMessage.trim() || sendingMessage}
+                        >
+                          <i className="fas fa-paper-plane"></i>
+                        </button>
+                      </form>
+                    </div>
+                  </div>
+                );
+              })()
+            )}
           </div>
         ) : (
           conversations.length > 0 && (
