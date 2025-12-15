@@ -9,6 +9,7 @@ import { ChatProvider } from "../contexts/ChatContext";
 import { dataAPI } from "../api";
 import AnnouncementPopup from "../components/Announcement/AnnouncementPopup";
 import { useAuth } from "../contexts/AuthContext";
+import { NotificationProvider } from "../contexts/NotificationContext";
 
 const MainLayout = () => {
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -62,6 +63,7 @@ const MainLayout = () => {
     return (
         <CartProvider>
             <ChatProvider>
+                <NotificationProvider>
             <div className="flex flex-col min-h-screen">
                 <div className="relative">
                     <Navbar 
@@ -97,6 +99,7 @@ const MainLayout = () => {
                     />
                 )}
             </div>
+            </NotificationProvider>
             </ChatProvider>
         </CartProvider>
     );

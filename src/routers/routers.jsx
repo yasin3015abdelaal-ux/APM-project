@@ -53,7 +53,6 @@ import PreviousAuctionsList from "../pages/Auctions/PerviousAuctionsList";
 import AboutUsPage from "../pages/About/About";
 import TermsPage from "../pages/Terms/Terms";
 import Articles from "../pages/Articles/ArticlesPage";
-import SellerReviews from "../pages/SellerReviews/SellerReviews";
 import ArticleDetailsPage from "../pages/Articles/ArticleDetails";
 import SellerDetails from "../components/Products/SellerDetails";
 // import AuctionsList from "../pages/Auctions/AuctionsList";
@@ -163,14 +162,14 @@ export const routers = createBrowserRouter([
               </PublicRoute>
             ),
           },
-          {
-            path: "seller-reviews",
-            element: (
-              <PublicRoute>
-                <SellerReviews />
-              </PublicRoute>
-            ),
-          },
+          // {
+          //   path: "seller-reviews",
+          //   element: (
+          //     <PublicRoute>
+          //       <SellerReviews />
+          //     </PublicRoute>
+          //   ),
+          // },
 
           // Protected routes
           { 

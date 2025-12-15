@@ -1,46 +1,35 @@
 import { useState, useEffect } from "react";
-import { Upload } from "lucide-react";
+import { Upload, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { adminAPI, getCachedSubCategories, userAPI } from "../../api";
+import { getCachedSubCategories, userAPI } from "../../api";
 import Loader from "../../components/Ui/Loader/Loader";
 import Categories from "../../components/Categories/Categories";
+import CustomSelect from "../../components/Ui/CustomSelect/CustomSelect";
 
 const AddAds = () => {
-    const { t, i18n } = useTranslation();
+    const { t } = useTranslation();
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
-    const isRTL = i18n.language === "ar";
+    
+    const currentLang = localStorage.getItem('i18nextLng') || 'ar';
+    const isRTL = currentLang === 'ar';
 
     const [showForm, setShowForm] = useState(false);
     const [formData, setFormData] = useState({
         category_id: "",
         sub_category_id: "",
-        name_ar: "",
-        name_en: "",
-        description_ar: "",
-        description_en: "",
-        image: null,
-        gender: "",
-        quantity: "",
-        price: "",
-        age: "",
-        weight: "",
-        delivery_available: "",
-        governorate_id: "",
-        location: "",
-        needs_vaccinations: "",
-        retail_sale_available: "",
-        price_negotiable: "",
-        contact_method: "",
+        images: [],
+        attributes: {}
     });
 
     const [categories, setCategories] = useState([]);
     const [subCategories, setSubCategories] = useState([]);
     const [governorates, setGovernorates] = useState([]);
+    const [categoryAttributes, setCategoryAttributes] = useState([]);
     const [loading, setLoading] = useState(false);
     const [dataLoading, setDataLoading] = useState(false);
-    const [imagePreview, setImagePreview] = useState(null);
+    const [imagePreviews, setImagePreviews] = useState([]);
     const [error, setError] = useState(null);
     const [toast, setToast] = useState(null);
 
@@ -61,6 +50,7 @@ const AddAds = () => {
     useEffect(() => {
         if (formData.category_id) {
             loadSubCategories(formData.category_id);
+            loadCategoryAttributes(formData.category_id);
         }
     }, [formData.category_id]);
 
@@ -84,10 +74,11 @@ const AddAds = () => {
 
             if (categoryId) {
                 loadSubCategories(categoryId);
+                loadCategoryAttributes(categoryId);
             }
         } catch (error) {
             console.error("Error loading data:", error);
-            setError("حدث خطأ في تحميل البيانات");
+            setError(isRTL ? "حدث خطأ في تحميل البيانات" : "Error loading data");
             setCategories([]);
             setGovernorates([]);
         } finally {
@@ -95,59 +86,190 @@ const AddAds = () => {
         }
     };
 
-const loadSubCategories = async (categoryId) => {
-    try {
-        const { data, fromCache } = await getCachedSubCategories(categoryId);
-        console.log(fromCache ? '📦 SubCategories من الكاش' : '🌐 SubCategories من API');
-        setSubCategories(Array.isArray(data) ? data : []);
-    } catch (error) {
-        console.error('Error loading subcategories:', error);
-        setSubCategories([]);
-    }
-};
+    const loadSubCategories = async (categoryId) => {
+        try {
+            const { data, fromCache } = await getCachedSubCategories(categoryId);
+            console.log(fromCache ? '📦 SubCategories من الكاش' : '🌐 SubCategories من API');
+            setSubCategories(Array.isArray(data) ? data : []);
+        } catch (error) {
+            console.error('Error loading subcategories:', error);
+            setSubCategories([]);
+        }
+    };
 
-    const handleChange = (e) => {
-        const { name, value, type, checked } = e.target;
+    const loadCategoryAttributes = async (categoryId) => {
+        try {
+            const response = await userAPI.get(`/categories/${categoryId}/attributes`);
+            const attributes = response.data?.data || [];
+            console.log('Category Attributes:', attributes);
+            setCategoryAttributes(attributes);
+        } catch (error) {
+            console.error('Error loading category attributes:', error);
+            setCategoryAttributes([]);
+        }
+    };
+
+    const handleAttributeChange = (attributeName, value) => {
         setFormData((prev) => ({
             ...prev,
-            [name]: type === "checkbox" ? checked : value,
+            attributes: {
+                ...prev.attributes,
+                [attributeName]: value
+            }
         }));
     };
 
     const handleImageChange = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            setFormData((prev) => ({ ...prev, image: file }));
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setImagePreview(reader.result);
-            };
-            reader.readAsDataURL(file);
+        const files = Array.from(e.target.files);
+        
+        if (files.length > 0) {
+            const newImages = [...formData.images, ...files];
+            setFormData((prev) => ({ ...prev, images: newImages }));
+            
+            files.forEach(file => {
+                if (file && file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                        setImagePreviews((prev) => [...prev, reader.result]);
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
         }
+        
+        e.target.value = '';
     };
 
-    const translateFieldName = (fieldName) => {
-        const translations = {
-            'category_id': 'الفئة',
-            'sub_category_id': 'النوع',
-            'name_ar': 'الاسم بالعربية',
-            'name_en': 'الاسم بالإنجليزية',
-            'description_ar': 'الوصف بالعربية',
-            'description_en': 'الوصف بالإنجليزية',
-            'gender': 'الجنس',
-            'quantity': 'الكمية',
-            'price': 'السعر',
-            'age': 'العمر',
-            'governorate_id': 'المحافظة',
-            'location': 'الموقع',
-            'contact_method': 'طريقة التواصل',
-            'image': 'الصورة'
-        };
-        return translations[fieldName] || fieldName;
+    const removeImage = (index) => {
+        setFormData((prev) => ({
+            ...prev,
+            images: prev.images.filter((_, i) => i !== index)
+        }));
+        setImagePreviews((prev) => prev.filter((_, i) => i !== index));
+    };
+
+    const renderAttributeInput = (attribute) => {
+        const value = formData.attributes[attribute.name_en] || '';
+        const label = isRTL ? attribute.name_ar : attribute.name_en;
+
+        if (attribute.name_en === 'image') {
+            return null;
+        }
+
+        if (attribute.name_en === 'governorate_id') {
+            const governorateOptions = [
+                { value: "", label: isRTL ? 'اختر المحافظة' : 'Select Governorate' },
+                ...governorates.map(gov => ({
+                    value: gov.id.toString(),
+                    label: isRTL ? gov.name_ar : gov.name_en
+                }))
+            ];
+
+            return (
+                <div key={attribute.id}>
+                    <label className="block text-gray-700 font-medium mb-2 text-sm">{label}</label>
+                    <CustomSelect
+                        options={governorateOptions}
+                        value={value}
+                        onChange={(val) => handleAttributeChange(attribute.name_en, val)}
+                        placeholder={isRTL ? 'اختر المحافظة' : 'Select Governorate'}
+                        isRTL={isRTL}
+                        required
+                    />
+                </div>
+            );
+        }
+
+        if (attribute.name_en === 'sub_category_id') {
+            const subCategoryOptions = [
+                { value: "", label: isRTL ? 'اختر النوع' : 'Select Type' },
+                ...subCategories.map(sub => ({
+                    value: sub.id.toString(),
+                    label: isRTL ? sub.name_ar : sub.name_en
+                }))
+            ];
+
+            return (
+                <div key={attribute.id}>
+                    <label className="block text-gray-700 font-medium mb-2 text-sm">{label}</label>
+                    <CustomSelect
+                        options={subCategoryOptions}
+                        value={formData.sub_category_id}
+                        onChange={(val) => setFormData(prev => ({ ...prev, sub_category_id: val }))}
+                        placeholder={isRTL ? 'اختر النوع' : 'Select Type'}
+                        isRTL={isRTL}
+                        required
+                        disabled={!formData.category_id}
+                    />
+                </div>
+            );
+        }
+
+        if (attribute.type === 'dropdown' && attribute.options && attribute.options.length > 0) {
+            const dropdownOptions = [
+                { value: "", label: isRTL ? 'اختر' : 'Select' },
+                ...attribute.options.map(option => ({
+                    value: option.value,
+                    label: isRTL ? option.label_ar : option.label_en
+                }))
+            ];
+
+            return (
+                <div key={attribute.id}>
+                    <label className="block text-gray-700 font-medium mb-2 text-sm">{label}</label>
+                    <CustomSelect
+                        options={dropdownOptions}
+                        value={value}
+                        onChange={(val) => handleAttributeChange(attribute.name_en, val)}
+                        placeholder={isRTL ? 'اختر' : 'Select'}
+                        isRTL={isRTL}
+                    />
+                </div>
+            );
+        }
+
+        if (attribute.name_en.includes('description')) {
+            return (
+                <div key={attribute.id} className="lg:col-span-2">
+                    <label className="block text-gray-700 font-medium mb-2 text-sm">{label}</label>
+                    <textarea
+                        value={value}
+                        onChange={(e) => handleAttributeChange(attribute.name_en, e.target.value)}
+                        rows="2"
+                        placeholder={label}
+                        className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-md focus:ring-1 focus:ring-green-500 focus:border-transparent resize-none"
+                    />
+                </div>
+            );
+        }
+
+        return (
+            <div key={attribute.id}>
+                <label className="block text-gray-700 font-medium mb-2 text-sm">{label}</label>
+                <input
+                    type={attribute.name_en === 'price' || attribute.name_en === 'quantity' ? 'number' : 'text'}
+                    value={value}
+                    onChange={(e) => handleAttributeChange(attribute.name_en, e.target.value)}
+                    placeholder={label}
+                    min={attribute.name_en === 'price' || attribute.name_en === 'quantity' ? '0' : undefined}
+                    step={attribute.name_en === 'price' ? '0.01' : undefined}
+                    className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-md focus:ring-1 focus:ring-green-500 focus:border-transparent"
+                />
+            </div>
+        );
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        
+        if (formData.images.length === 0) {
+            showToast(
+                isRTL ? 'يجب إضافة صورة واحدة على الأقل' : 'Please add at least one image',
+                'error'
+            );
+            return;
+        }
+        
         setLoading(true);
 
         try {
@@ -155,26 +277,16 @@ const loadSubCategories = async (categoryId) => {
 
             dataToSend.append("category_id", formData.category_id);
             dataToSend.append("sub_category_id", formData.sub_category_id);
-            dataToSend.append("name_ar", formData.name_ar || "");
-            dataToSend.append("name_en", formData.name_en || "");
-            dataToSend.append("description_ar", formData.description_ar || "");
-            dataToSend.append("description_en", formData.description_en || "");
-            dataToSend.append("gender", formData.gender);
-            dataToSend.append("quantity", formData.quantity);
-            dataToSend.append("price", formData.price);
-            dataToSend.append("age", formData.age);
-            dataToSend.append("governorate_id", formData.governorate_id);
-            dataToSend.append("location", formData.location);
-            dataToSend.append("contact_method", formData.contact_method);
 
-            dataToSend.append("delivery_available", formData.delivery_available ? "1" : "0");
-            dataToSend.append("needs_vaccinations", formData.needs_vaccinations ? "1" : "0");
-            dataToSend.append("retail_sale_available", formData.retail_sale_available ? "1" : "0");
-            dataToSend.append("price_negotiable", formData.price_negotiable ? "1" : "0");
+            Object.keys(formData.attributes).forEach(key => {
+                if (formData.attributes[key]) {
+                    dataToSend.append(key, formData.attributes[key]);
+                }
+            });
 
-            if (formData.image instanceof File) {
-                dataToSend.append("image", formData.image);
-            }
+            formData.images.forEach((image, index) => {
+                dataToSend.append(`images[${index}]`, image);
+            });
 
             await userAPI.post("/products", dataToSend, {
                 headers: {
@@ -196,21 +308,7 @@ const loadSubCategories = async (categoryId) => {
             if (validationErrors) {
                 const firstErrorKey = Object.keys(validationErrors)[0];
                 const firstError = validationErrors[firstErrorKey];
-                const errorText = Array.isArray(firstError) ? firstError[0] : firstError;
-                
-                if (isRTL) {
-                    if (errorText.includes('required')) {
-                        errorMessage = `حقل ${translateFieldName(firstErrorKey)} مطلوب`;
-                    } else if (errorText.includes('invalid')) {
-                        errorMessage = `حقل ${translateFieldName(firstErrorKey)} غير صالح`;
-                    } else if (errorText.includes('must be')) {
-                        errorMessage = `حقل ${translateFieldName(firstErrorKey)} يجب أن يكون صحيحاً`;
-                    } else {
-                        errorMessage = errorText;
-                    }
-                } else {
-                    errorMessage = errorText;
-                }
+                errorMessage = Array.isArray(firstError) ? firstError[0] : firstError;
             } else {
                 errorMessage = isRTL ? 'حدث خطأ أثناء نشر الإعلان' : 'Error publishing ad';
             }
@@ -233,13 +331,13 @@ const loadSubCategories = async (categoryId) => {
         return (
             <div className="min-h-screen flex items-center justify-center p-4">
                 <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md">
-                    <p className="text-red-600 text-center mb-4">{error}</p>
+                    <p className="text-red-600 text-center mb-4 text-base font-medium">{error}</p>
                     <button
                         onClick={() => {
                             setError(null);
                             loadInitialData(formData.category_id);
                         }}
-                        className="w-full bg-main text-white py-2 px-4 rounded-lg hover:bg-green-700"
+                        className="w-full bg-main text-white py-3 px-4 rounded-lg hover:bg-green-700 text-sm font-semibold transition"
                     >
                         {isRTL ? "إعادة المحاولة" : "Retry"}
                     </button>
@@ -248,8 +346,23 @@ const loadSubCategories = async (categoryId) => {
         );
     }
 
+    const filteredAttributes = categoryAttributes.filter(attr => {
+        const attrName = attr.name_en.toLowerCase();
+        if (isRTL) {
+            return attrName !== 'name_en' && attrName !== 'description_en';
+        } else {
+            return attrName !== 'name_ar' && attrName !== 'description_ar';
+        }
+    });
+
+    const regularAttrs = filteredAttributes.filter(attr => !attr.name_en.includes('description'));
+    const descriptionAttrs = filteredAttributes.filter(attr => attr.name_en.includes('description'));
+
+    const leftColumnAttrs = regularAttrs.filter((_, idx) => idx % 2 === 0);
+    const rightColumnAttrs = regularAttrs.filter((_, idx) => idx % 2 !== 0);
+
     return (
-        <div className={`w-full max-w-5xl mx-auto bg-white ${isRTL ? "rtl" : "ltr"}`} dir={isRTL ? "rtl" : "ltr"}>
+        <div className={`w-full max-w-5xl mx-auto bg-white ${isRTL ? "rtl" : "ltr"} px-4 sm:px-6`} dir={isRTL ? "rtl" : "ltr"}>
             {toast && (
                 <div className={`fixed top-4 sm:top-5 ${isRTL ? "left-4 sm:left-5" : "right-4 sm:right-5"} z-50 animate-slide-in max-w-[90%] sm:max-w-md`}>
                     <div className={`px-4 py-3 sm:px-6 sm:py-4 rounded-lg sm:rounded-xl shadow-lg flex items-center gap-2 sm:gap-3 ${toast.type === "success" ? "bg-main text-white" : "bg-red-500 text-white"}`}>
@@ -267,294 +380,82 @@ const loadSubCategories = async (categoryId) => {
                 </div>
             )}
 
-            <div className="text-main text-center py-4 rounded-t-lg">
-                <h1 className="text-3xl font-bold">{t("ads.publishYourAd")}</h1>
+            <div className="text-main text-center py-6">
+                <h1 className="text-2xl sm:text-3xl font-bold">{t("ads.publishYourAd")}</h1>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-8 space-y-6">
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center relative">
-                    <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageChange}
-                        className="hidden"
-                        id="image-upload"
-                    />
-                    <label htmlFor="image-upload" className="cursor-pointer block">
-                        {imagePreview ? (
-                            <div className="relative inline-block">
-                                <img src={imagePreview} alt="Preview" className="max-h-64 mx-auto rounded-lg" />
-                                <button
-                                    type="button"
-                                    onClick={(e) => {
-                                        e.preventDefault();
-                                        setImagePreview(null);
-                                        setFormData((prev) => ({ ...prev, image: null }));
-                                        document.getElementById('image-upload').value = '';
-                                    }}
-                                    className="absolute -top-3 -right-3 bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center cursor-pointer transition shadow-lg"
-                                >
-                                    ×
-                                </button>
-                            </div>
-                        ) : (
+            <form onSubmit={handleSubmit} className="pb-6 space-y-6">
+                {/* Images Upload */}
+                <div className="space-y-4">
+                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 sm:p-8">
+                        <input
+                            type="file"
+                            accept="image/*"
+                            multiple
+                            onChange={handleImageChange}
+                            className="hidden"
+                            id="images-upload"
+                        />
+                        <label htmlFor="images-upload" className="cursor-pointer block">
                             <div className="flex flex-col items-center">
-                                <Upload className="w-16 h-16 text-gray-400 mb-4" />
-                                <p className="text-gray-600 mb-2">{t("ads.clickToUpload")}</p>
-                                <p className="text-gray-400 text-sm">{t("ads.pngOrJpg") || "PNG or JPG"}</p>
+                                <Upload className="w-10 h-10 sm:w-12 sm:h-12 text-gray-400 mb-3" />
+                                <p className="text-gray-600 font-medium mb-1 text-sm sm:text-base">
+                                    {isRTL ? 'اضغط لإضافة صور' : 'Click to add images'}
+                                </p>
+                                <p className="text-gray-400 text-xs sm:text-sm">
+                                    {isRTL ? 'يمكنك اختيار أكثر من صورة' : 'You can select multiple images'}
+                                </p>
                             </div>
-                        )}
-                    </label>
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    <div className="space-y-6">
-                        <div>
-                            <label className="block text-gray-700 font-medium mb-2">
-                                {t("ads.type")} {categories.find((cat) => cat.id == formData.category_id)?.[isRTL ? "name_ar" : "name_en"]}
-                            </label>
-                            <select
-                                name="sub_category_id"
-                                value={formData.sub_category_id}
-                                onChange={handleChange}
-                                required
-                                disabled={!formData.category_id}
-                                className="w-full cursor-pointer px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:bg-gray-100 bg-main text-white disabled:text-gray-500"
-                            >
-                                <option value="">{t("ads.selectAdType")}</option>
-                                {Array.isArray(subCategories) && subCategories.map((sub) => (
-                                    <option key={sub.id} value={sub.id}>
-                                        {isRTL ? sub.name_ar : sub.name_en}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-
-                        <div>
-                            <label className="block text-gray-700 font-medium mb-2">{t("ads.adNameAr")}</label>
-                            <input
-                                type="text"
-                                name="name_ar"
-                                value={formData.name_ar}
-                                onChange={handleChange}
-                                required
-                                placeholder={t('ads.adNamePlaceholderAr')}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                            />
-                        </div>
-
-                        <div>
-                            <label className="block text-gray-700 font-medium mb-2">{t("ads.adNameEn")}</label>
-                            <input
-                                type="text"
-                                name="name_en"
-                                value={formData.name_en}
-                                onChange={handleChange}
-                                placeholder={t('ads.adNamePlaceholderEn')}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                            />
-                        </div>
-
-                        <div>
-                            <label className="block text-gray-700 font-medium mb-2">{t("ads.age")}</label>
-                            <input
-                                type="text"
-                                name="age"
-                                value={formData.age}
-                                onChange={handleChange}
-                                required
-                                placeholder={t("ads.agePlaceholder")}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                            />
-                        </div>
-
-                        <div>
-                            <label className="block text-gray-700 font-medium mb-2">{t("ads.location")}</label>
-                            <input
-                                name="location"
-                                value={formData.location}
-                                onChange={handleChange}
-                                required
-                                placeholder={t("ads.locationPlaceholder")}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                            />
-                        </div>
-
-                        <div>
-                            <label className="block text-gray-700 font-medium mb-2">{t("ads.price")}</label>
-                            <input
-                                type="number"
-                                name="price"
-                                value={formData.price}
-                                onChange={handleChange}
-                                required
-                                min="0"
-                                step="0.01"
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                            />
-                        </div>
-
-                        <div>
-                            <label className="block text-gray-700 font-medium mb-2">{t("ads.quantity")}</label>
-                            <input
-                                type="number"
-                                name="quantity"
-                                value={formData.quantity}
-                                onChange={handleChange}
-                                required
-                                min="0"
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                            />
-                        </div>
+                        </label>
                     </div>
 
-                    <div className="space-y-6">
-                        <div>
-                            <label className="block text-gray-700 font-medium mb-2">{t("ads.gender")}</label>
-                            <div className="flex gap-4">
-                                <label className="flex items-center gap-2 cursor-pointer">
-                                    <input type="radio" name="gender" value="male" checked={formData.gender === "male"} onChange={handleChange} className="w-4 h-4 cursor-pointer text-main" />
-                                    <span>{t("ads.male")}</span>
-                                </label>
-                                <label className="flex items-center gap-2 cursor-pointer">
-                                    <input type="radio" name="gender" value="female" checked={formData.gender === "female"} onChange={handleChange} className="w-4 h-4 cursor-pointer text-main" />
-                                    <span>{t("ads.female")}</span>
-                                </label>
-                                <label className="flex items-center gap-2 cursor-pointer">
-                                    <input type="radio" name="gender" value="both" checked={formData.gender === "both"} onChange={handleChange} className="w-4 h-4 cursor-pointer text-main" />
-                                    <span>{t("ads.both")}</span>
-                                </label>
-                            </div>
+                    {/* Display Image Previews */}
+                    {imagePreviews.length > 0 && (
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
+                            {imagePreviews.map((preview, index) => (
+                                <div key={index} className="relative group">
+                                    <img 
+                                        src={preview} 
+                                        alt={`Preview ${index + 1}`} 
+                                        className="w-full h-28 sm:h-32 object-cover rounded-lg border-2 border-gray-200"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => removeImage(index)}
+                                        className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center cursor-pointer transition shadow-lg opacity-0 group-hover:opacity-100"
+                                    >
+                                        <X className="w-3 h-3 sm:w-4 sm:h-4" />
+                                    </button>
+                                    {index === 0 && (
+                                        <div className="absolute bottom-2 left-2 bg-main text-white text-[10px] sm:text-xs px-2 py-1 rounded font-medium">
+                                            {isRTL ? 'رئيسية' : 'Main'}
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
                         </div>
+                    )}
+                </div>
 
-                        <div>
-                            <label className="block text-gray-700 font-medium mb-2">{t("ads.descriptionAr")}</label>
-                            <textarea
-                                name="description_ar"
-                                value={formData.description_ar}
-                                onChange={handleChange}
-                                required
-                                rows="3"
-                                placeholder={t('ads.descriptionPlaceholderAr')}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                            />
-                        </div>
-
-                        <div>
-                            <label className="block text-gray-700 font-medium mb-2">{t("ads.descriptionEn")}</label>
-                            <textarea
-                                name="description_en"
-                                value={formData.description_en}
-                                onChange={handleChange}
-                                rows="3"
-                                placeholder={t('ads.descriptionPlaceholderEn')}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                            />
-                        </div>
-
-                        <div>
-                            <label className="block text-gray-700 font-medium mb-2">{t("ads.governorate")}</label>
-                            <select
-                                name="governorate_id"
-                                value={formData.governorate_id}
-                                onChange={handleChange}
-                                required
-                                className="w-full cursor-pointer px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent bg-main text-white"
-                            >
-                                <option value="">{t("ads.selectGovernorate")}</option>
-                                {Array.isArray(governorates) && governorates.map((gov) => (
-                                    <option key={gov.id} value={gov.id}>
-                                        {isRTL ? gov.name_ar : gov.name_en}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-
-                        <div className="flex items-center gap-5 rounded-lg">
-                            <h3 className="text-gray-700 font-medium whitespace-nowrap">{t("ads.contactMethod")}</h3>
-                            <div className="flex items-center flex-wrap gap-2">
-                                <label className="flex items-center gap-1 cursor-pointer">
-                                    <input type="radio" name="contact_method" value="phone" checked={formData.contact_method === "phone"} onChange={handleChange} className="w-5 h-5 text-main border-gray-300 focus:ring-green-500" />
-                                    <span className="text-gray-700">{t("ads.call")}</span>
-                                </label>
-                                <label className="flex items-center gap-2 cursor-pointer">
-                                    <input type="radio" name="contact_method" value="chat" checked={formData.contact_method === "chat"} onChange={handleChange} className="w-5 h-5 text-main border-gray-300 focus:ring-green-500" />
-                                    <span className="text-gray-700">{t("ads.chat")}</span>
-                                </label>
-                                <label className="flex items-center gap-2 cursor-pointer">
-                                    <input type="radio" name="contact_method" value="both" checked={formData.contact_method === "both"} onChange={handleChange} className="w-5 h-5 text-main border-gray-300 focus:ring-green-500" />
-                                    <span className="text-gray-700">{t("ads.both")}</span>
-                                </label>
-                            </div>
-                        </div>
-
-                        <div className="flex items-center gap-6 mb-4">
-                            <label className="text-gray-700 font-medium whitespace-nowrap w-40">{t("ads.deliveryAvailable")}</label>
-                            <div className="flex items-center gap-6">
-                                <label className="flex items-center gap-2 cursor-pointer">
-                                    <input type="radio" name="delivery_available" value="true" checked={formData.delivery_available === true} onChange={() => setFormData((prev) => ({ ...prev, delivery_available: true }))} className="w-4 h-4 cursor-pointer text-main" />
-                                    <span>{isRTL ? "نعم" : "Yes"}</span>
-                                </label>
-                                <label className="flex items-center gap-2 cursor-pointer">
-                                    <input type="radio" name="delivery_available" value="false" checked={formData.delivery_available === false} onChange={() => setFormData((prev) => ({ ...prev, delivery_available: false }))} className="w-4 h-4 cursor-pointer text-main" />
-                                    <span>{isRTL ? "لا" : "No"}</span>
-                                </label>
-                            </div>
-                        </div>
-
-                        <div className="flex items-center gap-6 mb-4">
-                            <label className="text-gray-700 font-medium whitespace-nowrap w-40">{t("ads.needsVaccinations")}</label>
-                            <div className="flex items-center gap-6">
-                                <label className="flex items-center gap-2 cursor-pointer">
-                                    <input type="radio" name="needs_vaccinations" value="true" checked={formData.needs_vaccinations === true} onChange={() => setFormData((prev) => ({ ...prev, needs_vaccinations: true }))} className="w-4 h-4 cursor-pointer text-main" />
-                                    <span>{isRTL ? "نعم" : "Yes"}</span>
-                                </label>
-                                <label className="flex items-center gap-2 cursor-pointer">
-                                    <input type="radio" name="needs_vaccinations" value="false" checked={formData.needs_vaccinations === false} onChange={() => setFormData((prev) => ({ ...prev, needs_vaccinations: false }))} className="w-4 h-4 cursor-pointer text-main" />
-                                    <span>{isRTL ? "لا" : "No"}</span>
-                                </label>
-                            </div>
-                        </div>
-
-                        <div className="flex items-center gap-6 mb-4">
-                            <label className="text-gray-700 font-medium whitespace-nowrap w-40">{t("ads.retailSaleAvailable")}</label>
-                            <div className="flex items-center gap-6">
-                                <label className="flex items-center gap-2 cursor-pointer">
-                                    <input type="radio" name="retail_sale_available" value="true" checked={formData.retail_sale_available === true} onChange={() => setFormData((prev) => ({ ...prev, retail_sale_available: true }))} className="w-4 h-4 cursor-pointer text-main" />
-                                    <span>{isRTL ? "نعم" : "Yes"}</span>
-                                </label>
-                                <label className="flex items-center gap-2 cursor-pointer">
-                                    <input type="radio" name="retail_sale_available" value="false" checked={formData.retail_sale_available === false} onChange={() => setFormData((prev) => ({ ...prev, retail_sale_available: false }))} className="w-4 h-4 cursor-pointer text-main" />
-                                    <span>{isRTL ? "لا" : "No"}</span>
-                                </label>
-                            </div>
-                        </div>
-
-                        <div className="flex items-center gap-6 mb-4">
-                            <label className="text-gray-700 font-medium whitespace-nowrap w-40">{t("ads.priceNegotiable")}</label>
-                            <div className="flex items-center gap-6">
-                                <label className="flex items-center gap-2 cursor-pointer">
-                                    <input type="radio" name="price_negotiable" value="true" checked={formData.price_negotiable === true} onChange={() => setFormData((prev) => ({ ...prev, price_negotiable: true }))} className="w-4 h-4 cursor-pointer text-main" />
-                                    <span>{isRTL ? "نعم" : "Yes"}</span>
-                                </label>
-                                <label className="flex items-center gap-2 cursor-pointer">
-                                    <input type="radio" name="price_negotiable" value="false" checked={formData.price_negotiable === false} onChange={() => setFormData((prev) => ({ ...prev, price_negotiable: false }))} className="w-4 h-4 cursor-pointer text-main" />
-                                    <span>{isRTL ? "لا" : "No"}</span>
-                                </label>
-                            </div>
-                        </div>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                    <div className="space-y-4">
+                        {leftColumnAttrs.map(attr => renderAttributeInput(attr))}
                     </div>
+                    
+                    <div className="space-y-4">
+                        {rightColumnAttrs.map(attr => renderAttributeInput(attr))}
+                    </div>
+                    
+                    {descriptionAttrs.map(attr => renderAttributeInput(attr))}
                 </div>
 
-                <div className="pt-6">
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className="w-full cursor-pointer bg-main hover:bg-green-700 text-white font-bold py-4 px-6 rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed text-lg"
-                    >
-                        {loading ? (isRTL ? "جاري النشر..." : "Publishing...") : t("ads.publish")}
-                    </button>
-                </div>
+                <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full cursor-pointer bg-main hover:bg-green-700 text-white font-semibold py-3 sm:py-3.5 rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed text-base sm:text-lg"
+                >
+                    {loading ? (isRTL ? "جاري النشر..." : "Publishing...") : t("ads.publish")}
+                </button>
             </form>
         </div>
     );

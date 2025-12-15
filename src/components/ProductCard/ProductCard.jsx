@@ -1,6 +1,6 @@
-import { Heart, MapPin, Calendar } from 'lucide-react';
+import { Heart, MapPin, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { chatAPI } from '../../api';
 import { useNavigate } from 'react-router-dom';
 import PlaceholderSVG from '../../assets/PlaceholderSVG';
@@ -17,13 +17,45 @@ const ProductCard = ({
     const navigate = useNavigate();
     const [isContacting, setIsContacting] = useState(false);
     const [toast, setToast] = useState(null);
-    const [error, setError] = useState(null);
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
     const showToast = (message, type = "success") => {
         setToast({ message, type });
         setTimeout(() => setToast(null), 4000);
     };
-    const imageUrl = product.image || product.images?.[0];
+
+    // Get all images
+    const allImages = product.images && product.images.length > 0 
+        ? product.images 
+        : (product.image ? [product.image] : []);
+    
+    const hasMultipleImages = allImages.length > 1;
+
+    // Auto-slide effect
+    useEffect(() => {
+        if (!hasMultipleImages) return;
+
+        const interval = setInterval(() => {
+            setCurrentImageIndex((prev) => (prev + 1) % allImages.length);
+        }, 3000); // Change image every 3 seconds
+
+        return () => clearInterval(interval);
+    }, [hasMultipleImages, allImages.length]);
+
+    const nextImage = (e) => {
+        e.stopPropagation();
+        setCurrentImageIndex((prev) => (prev + 1) % allImages.length);
+    };
+
+    const prevImage = (e) => {
+        e.stopPropagation();
+        setCurrentImageIndex((prev) => (prev - 1 + allImages.length) % allImages.length);
+    };
+
+    const goToImage = (e, index) => {
+        e.stopPropagation();
+        setCurrentImageIndex(index);
+    };
 
     const formatDate = (dateString) => {
         if (!dateString) return '';
@@ -53,10 +85,8 @@ const ProductCard = ({
     const handleContactSeller = async (e) => {
         e.stopPropagation();
         
-        // Check if user is logged in
         const token = localStorage.getItem('authToken');
         if (!token) {
-            // Redirect to login
             navigate('/login', { state: { from: `/product-details/${product.id}` } });
             return;
         }
@@ -64,42 +94,27 @@ const ProductCard = ({
         try {
             setIsContacting(true);
             
-            // Get seller ID
             const sellerId = product.user_id || product.seller_id || product.owner_id || product.user?.id;
             
-            console.log('=== Contact Seller Debug ===');
-            console.log('Product:', product);
-            console.log('Seller ID:', sellerId);
-            console.log('Current User:', JSON.parse(localStorage.getItem('userData') || '{}'));
-            
             if (!sellerId) {
-                console.error('No seller ID found in product:', product);
-                showToast(isRTL ? 'لا يمكن العثور على معرف البائع' : 'Cannot find seller ID',error);
+                showToast(isRTL ? 'لا يمكن العثور على معرف البائع' : 'Cannot find seller ID', 'error');
                 return;
             }
             
-            // Check if trying to message yourself
             const currentUser = JSON.parse(localStorage.getItem('userData') || '{}');
             if (currentUser.id === sellerId) {
-                showToast(isRTL ? 'لا يمكنك إرسال رسالة لنفسك' : 'You cannot message yourself', error);
+                showToast(isRTL ? 'لا يمكنك إرسال رسالة لنفسك' : 'You cannot message yourself', 'error');
                 return;
             }
             
-            // Prepare data for API
             const conversationData = {
                 user_id: parseInt(sellerId),
                 type: 'auction'
             };
             
-            console.log('Sending conversation data:', conversationData);
-            
-            // Create conversation with seller
             const response = await chatAPI.createConversation(conversationData);
-            
-            console.log('API Response:', response.data);
 
             if (response.data.success) {
-                // Navigate to messages page with the conversation
                 const conversationId = response.data.conversation?.id || response.data.data?.id;
                 
                 if (conversationId) {
@@ -107,41 +122,27 @@ const ProductCard = ({
                         state: { conversationId } 
                     });
                 } else {
-                    console.error('No conversation ID in response:', response.data);
-                    showToast(isRTL ? 'حدث خطأ أثناء إنشاء المحادثة' : 'Error creating conversation', error);
+                    showToast(isRTL ? 'حدث خطأ أثناء إنشاء المحادثة' : 'Error creating conversation', 'error');
                 }
             }
         } catch (error) {
-            console.error('=== Error Details ===');
-            console.error('Full Error:', error);
-            console.error('Error Response:', error.response);
-            console.error('Error Data:', error.response?.data);
-            console.error('Error Status:', error.response?.status);
-            
-            // If conversation already exists, try to navigate anyway
             if (error.response?.status === 409 || error.response?.data?.conversation) {
                 const existingConvId = error.response.data.conversation?.id || error.response.data.data?.id;
                 if (existingConvId) {
-                    console.log('Conversation exists, navigating to:', existingConvId);
                     navigate('/chats', { state: { conversationId: existingConvId } });
                     return;
                 }
             }
             
-            // Show error details
             const errorMessage = error.response?.data?.message 
                 || error.response?.data?.error 
                 || error.message 
                 || 'Unknown error';
-                
-            const errorDetails = error.response?.data?.errors 
-                ? JSON.stringify(error.response.data.errors) 
-                : '';
             
             showToast(isRTL 
-                ? `حدث خطأ: ${errorMessage}\n${errorDetails}` 
-                : `Error: ${errorMessage}\n${errorDetails}`
-                ,error
+                ? `حدث خطأ: ${errorMessage}` 
+                : `Error: ${errorMessage}`
+                , 'error'
             );
         } finally {
             setIsContacting(false);
@@ -166,27 +167,68 @@ const ProductCard = ({
                     </div>
                 </div>
             )}
+            
             <div
                 className="relative h-40 bg-gray-100 cursor-pointer group"
                 onClick={() => onProductClick(product.id)}
             >
-                {imageUrl ? (
-                    <img
-                        src={imageUrl}
-                        alt={isRTL ? product.name_ar : product.name_en}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        onError={(e) => {
-                            e.target.style.display = 'none';
-                            e.target.nextElementSibling.style.display = 'block';
-                        }}
-                    />
-                ) : null}
-                <div 
-                    className={`${imageUrl ? 'hidden' : 'block'} w-full h-full`}
-                    style={{ display: imageUrl ? 'none' : 'block' }}
-                >
-                    <PlaceholderSVG />
-                </div>
+                {allImages.length > 0 ? (
+                    <>
+                        <img
+                            src={allImages[currentImageIndex]}
+                            alt={isRTL ? product.name_ar : product.name_en}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            onError={(e) => {
+                                e.target.style.display = 'none';
+                                e.target.nextElementSibling.style.display = 'block';
+                            }}
+                        />
+                        <div 
+                            className="hidden w-full h-full"
+                            style={{ display: 'none' }}
+                        >
+                            <PlaceholderSVG />
+                        </div>
+                    </>
+                ) : (
+                    <div className="w-full h-full">
+                        <PlaceholderSVG />
+                    </div>
+                )}
+
+                {/* Image Navigation Arrows */}
+                {hasMultipleImages && (
+                    <>
+                        <button
+                            onClick={prevImage}
+                            className={`absolute top-1/2 -translate-y-1/2 ${isRTL ? 'right-1' : 'left-1'} bg-black/50 hover:bg-black/70 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity z-10`}
+                        >
+                            {isRTL ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+                        </button>
+                        <button
+                            onClick={nextImage}
+                            className={`absolute top-1/2 -translate-y-1/2 ${isRTL ? 'left-1' : 'right-1'} bg-black/50 hover:bg-black/70 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity z-10`}
+                        >
+                            {isRTL ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
+                        </button>
+
+                        {/* Image Indicators (Dots) */}
+                        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 z-10 bg-black/30 px-2 py-1 rounded-full backdrop-blur-sm">
+                            {allImages.map((_, index) => (
+                                <button
+                                    key={index}
+                                    onClick={(e) => goToImage(e, index)}
+                                    className={`transition-all rounded-full cursor-pointer ${
+                                        index === currentImageIndex 
+                                            ? 'bg-white w-4 h-2' 
+                                            : 'bg-white/50 hover:bg-white/75 w-2 h-2'
+                                    }`}
+                                    aria-label={`Go to image ${index + 1}`}
+                                />
+                            ))}
+                        </div>
+                    </>
+                )}
 
                 {onToggleFavorite && (
                     <button

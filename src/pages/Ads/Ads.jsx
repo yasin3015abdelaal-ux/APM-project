@@ -13,12 +13,13 @@ function DeleteConfirmModal({ isOpen, onClose, onConfirm, isRTL }) {
   const [soldOnWebsite, setSoldOnWebsite] = useState(false);
   const [changedMind, setChangedMind] = useState(false);
   const [loading, setLoading] = useState(false);
-    const [toast, setToast] = useState(null);
+  const [toast, setToast] = useState(null);
 
-    const showToast = (message, type = "success") => {
-        setToast({ message, type });
-        setTimeout(() => setToast(null), 4000);
-    };
+  const showToast = (message, type = "success") => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 4000);
+  };
+
   const handleSoldChange = (checked) => {
     if (checked) {
       setChangedMind(false);
@@ -33,52 +34,51 @@ function DeleteConfirmModal({ isOpen, onClose, onConfirm, isRTL }) {
     setChangedMind(checked);
   };
 
-const handleConfirm = async () => {
-  setLoading(true);
-  await onConfirm(soldOnWebsite);
-  showToast(
-    isRTL ? 'تم حذف الإعلان بنجاح' : 'Ad deleted successfully',  
-    'success'
-  );
-  setLoading(false);
-};
+  const handleConfirm = async () => {
+    setLoading(true);
+    await onConfirm(soldOnWebsite);
+    showToast(
+      isRTL ? 'تم حذف الإعلان بنجاح' : 'Ad deleted successfully',
+      'success'
+    );
+    setLoading(false);
+  };
 
   const isConfirmDisabled = !soldOnWebsite && !changedMind;
 
   if (!isOpen) return null;
 
   return (
-    <div 
+    <div
       className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
       onClick={onClose}
     >
       {toast && (
-                <div className={`fixed top-4 sm:top-5 ${isRTL ? "left-4 sm:left-5" : "right-4 sm:right-5"} z-50 animate-slide-in max-w-[90%] sm:max-w-md`}>
-                    <div className={`px-4 py-3 sm:px-6 sm:py-4 rounded-lg sm:rounded-xl shadow-lg flex items-center gap-2 sm:gap-3 ${toast.type === "success" ? "bg-main text-white" : "bg-red-500 text-white"}`}>
-                        {toast.type === "success" ? (
-                            <svg className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                            </svg>
-                        ) : (
-                            <svg className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        )}
-                        <span className="font-semibold text-sm sm:text-base break-words">{toast.message}</span>
-                    </div>
-                </div>
+        <div className={`fixed top-4 sm:top-5 ${isRTL ? "left-4 sm:left-5" : "right-4 sm:right-5"} z-50 animate-slide-in max-w-[90%] sm:max-w-md`}>
+          <div className={`px-4 py-3 sm:px-6 sm:py-4 rounded-lg sm:rounded-xl shadow-lg flex items-center gap-2 sm:gap-3 ${toast.type === "success" ? "bg-main text-white" : "bg-red-500 text-white"}`}>
+            {toast.type === "success" ? (
+              <svg className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            ) : (
+              <svg className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
             )}
-      <div 
+            <span className="font-semibold text-sm sm:text-base break-words">{toast.message}</span>
+          </div>
+        </div>
+      )}
+      <div
         className="bg-white rounded-xl p-6 max-w-md w-full shadow-xl"
         onClick={(e) => e.stopPropagation()}
         dir={isRTL ? 'rtl' : 'ltr'}
       >
-        {/* Header */}
         <div className="flex items-center justify-between mb-5">
           <h3 className="text-xl font-bold text-gray-900">
             {isRTL ? 'حذف الإعلان' : 'Delete Ad'}
           </h3>
-          <button 
+          <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 cursor-pointer"
           >
@@ -95,8 +95,8 @@ const handleConfirm = async () => {
               className="w-5 h-5 text-main rounded cursor-pointer"
             />
             <span className="text-gray-800 font-medium text-sm">
-              {isRTL 
-                ? 'هل تم البيع على الموقع؟' 
+              {isRTL
+                ? 'هل تم البيع على الموقع؟'
                 : 'Was it sold on the website?'}
             </span>
           </label>
@@ -111,22 +111,21 @@ const handleConfirm = async () => {
               className="w-5 h-5 text-amber-600 rounded cursor-pointer"
             />
             <span className="text-gray-800 font-medium text-sm">
-              {isRTL 
-                ? 'هل غيرت رأيك من البيع؟' 
+              {isRTL
+                ? 'هل غيرت رأيك من البيع؟'
                 : 'Did you change your mind about selling?'}
             </span>
           </label>
         </div>
 
-        {/* Buttons */}
         <div className="flex gap-3">
           <button
             onClick={handleConfirm}
             disabled={loading || isConfirmDisabled}
             className="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-2 rounded-lg transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading 
-              ? (isRTL ? 'جاري...' : 'Loading...') 
+            {loading
+              ? (isRTL ? 'جاري...' : 'Loading...')
               : (isRTL ? 'متابعة' : 'Continue')}
           </button>
           <button
@@ -137,7 +136,6 @@ const handleConfirm = async () => {
             {isRTL ? 'الرجوع عن الحذف' : 'Cancel Delete'}
           </button>
         </div>
-
       </div>
     </div>
   );
@@ -150,7 +148,7 @@ function AdsItem({ item, onDelete }) {
   const navigate = useNavigate();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-  const imageUrl = images && images.length > 0 ? images[0] : image;
+  const allImages = images && images.length > 0 ? images : (image ? [image] : []);
 
   const handleProductClick = (productId) => {
     navigate(`/product-details/${productId}`);
@@ -181,7 +179,8 @@ function AdsItem({ item, onDelete }) {
     name_ar: name_ar,
     name_en: name_en || name,
     price: price,
-    image: imageUrl,
+    images: allImages,
+    image: allImages[0],
     governorate: governorate,
     created_at: created_at
   };
@@ -190,14 +189,14 @@ function AdsItem({ item, onDelete }) {
     <>
       <div className="relative">
         <div className={`absolute top-2 ${isRTL ? 'left-2' : 'right-2'} z-10 flex gap-2`}>
-          <button 
+          <button
             onClick={(e) => handleEditClick(e, id)}
             className="cursor-pointer rounded-full p-1.5 shadow-sm hover:scale-110 transition-all bg-white hover:bg-gray-50"
           >
             <FaRegEdit size={16} className="text-gray-400" />
           </button>
-          
-          <button 
+
+          <button
             onClick={handleDeleteClick}
             className="cursor-pointer rounded-full p-1.5 shadow-sm hover:scale-110 transition-all bg-white hover:bg-red-50"
           >
@@ -290,15 +289,13 @@ export default function Ads() {
 
   const handleDelete = async (productId, soldOnWebsite) => {
     try {
-      // Send delete request with sold_on_website parameter
       await userAPI.delete(`/products/${productId}`, {
         data: { sold_on_website: soldOnWebsite }
       });
-      
-      // Update local state
+
       setAdsItems(prev => prev.filter(item => item.id !== productId));
       setFilteredAds(prev => prev.filter(item => item.id !== productId));
-      
+
       showToast(
         isRTL ? 'تم حذف الإعلان بنجاح' : 'Ad deleted successfully',
         'success'
@@ -365,19 +362,34 @@ export default function Ads() {
         )}
 
         <h3 className="text-2xl text-center font-bold text-main mb-6">{t("ads.title")}</h3>
-        
+
+        {/* Create Ad Button */}
+        <div className="block sm:hidden mb-4">
+          <button
+            onClick={() => navigate("/ads/create")}
+            className="w-full flex items-center justify-center bg-gradient-to-r from-main to-green-700 text-white py-3.5 px-8 rounded-xl hover:from-green-700 hover:to-main transition-all duration-300 text-base font-bold cursor-pointer shadow-lg hover:shadow-xl transform hover:scale-[1.02]"
+          >
+            <svg className={`w-5 h-5 ${isRTL ? 'ml-2' : 'mr-2'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            {t("ads.makeAds")}
+          </button>
+        </div>
+
+        {/* Filters Section */}
         <div className="flex flex-col sm:flex-row items-stretch justify-between sm:items-center gap-4 mb-6 bg-gradient-to-r from-gray-50 to-gray-100/50 p-5 rounded-2xl shadow-md border border-gray-200/60 backdrop-blur-sm relative z-20">
-          <div className={`w-full sm:w-auto ${isRTL ? 'sm:order-2' : 'sm:order-1'}`}>
+          {/* Desktop Button */}
+          <div className={`hidden sm:block ${isRTL ? 'sm:order-2' : 'sm:order-1'}`}>
             <button 
               onClick={() => navigate("/ads/create")}
-              className="w-full flex sm:w-auto bg-main text-white py-3 px-8 whitespace-nowrap rounded-lg hover:bg-green-700 transition-all duration-200 text-base font-semibold cursor-pointer shadow-sm hover:shadow-md"
+              className="flex items-center bg-main text-white py-3 px-8 whitespace-nowrap rounded-lg hover:bg-green-700 transition-all duration-200 text-base font-semibold cursor-pointer shadow-sm hover:shadow-md"
             >
               {t("ads.makeAds")}
             </button>
           </div>
 
           {/* Desktop Filters */}
-          <div className={`hidden sm:flex gap-3 ${isRTL ? 'sm:order-2' : 'sm:order-1'}`}>
+          <div className={`hidden sm:flex gap-3 ${isRTL ? 'sm:order-1' : 'sm:order-2'}`}>
             <CustomSelect
               options={categoryOptions}
               value={filter.category_id}
@@ -397,7 +409,7 @@ export default function Ads() {
             />
           </div>
 
-          {/* Mobile Filters */}
+          {/* Mobile Filters Only */}
           <div className="w-full block sm:hidden">
             <div className="grid grid-cols-2 gap-3">
               <CustomSelect
@@ -418,7 +430,7 @@ export default function Ads() {
             </div>
           </div>
         </div>
-        
+
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-5 gap-4">
           {filteredAds.length === 0 ? (
             <div className="col-span-full text-center py-12 text-gray-500 rounded-2xl">
@@ -426,9 +438,9 @@ export default function Ads() {
             </div>
           ) : (
             filteredAds.map((item) => (
-              <AdsItem 
-                key={item.id} 
-                item={item} 
+              <AdsItem
+                key={item.id}
+                item={item}
                 onDelete={handleDelete}
               />
             ))

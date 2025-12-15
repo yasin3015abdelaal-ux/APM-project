@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import Loader from '../../../components/Ui/Loader/Loader';
 import PlaceholderSVG from '../../../assets/PlaceholderSVG';
 import { getCachedAdvertisements } from '../../../api';
 
@@ -58,7 +57,26 @@ const AdvertisementsSlider = () => {
     };
 
     if (isLoading) {
-        return <Loader />;
+        return (
+            <div className="relative w-[98%] mb-2 mx-auto h-34 mt-4 md:h-[250px] rounded-2xl overflow-hidden shadow-xl">
+                <div className="w-full h-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 animate-pulse bg-[length:200%_100%]" 
+                     style={{
+                         animation: 'shimmer 1.5s ease-in-out infinite',
+                         backgroundSize: '200% 100%'
+                     }}>
+                </div>
+                <style>{`
+                    @keyframes shimmer {
+                        0% {
+                            background-position: -200% 0;
+                        }
+                        100% {
+                            background-position: 200% 0;
+                        }
+                    }
+                `}</style>
+            </div>
+        );
     }
 
     if (advertisements.length === 0) {
@@ -66,7 +84,7 @@ const AdvertisementsSlider = () => {
     }
 
     return (
-        <div className="relative w-[96%] mx-auto h-34 mt-4 md:h-[250px] rounded-2xl overflow-hidden shadow-xl group">
+        <div className="relative w-[98%] mb-2 mx-auto h-34 mt-4 md:h-[250px] rounded-2xl overflow-hidden shadow-xl group">
             <div className="relative w-full h-full">
                 {advertisements.map((ad, index) => (
                     <div

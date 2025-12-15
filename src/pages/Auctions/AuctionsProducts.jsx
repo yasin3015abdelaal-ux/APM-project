@@ -55,14 +55,35 @@ function ProductItem({
   isAddedToAuction = false,
   isPastAuction = false,
 }) {
-  const { id, images, image, name, name_ar, name_en, governorate, price } =
-    item;
+  const { id, images, image, name, name_ar, name_en, governorate, price } = item;
   const { i18n } = useTranslation();
   const isRTL = i18n.language === "ar";
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-  const imageUrl = images && images.length > 0 ? images[0] : image;
+  // Get all images
+  const allImages = images && images.length > 0
+    ? images
+    : (image ? [image] : []);
+
+  const hasMultipleImages = allImages.length > 1;
+
+  // Auto-slide effect
+  useEffect(() => {
+    if (!hasMultipleImages) return;
+
+    const interval = setInterval(() => {
+      setCurrentImageIndex((prev) => (prev + 1) % allImages.length);
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [hasMultipleImages, allImages.length]);
+
+  const goToImage = (e, index) => {
+    e.stopPropagation();
+    setCurrentImageIndex(index);
+  };
+
   const displayName = isRTL ? name_ar : name_en || name;
-
   const auctionPrice = item.auction_price;
   const displayPrice = auctionPrice || price;
 
@@ -128,8 +149,8 @@ function ProductItem({
               ? "تم تعديل سعر المزاد بنجاح"
               : "تم إضافة المنتج إلى المزاد بنجاح"
             : isAddedToAuction
-            ? "Auction price updated successfully"
-            : "Product added to auction successfully",
+              ? "Auction price updated successfully"
+              : "Product added to auction successfully",
           "success"
         );
         setShowAuctionModal(false);
@@ -176,33 +197,52 @@ function ProductItem({
   return (
     <>
       <div
-        className={`bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden ${
-          isPastAuction ? "opacity-90" : ""
-        }`}
+        className={`bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden ${isPastAuction ? "opacity-90" : ""
+          }`}
       >
-        <div className="h-36 bg-gray-100 relative">
-          {imageUrl ? (
-            <img
-              src={imageUrl}
-              alt={`image-logo-for-${id}`}
-              className="w-full h-full object-cover"
-              onError={(e) => {
-                e.target.style.display = "none";
-                e.target.nextElementSibling.style.display = "flex";
-              }}
-            />
-          ) : null}
-          <div
-            className={`${
-              imageUrl ? "hidden" : "flex"
-            } w-full h-full items-center justify-center bg-gray-100`}
-          >
-            <PlaceholderSVG />
-          </div>
+        {/* Image with Auto Slider */}
+        <div className="h-36 bg-gray-100 relative group">
+          {allImages.length > 0 && allImages[currentImageIndex] ? (
+            <>
+              <img
+                src={allImages[currentImageIndex]}
+                alt={displayName}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  e.target.nextElementSibling.style.display = 'flex';
+                }}
+              />
+              <div className="hidden w-full h-full items-center justify-center bg-gray-100 absolute top-0 left-0">
+                <PlaceholderSVG />
+              </div>
+            </>
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <PlaceholderSVG />
+            </div>
+          )}
 
           {isAddedToAuction && !isPastAuction && (
-            <div className="absolute top-2 right-2 bg-green-500 text-white px-2 py-1 rounded-full text-xs font-bold">
+            <div className="absolute top-2 right-2 bg-green-500 text-white px-2 py-1 rounded-full text-xs font-bold z-10">
               {isRTL ? "مضاف للمزاد" : "Added to Auction"}
+            </div>
+          )}
+
+          {/* Image Indicators (Dots) */}
+          {hasMultipleImages && (
+            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 z-10 bg-black/30 px-2 py-1 rounded-full backdrop-blur-sm">
+              {allImages.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={(e) => goToImage(e, index)}
+                  className={`transition-all rounded-full cursor-pointer ${index === currentImageIndex
+                      ? 'bg-white w-4 h-2'
+                      : 'bg-white/50 hover:bg-white/75 w-2 h-2'
+                    }`}
+                  aria-label={`Go to image ${index + 1}`}
+                />
+              ))}
             </div>
           )}
         </div>
@@ -228,7 +268,7 @@ function ProductItem({
               <span>{item.watchers_count || 0}</span>
             </div>
             <div className="flex items-center gap-1">
-                <HeartIcon className="w-3 h-3 text-red-600" />
+              <HeartIcon className="w-3 h-3 text-red-600" />
               <span>{item.interested_count || 0}</span>
             </div>
           </div>
@@ -248,11 +288,10 @@ function ProductItem({
             {!isPastAuction && (
               <button
                 onClick={() => setShowAuctionModal(true)}
-                className={`py-1.5 px-2.5 rounded-lg transition text-xs cursor-pointer flex items-center justify-center gap-1 w-full md:w-auto ${
-                  isAddedToAuction
+                className={`py-1.5 px-2.5 rounded-lg transition text-xs cursor-pointer flex items-center justify-center gap-1 w-full md:w-auto ${isAddedToAuction
                     ? "bg-blue-600 text-white hover:bg-blue-700"
                     : "bg-main text-white hover:bg-green-700"
-                }`}
+                  }`}
               >
                 {isAddedToAuction ? (
                   <>
@@ -280,8 +319,8 @@ function ProductItem({
                   ? "تعديل سعر المزاد"
                   : "إضافة المنتج للمزاد"
                 : isAddedToAuction
-                ? "Edit Auction Price"
-                : "Add Product to Auction"}
+                  ? "Edit Auction Price"
+                  : "Add Product to Auction"}
             </h3>
 
             <div className="space-y-4">
@@ -345,12 +384,12 @@ function ProductItem({
                       ? "جاري الحفظ..."
                       : "Saving..."
                     : isRTL
-                    ? isAddedToAuction
-                      ? "تحديث السعر"
-                      : "إضافة"
-                    : isAddedToAuction
-                    ? "Update Price"
-                    : "Add"}
+                      ? isAddedToAuction
+                        ? "تحديث السعر"
+                        : "إضافة"
+                      : isAddedToAuction
+                        ? "Update Price"
+                        : "Add"}
                 </button>
               </div>
             </div>
@@ -441,7 +480,7 @@ export default function AuctionProducts() {
       setCategories(categoriesData);
       setProducts(finalProducts);
       setFilteredProducts(finalProducts);
-      
+
       if (!isPastAuction && extractedAuctionProducts.length >= 0) {
         setIsRegisteredAsSeller(true);
       }
@@ -503,16 +542,14 @@ export default function AuctionProducts() {
       <div className="container">
         {toast && (
           <div
-            className={`fixed top-4 ${
-              isRTL ? "left-20" : "right-4"
-            } z-50 animate-fade-in`}
+            className={`fixed top-4 ${isRTL ? "left-20" : "right-4"
+              } z-50 animate-fade-in`}
           >
             <div
-              className={`px-6 py-4 rounded-xl shadow-lg flex items-center gap-3 ${
-                toast.type === "success"
+              className={`px-6 py-4 rounded-xl shadow-lg flex items-center gap-3 ${toast.type === "success"
                   ? "bg-main text-white"
                   : "bg-red-500 text-white"
-              }`}
+                }`}
             >
               {toast.type === "success" ? (
                 <svg
@@ -554,8 +591,8 @@ export default function AuctionProducts() {
               ? "مزاد سابق"
               : "Previous Auction"
             : isRTL
-            ? "مزاداتي"
-            : "My Auctions"}
+              ? "مزاداتي"
+              : "My Auctions"}
         </h3>
 
         <div className="mb-6">
@@ -577,8 +614,8 @@ export default function AuctionProducts() {
                     ? "لا توجد منتجات في هذا المزاد"
                     : "No products in this auction"
                   : isRTL
-                  ? "لا توجد منتجات متاحة"
-                  : "No available products"}
+                    ? "لا توجد منتجات متاحة"
+                    : "No available products"}
               </p>
             </div>
           ) : (

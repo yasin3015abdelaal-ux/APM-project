@@ -10,26 +10,38 @@ const SellerReportModal = ({ isOpen, onClose, sellerId, sellerName, productId })
     const [reportReasons, setReportReasons] = useState([]);
     const [selectedReason, setSelectedReason] = useState("");
     const [details, setDetails] = useState("");
+    const [reportType, setReportType] = useState("seller");
     const [loading, setLoading] = useState(false);
     const [loadingReasons, setLoadingReasons] = useState(true);
-    const [error, setError] = useState("");
-    const [success, setSuccess] = useState(false);
+    const [toast, setToast] = useState(null);
 
+    const showToast = (message, type = "success") => {
+        setToast({ message, type });
+        setTimeout(() => setToast(null), 4000);
+    };
+
+    // Set report type based on productId
     useEffect(() => {
         if (isOpen) {
-            fetchReportReasons();
+            const type = productId ? "product" : "seller";
+            setReportType(type);
+            fetchReportReasons(type);
         }
-    }, [isOpen]);
+    }, [isOpen, productId]);
 
-    const fetchReportReasons = async () => {
+    const fetchReportReasons = async (type) => {
         try {
             setLoadingReasons(true);
-            const response = await userAPI.get("/report-reasons");
+            // Pass type parameter to API
+            const response = await userAPI.get(`/report-reasons?type=${type}`);
             const reasons = response.data?.data || [];
             setReportReasons(reasons);
         } catch (error) {
             console.error("Error fetching report reasons:", error);
-            setError(isRTL ? "حدث خطأ في تحميل أسباب الإبلاغ" : "Error loading report reasons");
+            showToast(
+                isRTL ? "حدث خطأ في تحميل أسباب الإبلاغ" : "Error loading report reasons",
+                "error"
+            );
         } finally {
             setLoadingReasons(false);
         }
@@ -38,8 +50,8 @@ const SellerReportModal = ({ isOpen, onClose, sellerId, sellerName, productId })
     const resetForm = () => {
         setSelectedReason("");
         setDetails("");
-        setError("");
-        setSuccess(false);
+        setReportType(productId ? "product" : "seller");
+        setToast(null);
     };
 
     const handleClose = () => {
@@ -49,20 +61,28 @@ const SellerReportModal = ({ isOpen, onClose, sellerId, sellerName, productId })
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setError("");
 
         if (!selectedReason) {
-            setError(isRTL ? "من فضلك اختر سبب الإبلاغ" : "Please select a report reason");
+            showToast(
+                isRTL ? "من فضلك اختر سبب الإبلاغ" : "Please select a report reason",
+                "error"
+            );
             return;
         }
 
         if (details.trim().length < 10) {
-            setError(isRTL ? "التفاصيل يجب أن تكون 10 أحرف على الأقل" : "Details must be at least 10 characters");
+            showToast(
+                isRTL ? "التفاصيل يجب أن تكون 10 أحرف على الأقل" : "Details must be at least 10 characters",
+                "error"
+            );
             return;
         }
 
         if (details.length > 500) {
-            setError(isRTL ? "التفاصيل طويلة جداً (الحد الأقصى 500 حرف)" : "Details are too long (max 500 characters)");
+            showToast(
+                isRTL ? "التفاصيل طويلة جداً (الحد الأقصى 500 حرف)" : "Details are too long (max 500 characters)",
+                "error"
+            );
             return;
         }
 
@@ -74,9 +94,18 @@ const SellerReportModal = ({ isOpen, onClose, sellerId, sellerName, productId })
                 details: details.trim()
             };
 
-            await userAPI.post("/seller-reports", data);
+            if (reportType === "product" && productId) {
+                data.product_id = productId;
+            }
 
-            setSuccess(true);
+            const endpoint = reportType === "product" ? "/product-reports" : "/seller-reports";
+            await userAPI.post(endpoint, data);
+
+            showToast(
+                isRTL ? "تم إرسال الإبلاغ بنجاح!" : "Report submitted successfully!",
+                "success"
+            );
+
             setTimeout(() => {
                 handleClose();
             }, 2000);
@@ -84,9 +113,12 @@ const SellerReportModal = ({ isOpen, onClose, sellerId, sellerName, productId })
         } catch (error) {
             console.error("Error submitting report:", error);
             if (error.response?.data?.message) {
-                setError(error.response.data.message);
+                showToast(error.response.data.message, "error");
             } else {
-                setError(isRTL ? "حدث خطأ أثناء إرسال الإبلاغ" : "Error submitting report");
+                showToast(
+                    isRTL ? "حدث خطأ أثناء إرسال الإبلاغ" : "Error submitting report",
+                    "error"
+                );
             }
         } finally {
             setLoading(false);
@@ -100,6 +132,26 @@ const SellerReportModal = ({ isOpen, onClose, sellerId, sellerName, productId })
             className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
             onClick={handleClose}
         >
+            {/* Toast Notification */}
+            {toast && (
+                <div className={`fixed top-4 sm:top-5 ${isRTL ? "left-4 sm:left-5" : "right-4 sm:right-5"} z-[60] animate-slide-in max-w-[90%] sm:max-w-md`}>
+                    <div className={`px-4 py-3 sm:px-6 sm:py-4 rounded-lg sm:rounded-xl shadow-lg flex items-center gap-2 sm:gap-3 ${
+                        toast.type === "success" ? "bg-main text-white" : "bg-red-500 text-white"
+                    }`}>
+                        {toast.type === "success" ? (
+                            <svg className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                        ) : (
+                            <svg className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        )}
+                        <span className="font-semibold text-sm sm:text-base break-words">{toast.message}</span>
+                    </div>
+                </div>
+            )}
+
             <div 
                 className="bg-white rounded-3xl w-full max-w-md shadow-2xl animate-slide-up"
                 onClick={(e) => e.stopPropagation()}
@@ -121,29 +173,13 @@ const SellerReportModal = ({ isOpen, onClose, sellerId, sellerName, productId })
                                     <AlertTriangle className="w-8 h-8 text-red-500" />
                                 </div>
                                 <h2 className="text-2xl font-bold text-gray-900">
-                                    {isRTL ? "الإبلاغ عن البائع" : "Report Seller"}
+                                    {isRTL 
+                                        ? (reportType === "product" ? "الإبلاغ عن المنتج" : "الإبلاغ عن البائع")
+                                        : (reportType === "product" ? "Report Product" : "Report Seller")
+                                    }
                                 </h2>
                                 <p className="text-gray-500">{sellerName}</p>
                             </div>
-
-                            {success && (
-                                <div className="bg-green-50 border border-green-200 rounded-xl p-3 flex items-center gap-2">
-                                    <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
-                                        <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                                        </svg>
-                                    </div>
-                                    <p className="text-sm font-medium text-green-800">
-                                        {isRTL ? "تم إرسال الإبلاغ بنجاح!" : "Report submitted successfully!"}
-                                    </p>
-                                </div>
-                            )}
-
-                            {error && (
-                                <div className="bg-red-50 border border-red-200 rounded-xl p-3">
-                                    <p className="text-sm text-red-800 text-center">{error}</p>
-                                </div>
-                            )}
 
                             <div className="space-y-2">
                                 <label className="block text-sm font-medium text-gray-700">
@@ -166,7 +202,7 @@ const SellerReportModal = ({ isOpen, onClose, sellerId, sellerName, productId })
                                                 checked={selectedReason === String(reason.id)}
                                                 onChange={(e) => setSelectedReason(e.target.value)}
                                                 className="sr-only"
-                                                disabled={loading || success}
+                                                disabled={loading}
                                             />
                                             <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
                                                 selectedReason === String(reason.id)
@@ -197,7 +233,7 @@ const SellerReportModal = ({ isOpen, onClose, sellerId, sellerName, productId })
                                         className="w-full px-4 py-3 pb-8 border-2 border-gray-200 rounded-xl outline-none focus:border-red-500 transition-all resize-none text-sm bg-white"
                                         rows={4}
                                         maxLength={500}
-                                        disabled={loading || success}
+                                        disabled={loading}
                                         required
                                         minLength={10}
                                     />
@@ -214,8 +250,8 @@ const SellerReportModal = ({ isOpen, onClose, sellerId, sellerName, productId })
 
                             <button
                                 type="submit"
-                                className="w-full py-3.5 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-bold rounded-2xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
-                                disabled={loading || success || !selectedReason || details.trim().length < 10}
+                                className="w-full cursor-pointer py-3.5 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-bold rounded-2xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
+                                disabled={loading || !selectedReason || details.trim().length < 10}
                             >
                                 {loading ? (
                                     <span className="flex items-center justify-center gap-2">
@@ -243,6 +279,21 @@ const SellerReportModal = ({ isOpen, onClose, sellerId, sellerName, productId })
                 
                 .animate-slide-up {
                     animation: slide-up 0.3s ease-out;
+                }
+
+                @keyframes slide-in {
+                    from {
+                        transform: translateX(${isRTL ? '-' : ''}100%);
+                        opacity: 0;
+                    }
+                    to {
+                        transform: translateX(0);
+                        opacity: 1;
+                    }
+                }
+                
+                .animate-slide-in {
+                    animation: slide-in 0.3s ease-out;
                 }
             `}</style>
         </div>
