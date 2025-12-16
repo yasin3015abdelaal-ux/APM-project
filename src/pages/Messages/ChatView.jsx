@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import Loader from "../../components/Ui/Loader/Loader";
 import SellerRatingModal from "../../components/SellerRating/SellerRating";
 import SellerReportModal from "../../components/SellerRating/SellerReport";
+import { chatAPI } from "../../api";
 
 const ChatView = memo(({
     conversation,
@@ -27,10 +28,34 @@ const ChatView = memo(({
     const isUserScrollingRef = useRef(false);
     const hasInitialScrollRef = useRef(false);
     const conversationIdRef = useRef(conversation?.id);
+    const hasMarkedAsReadRef = useRef(false);
 
     // State for modals
     const [showRatingModal, setShowRatingModal] = useState(false);
     const [showReportModal, setShowReportModal] = useState(false);
+
+    // Mark messages as read when user enters chat
+    useEffect(() => {
+        const markAsRead = async () => {
+            if (conversation?.id && !hasMarkedAsReadRef.current) {
+                try {
+                    await chatAPI.markAsRead(conversation.id);
+                    hasMarkedAsReadRef.current = true;
+                } catch (error) {
+                    console.error('Error marking messages as read:', error);
+                }
+            }
+        };
+
+        if (!isLoadingMessages && messages.length > 0) {
+            markAsRead();
+        }
+
+        // Reset when conversation changes
+        if (conversationIdRef.current !== conversation?.id) {
+            hasMarkedAsReadRef.current = false;
+        }
+    }, [conversation?.id, isLoadingMessages, messages.length]);
 
     const isAtBottom = useCallback(() => {
         if (!messagesContainerRef.current) return true;
@@ -110,6 +135,15 @@ const ChatView = memo(({
         setShowChatOptions(false);
         setShowReportModal(true);
     };
+
+    // Check if message is read
+    const isMessageRead = useCallback((msg) => {
+        // If it's my message and the other user has read it
+        if (msg.sender_id === currentUserId) {
+            return msg.is_read || msg.read_at || msg.status === 'read';
+        }
+        return false;
+    }, [currentUserId]);
 
     return (
         <div className="flex flex-col h-full bg-white rounded-2xl overflow-hidden shadow-lg border border-gray-100">
@@ -271,9 +305,16 @@ const ChatView = memo(({
                                                             <div className="w-1 h-1 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
                                                             <div className="w-1 h-1 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
                                                         </div>
+                                                    ) : isMessageRead(msg) ? (
+                                                        // Double check marks - Blue (Read)
+                                                        <svg className="w-5 h-4 text-blue-500" viewBox="0 0 24 16" fill="none" stroke="currentColor">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M1 8l3 3 5-5" />
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M7 8l3 3 5-5" />
+                                                        </svg>
                                                     ) : (
-                                                        <svg className="w-3.5 h-3.5 text-main" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                                                        // Single check mark - Gray (Delivered)
+                                                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 16 16">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M2 8l3 3 6-6" />
                                                         </svg>
                                                     )
                                                 )}

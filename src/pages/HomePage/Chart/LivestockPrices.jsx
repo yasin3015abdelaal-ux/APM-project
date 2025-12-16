@@ -9,18 +9,21 @@ import {
     Legend,
     ResponsiveContainer,
 } from "recharts";
-import { Calendar, MapPin, Package } from "lucide-react";
-import { getCachedGovernorates, getCachedLivestockPrices, userAPI } from "../../../api";
-import { useTranslation } from "react-i18next";
-import Loader from "../../../components/Ui/Loader/Loader";
+import { Calendar, MapPin, Package, Check } from "lucide-react";
+import { getCachedGovernorates, getCachedLivestockPrices } from "../../../api";
+import CustomSelect from "../../../components/Ui/CustomSelect/CustomSelect";
+
+const SkeletonLoader = ({ mobile = false }) => (
+    <div className={`w-full ${mobile ? 'h-64' : 'h-96'} bg-gray-100 rounded-lg animate-pulse`}></div>
+);
 
 const LivestockPrices = () => {
-    const { t, i18n } = useTranslation();
-    const isRTL = i18n.language === "ar";
+    const isRTL = document.documentElement.dir === 'rtl' || document.documentElement.lang === 'ar';
 
     const [selectedProduct, setSelectedProduct] = useState("cow");
     const [selectedGovernorate, setSelectedGovernorate] = useState(null);
     const [selectedYear, setSelectedYear] = useState(2025);
+    const [selectedMonth, setSelectedMonth] = useState(null);
     const [pricesData, setPricesData] = useState([]);
     const [governorates, setGovernorates] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -38,34 +41,38 @@ const LivestockPrices = () => {
     ];
 
     const monthsArabic = {
-        1: "يناير",
-        2: "فبراير",
-        3: "مارس",
-        4: "أبريل",
-        5: "مايو",
-        6: "يونيو",
-        7: "يوليو",
-        8: "أغسطس",
-        9: "سبتمبر",
-        10: "أكتوبر",
-        11: "نوفمبر",
-        12: "ديسمبر",
+        1: "يناير", 2: "فبراير", 3: "مارس", 4: "أبريل",
+        5: "مايو", 6: "يونيو", 7: "يوليو", 8: "أغسطس",
+        9: "سبتمبر", 10: "أكتوبر", 11: "نوفمبر", 12: "ديسمبر",
     };
 
     const monthsEnglish = {
-        1: "Jan",
-        2: "Feb",
-        3: "Mar",
-        4: "Apr",
-        5: "May",
-        6: "Jun",
-        7: "Jul",
-        8: "Aug",
-        9: "Sep",
-        10: "Oct",
-        11: "Nov",
-        12: "Dec",
+        1: "Jan", 2: "Feb", 3: "Mar", 4: "Apr",
+        5: "May", 6: "Jun", 7: "Jul", 8: "Aug",
+        9: "Sep", 10: "Oct", 11: "Nov", 12: "Dec",
     };
+
+    const monthOptions = [
+        { value: null, label_ar: "كل الشهور", label_en: "All Months" },
+        { value: 1, label_ar: "يناير", label_en: "January" },
+        { value: 2, label_ar: "فبراير", label_en: "February" },
+        { value: 3, label_ar: "مارس", label_en: "March" },
+        { value: 4, label_ar: "أبريل", label_en: "April" },
+        { value: 5, label_ar: "مايو", label_en: "May" },
+        { value: 6, label_ar: "يونيو", label_en: "June" },
+        { value: 7, label_ar: "يوليو", label_en: "July" },
+        { value: 8, label_ar: "أغسطس", label_en: "August" },
+        { value: 9, label_ar: "سبتمبر", label_en: "September" },
+        { value: 10, label_ar: "أكتوبر", label_en: "October" },
+        { value: 11, label_ar: "نوفمبر", label_en: "November" },
+        { value: 12, label_ar: "ديسمبر", label_en: "December" },
+    ];
+
+    const yearOptions = [
+        { value: 2025, label: "2025" },
+        { value: 2024, label: "2024" },
+        { value: 2023, label: "2023" },
+    ];
 
     useEffect(() => {
         fetchGovernorates();
@@ -75,13 +82,11 @@ const LivestockPrices = () => {
         if (selectedGovernorate) {
             fetchPrices();
         }
-    }, [selectedProduct, selectedGovernorate, selectedYear]);
+    }, [selectedProduct, selectedGovernorate, selectedYear, selectedMonth, isRTL]);
 
     const fetchGovernorates = async () => {
         try {
-            const { data, fromCache } = await getCachedGovernorates(1);
-            console.log(fromCache ? '📦 Governorates من الكاش' : '🌐 Governorates من API');
-
+            const { data } = await getCachedGovernorates();
             setGovernorates(data);
             if (data.length > 0) {
                 setSelectedGovernorate(data[0].id);
@@ -96,16 +101,28 @@ const LivestockPrices = () => {
             setLoading(true);
             setError(null);
 
-            const { data, fromCache } = await getCachedLivestockPrices({
+            const params = {
                 product_type: selectedProduct,
                 governorate_id: selectedGovernorate,
                 year: selectedYear,
-            });
+            };
 
-            console.log(fromCache ? '📦 Livestock prices من الكاش' : '🌐 Livestock prices من API');
+            if (selectedMonth !== null && selectedMonth !== "") {
+                params.month = selectedMonth;
+            }
 
-            if (data.success && data.data && data.data.data) {
-                const formattedData = data.data.data
+            const { data: apiResponse } = await getCachedLivestockPrices(params);
+
+            if (apiResponse && apiResponse.success && apiResponse.data && apiResponse.data.data) {
+                const dataArray = apiResponse.data.data;
+                
+                if (!Array.isArray(dataArray) || dataArray.length === 0) {
+                    setPricesData([]);
+                    setMeta(null);
+                    return;
+                }
+
+                const formattedData = dataArray
                     .map((item) => {
                         const netPrice = item.average_net_price
                             ? parseFloat(item.average_net_price)
@@ -114,20 +131,35 @@ const LivestockPrices = () => {
                             ? parseFloat(item.average_standing_price)
                             : null;
 
-                        return {
-                            month: isRTL
+                        let displayLabel;
+                        if (item.week) {
+                            displayLabel = isRTL 
+                                ? `الأسبوع ${item.week}` 
+                                : `Week ${item.week}`;
+                        } else {
+                            displayLabel = isRTL
                                 ? monthsArabic[item.month] || item.month_name
-                                : monthsEnglish[item.month] || item.month_name,
+                                : monthsEnglish[item.month] || item.month_name;
+                        }
+
+                        return {
+                            month: displayLabel,
                             monthNumber: item.month,
+                            week: item.week || null,
                             net: netPrice,
                             standing: standingPrice,
                             entries_count: item.entries_count,
                         };
                     })
-                    .sort((a, b) => a.monthNumber - b.monthNumber);
+                    .sort((a, b) => {
+                        if (a.week && b.week) {
+                            return a.week - b.week;
+                        }
+                        return a.monthNumber - b.monthNumber;
+                    });
 
                 setPricesData(formattedData);
-                setMeta(data.data.meta);
+                setMeta(apiResponse.data.meta);
             } else {
                 setPricesData([]);
                 setMeta(null);
@@ -152,8 +184,9 @@ const LivestockPrices = () => {
     const FilterButton = ({ name, label_ar, label_en, activeColor }) => (
         <button
             onClick={() => toggleFilter(name)}
-            className={`px-4 py-2 rounded-lg cursor-pointer text-white font-semibold text-sm transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105 ${activeFilters[name] ? `${activeColor}` : "bg-gray-400 opacity-60"
-                }`}
+            className={`px-3 py-1.5 md:px-4 md:py-2 rounded-lg cursor-pointer text-white font-semibold text-xs md:text-sm transition-all duration-300 shadow-md hover:shadow-lg md:transform md:hover:scale-105 ${
+                activeFilters[name] ? `${activeColor}` : "bg-gray-400 opacity-60"
+            }`}
         >
             {activeFilters[name] ? "✓" : "○"} {isRTL ? label_ar : label_en}
         </button>
@@ -162,11 +195,11 @@ const LivestockPrices = () => {
     const CustomTooltip = ({ active, payload }) => {
         if (active && payload && payload.length) {
             return (
-                <div className="bg-white p-3 rounded-lg shadow-xl border border-gray-200">
-                    <p className="font-bold text-gray-800 mb-1 text-sm">
+                <div className="bg-white p-2 md:p-3 rounded-lg shadow-xl border-2 border-gray-200">
+                    <p className="font-bold text-gray-800 mb-1 text-xs md:text-sm">
                         {payload[0].payload.month}
                     </p>
-                    <p className="text-xs text-gray-500 mb-2">
+                    <p className="text-[10px] md:text-xs text-gray-500 mb-1 md:mb-2">
                         {isRTL ? "عدد الإدخالات" : "Entries"}:{" "}
                         {payload[0].payload.entries_count}
                     </p>
@@ -175,7 +208,7 @@ const LivestockPrices = () => {
                             entry.value !== null && (
                                 <p
                                     key={index}
-                                    className="text-sm font-semibold"
+                                    className="text-xs md:text-sm font-semibold"
                                     style={{ color: entry.color }}
                                 >
                                     <span>{entry.name}:</span> {entry.value.toFixed(2)}{" "}
@@ -191,9 +224,7 @@ const LivestockPrices = () => {
 
     const calculateStats = () => {
         if (pricesData.length === 0) return null;
-
         const latestData = pricesData[pricesData.length - 1];
-
         return {
             latest: latestData,
             minPrice: meta?.min_price ? parseFloat(meta.min_price).toFixed(2) : null,
@@ -203,97 +234,142 @@ const LivestockPrices = () => {
 
     const stats = calculateStats();
 
+    const getTimeLabel = () => {
+        if (selectedMonth !== null) {
+            const monthName = isRTL 
+                ? monthsArabic[selectedMonth] 
+                : monthOptions.find(m => m.value === selectedMonth)?.[isRTL ? "label_ar" : "label_en"];
+            return `${monthName} ${selectedYear}`;
+        }
+        return selectedYear.toString();
+    };
+
+    const productSelectOptions = productTypes.map(p => ({
+        value: p.value,
+        label: isRTL ? p.label_ar : p.label_en
+    }));
+
+    const governorateSelectOptions = governorates.map(g => ({
+        value: g.id,
+        label: isRTL ? g.name_ar : g.name_en
+    }));
+
+    const monthSelectOptions = monthOptions.map(m => ({
+        value: m.value === null ? "" : m.value,
+        label: isRTL ? m.label_ar : m.label_en
+    }));
+
+    const yearSelectOptions = yearOptions.map(y => ({
+        value: y.value,
+        label: y.label
+    }));
+
     if (loading && !pricesData.length) {
-        return <Loader />;
+        return (
+            <div className="mx-auto p-3 md:p-2" dir={isRTL ? "rtl" : "ltr"}>
+                <div className="max-w-7xl mx-auto">
+                    <div className="mb-3 md:mb-2">
+                        <div className="h-8 w-32 bg-gray-200 rounded animate-pulse"></div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2 mb-3 md:mb-4 md:gap-4">
+                        {[1, 2, 3].map((i) => (
+                            <div key={i} className="bg-white rounded-lg md:rounded-xl shadow-md p-2 md:p-4 border border-gray-100">
+                                <div className="h-4 w-16 bg-gray-200 rounded mb-2 animate-pulse"></div>
+                                <div className="h-8 w-full bg-gray-200 rounded animate-pulse"></div>
+                            </div>
+                        ))}
+                    </div>
+                    <div className="bg-white rounded-lg md:rounded-xl shadow-lg p-4 md:p-6 border border-gray-100">
+                        <div className="w-full h-64 md:h-96 bg-gray-100 rounded-lg animate-pulse"></div>
+                    </div>
+                </div>
+            </div>
+        );
     }
 
     return (
-        <div className="p-4 md:p-6" dir={isRTL ? "rtl" : "ltr"}>
+        <div className="mx-auto p-3 md:p-2" dir={isRTL ? "rtl" : "ltr"}>
             <div className="max-w-7xl mx-auto">
-                {/* Header */}
-                <div className="mb-6">
-                    <h1 className="text-2xl font-bold text-main">
+                <div className="mb-3 md:mb-2">
+                    <h1 className="text-xl md:text-2xl font-bold text-green-600">
                         {isRTL ? "الأسعار" : "Prices"}
                     </h1>
                 </div>
-                {/* Selection */}
-                <div className="flex gap-2 mb-4 overflow-x-auto md:grid md:grid-cols-3 md:gap-4">
-                    <div className="bg-white rounded-xl shadow-lg p-2 md:p-4 border border-gray-100 flex-1 min-w-[110px] md:min-w-0">
-                        <div className="flex items-center gap-1 md:gap-2 mb-1 md:mb-3">
-                            <Package className="w-3 h-3 md:w-4 md:h-4 text-main" />
-                            <label className="text-[10px] md:text-sm font-bold text-gray-700">
-                                {isRTL ? "نوع المنتج" : "Product Type"}
+
+                <div className="grid grid-cols-3 gap-2 mb-3 md:mb-4 md:gap-4">
+                    <div className="bg-white rounded-lg md:rounded-xl shadow-md p-2 md:p-4 border border-gray-100 md:shadow-lg">
+                        <div className="flex items-center gap-1 md:gap-2 mb-1.5 md:mb-3">
+                            <Package className="w-3 h-3 md:w-4 md:h-4 text-green-600 flex-shrink-0" />
+                            <label className="text-[10px] md:text-sm font-bold text-gray-700 leading-tight">
+                                {isRTL ? "النوع" : "Type"}
                             </label>
                         </div>
-                        <select
+                        <CustomSelect
+                            options={productSelectOptions}
                             value={selectedProduct}
-                            onChange={(e) => setSelectedProduct(e.target.value)}
-                            className="w-full px-1.5 py-1 md:px-3 md:py-2 cursor-pointer border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-main text-[10px] md:text-sm font-semibold text-gray-700 bg-gray-50"
-                        >
-                            {productTypes.map((type) => (
-                                <option key={type.value} value={type.value}>
-                                    {isRTL ? type.label_ar : type.label_en}
-                                </option>
-                            ))}
-                        </select>
+                            onChange={setSelectedProduct}
+                            isRTL={isRTL}
+                        />
                     </div>
 
-                    <div className="bg-white rounded-xl shadow-lg p-2 md:p-4 border border-gray-100 flex-1 min-w-[110px] md:min-w-0">
-                        <div className="flex items-center gap-1 md:gap-2 mb-1 md:mb-3">
-                            <MapPin className="w-3 h-3 md:w-4 md:h-4 text-main" />
-                            <label className="text-[10px] md:text-sm font-bold text-gray-700">
-                                {isRTL ? "المحافظة" : "Governorate"}
+                    <div className="bg-white rounded-lg md:rounded-xl shadow-md p-2 md:p-4 border border-gray-100 md:shadow-lg">
+                        <div className="flex items-center gap-1 md:gap-2 mb-1.5 md:mb-3">
+                            <MapPin className="w-3 h-3 md:w-4 md:h-4 text-green-600 flex-shrink-0" />
+                            <label className="text-[10px] md:text-sm font-bold text-gray-700 leading-tight">
+                                {isRTL ? "المحافظة" : "Gov"}
                             </label>
                         </div>
-                        <select
-                            value={selectedGovernorate || ""}
-                            onChange={(e) => setSelectedGovernorate(Number(e.target.value))}
-                            className="w-full px-1.5 py-1 md:px-3 md:py-2 cursor-pointer border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-main text-[10px] md:text-sm font-semibold text-gray-700 bg-gray-50"
-                        >
-                            {governorates.map((gov) => (
-                                <option key={gov.id} value={gov.id}>
-                                    {isRTL ? gov.name_ar : gov.name_en}
-                                </option>
-                            ))}
-                        </select>
+                        <CustomSelect
+                            options={governorateSelectOptions}
+                            value={selectedGovernorate}
+                            onChange={(val) => setSelectedGovernorate(Number(val))}
+                            isRTL={isRTL}
+                        />
                     </div>
 
-                    <div className="bg-white rounded-xl shadow-lg p-2 md:p-4 border border-gray-100 flex-1 min-w-[90px] md:min-w-0">
-                        <div className="flex items-center gap-1 md:gap-2 mb-1 md:mb-3">
-                            <Calendar className="w-3 h-3 md:w-4 md:h-4 text-main" />
-                            <label className="text-[10px] md:text-sm font-bold text-gray-700">
-                                {isRTL ? "السنة" : "Year"}
+                    <div className="bg-white rounded-lg md:rounded-xl shadow-md p-2 md:p-4 border border-gray-100 md:shadow-lg">
+                        <div className="flex items-center gap-1 md:gap-2 mb-1.5 md:mb-3">
+                            <Calendar className="w-3 h-3 md:w-4 md:h-4 text-green-600 flex-shrink-0" />
+                            <label className="text-[10px] md:text-sm font-bold text-gray-700 leading-tight">
+                                {isRTL ? "الفترة" : "Period"}
                             </label>
                         </div>
-                        <select
-                            value={selectedYear}
-                            onChange={(e) => setSelectedYear(Number(e.target.value))}
-                            className="w-full px-1.5 py-1 md:px-3 md:py-2 cursor-pointer border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-main text-[10px] md:text-sm font-semibold text-gray-700 bg-gray-50"
-                        >
-                            <option value={2025}>2025</option>
-                            <option value={2024}>2024</option>
-                            <option value={2023}>2023</option>
-                        </select>
+                        <div className="flex flex-col gap-1.5 md:flex-row md:gap-2">
+                            <CustomSelect
+                                options={monthSelectOptions}
+                                value={selectedMonth === null ? "" : selectedMonth}
+                                onChange={(val) => setSelectedMonth(val === "" ? null : Number(val))}
+                                isRTL={isRTL}
+                                className="w-full md:flex-1"
+                            />
+                            <CustomSelect
+                                options={yearSelectOptions}
+                                value={selectedYear}
+                                onChange={(val) => setSelectedYear(Number(val))}
+                                isRTL={isRTL}
+                                className="w-full md:flex-1"
+                            />
+                        </div>
                     </div>
                 </div>
 
-                {/* Stats */}
                 {stats && pricesData.length > 0 && (
-                    <div className="hidden md:grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">                        {stats.latest.standing && (
-                        <div className="bg-gradient-to-br from-red-500 to-red-600 rounded-xl shadow-lg p-4 text-white">
-                            <div className="text-xs font-semibold mb-1 opacity-90">
-                                {isRTL ? "السعر القائم" : "Standing Price"}
+                    <div className="hidden md:grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        {stats.latest.standing && (
+                            <div className="bg-gradient-to-br from-red-500 to-red-600 rounded-xl shadow-lg p-4 text-white">
+                                <div className="text-xs font-semibold mb-1 opacity-90">
+                                    {isRTL ? "السعر القائم" : "Standing Price"}
+                                </div>
+                                <div className="text-2xl font-bold">
+                                    {stats.latest.standing.toFixed(2)} {isRTL ? "ج.م" : "EGP"}
+                                </div>
+                                <div className="text-xs mt-1 opacity-75">
+                                    {isRTL ? "للكيلوجرام" : "per kg"}
+                                </div>
                             </div>
-                            <div className="text-2xl font-bold">
-                                {stats.latest.standing.toFixed(2)} {isRTL ? "ج.م" : "EGP"}
-                            </div>
-                            <div className="text-xs mt-1 opacity-75">
-                                {isRTL ? "للكيلوجرام" : "per kg"}
-                            </div>
-                        </div>
-                    )}
+                        )}
                         {stats.latest.net && (
-                            <div className="bg-gradient-to-br from-main to-main rounded-xl shadow-lg p-4 text-white">
+                            <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg p-4 text-white">
                                 <div className="text-xs font-semibold mb-1 opacity-90">
                                     {isRTL ? "السعر الصافي" : "Net Price"}
                                 </div>
@@ -321,23 +397,20 @@ const LivestockPrices = () => {
                     </div>
                 )}
 
-                {/* Chart */}
-                <div className="mb-4">
-                    <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-main to-main mb-1 text-center">
+                <div className="mb-2 md:mb-4">
+                    <h2 className="text-base md:text-xl font-bold text-gray-800 mb-0.5 md:mb-1 text-center">
                         {isRTL ? "أسعار" : "Prices of"}{" "}
-                        {
-                            productTypes.find((p) => p.value === selectedProduct)?.[
-                            isRTL ? "label_ar" : "label_en"
-                            ]
-                        }
+                        {productTypes.find((p) => p.value === selectedProduct)?.[isRTL ? "label_ar" : "label_en"]}
+                        {" - "}
+                        {getTimeLabel()}
                     </h2>
-                    <div className="text-center text-xs text-gray-500 font-semibold">
+                    <div className="text-center text-[10px] md:text-xs text-gray-500 font-semibold">
                         {isRTL ? "ج.م / كجم" : "EGP / kg"}
                     </div>
                 </div>
-                {/* Filters */}
-                <div className="bg-white rounded-xl shadow-lg p-4 mb-4 border border-gray-100">
-                    <div className="flex flex-wrap gap-3 justify-center">
+
+                <div className="bg-white rounded-lg shadow-lg py-2.5 md:hidden border border-gray-100">
+                    <div className="flex gap-2 justify-center mb-3 px-4">
                         <FilterButton
                             name="standing"
                             label_ar="القائم"
@@ -348,95 +421,225 @@ const LivestockPrices = () => {
                             name="net"
                             label_ar="الصافي"
                             label_en="Net"
-                            activeColor="bg-gradient-to-r from-main to-main"
+                            activeColor="bg-gradient-to-r from-green-500 to-green-600"
                         />
                     </div>
+
                     {loading ? (
-                        <Loader />
+                        <SkeletonLoader mobile={true} />
                     ) : error ? (
-                        <div className="text-center py-8">
-                            <div className="text-red-500 text-lg font-semibold mb-2">
+                        <div className="text-center py-8 px-4">
+                            <div className="text-red-500 text-sm font-semibold mb-2">
                                 {error}
                             </div>
                             <button
                                 onClick={fetchPrices}
-                                className="mt-3 px-5 py-2 cursor-pointer bg-main text-white rounded-lg hover:bg-main text-sm font-semibold"
+                                className="mt-2 px-4 py-1.5 cursor-pointer bg-green-600 text-white rounded-lg hover:bg-green-700 text-xs font-semibold"
                             >
                                 {isRTL ? "إعادة المحاولة" : "Retry"}
                             </button>
                         </div>
                     ) : pricesData.length === 0 ? (
-                        <div className="text-center py-8 text-gray-500">
-                            <p className="text-lg font-semibold">
-                                {isRTL ? "لا توجد بيانات" : "No data available"}
-                            </p>
-                            <p className="text-xs mt-2">
-                                {isRTL ? "اختر محافظة أخرى" : "Select another governorate"}
+                        <div className="text-center py-10 px-4">
+                            <div className="inline-block p-6 bg-gray-50 rounded-2xl mb-4">
+                                <svg className="w-20 h-20 text-gray-300 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                </svg>
+                            </div>
+                            <h3 className="text-base md:text-lg font-bold text-gray-700 mb-2">
+                                {isRTL ? "لا توجد بيانات متاحة" : "No data available"}
+                            </h3>
+                            <p className="text-xs md:text-sm text-gray-500 max-w-sm mx-auto">
+                                {isRTL 
+                                    ? "لم يتم تسجيل أي أسعار في هذه الفترة. جرب اختيار فترة زمنية أخرى أو محافظة مختلفة." 
+                                    : "No prices were recorded for this period. Try selecting a different time period or governorate."}
                             </p>
                         </div>
                     ) : (
-                        <>
-                            <div className="px-0 mt-2">
+                        <div className="w-full flex justify-center">
+                            <ResponsiveContainer width="100%" height={250}>
+                                <LineChart
+                                    data={pricesData}
+                                    margin={{ top: 5, right: 20, left: -30, bottom: 5 }}
+                                >
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                                    <XAxis
+                                        dataKey="month"
+                                        tick={{ fontSize: 9, fontWeight: 600, fill: "#6b7280" }}
+                                        stroke="#9ca3af"
+                                        angle={pricesData.length > 4 ? -45 : 0}
+                                        textAnchor={pricesData.length > 4 ? "end" : "middle"}
+                                        height={pricesData.length > 4 ? 60 : 40}
+                                    />
+                                    <YAxis
+                                        tick={{ fontSize: 9, fontWeight: 600, fill: "#6b7280" }}
+                                        stroke="#9ca3af"
+                                    />
+                                    <Tooltip content={<CustomTooltip />} />
+                                    <Legend
+                                        wrapperStyle={{ 
+                                            paddingTop: "10px", 
+                                            fontSize: "10px",  
+                                            display: "flex",
+                                            justifyContent: "center"
+                                        }}
+                                        iconType="line"
+                                        align="center"
+                                        verticalAlign="bottom"
+                                    />
 
-                                <ResponsiveContainer width="100%" height={400}>
-                                    <LineChart
-                                        data={pricesData}
-                                        margin={{ top: 10, right: 40, left: 0, bottom: 10 }}
-                                    >
-                                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                                        <XAxis
-                                            dataKey="month"
-                                            tick={{ fontSize: 11, fontWeight: 600, fill: "#6b7280" }}
-                                            stroke="#6b7280"
+                                    {activeFilters.standing && (
+                                        <Line
+                                            type="linear"
+                                            dataKey="standing"
+                                            stroke="#ef4444"
+                                            strokeWidth={3}
+                                            name={isRTL ? "القائم" : "Standing"}
+                                            dot={{
+                                                fill: "#ef4444",
+                                                r: 5,
+                                                strokeWidth: 3,
+                                                stroke: "#fff",
+                                            }}
+                                            activeDot={{ r: 7 }}
+                                            connectNulls
+                                            isAnimationActive={true}
                                         />
-                                        <YAxis
-                                            tick={{ fontSize: 11, fontWeight: 600, fill: "#6b7280" }}
-                                            stroke="#6b7280"
+                                    )}
+                                    {activeFilters.net && (
+                                        <Line
+                                            type="linear"
+                                            dataKey="net"
+                                            stroke="#22c55e"
+                                            strokeWidth={3}
+                                            name={isRTL ? "الصافي" : "Net"}
+                                            dot={{
+                                                fill: "#22c55e",
+                                                r: 5,
+                                                strokeWidth: 3,
+                                                stroke: "#fff",
+                                            }}
+                                            activeDot={{ r: 7 }}
+                                            connectNulls
+                                            isAnimationActive={true}
                                         />
-                                        <Tooltip content={<CustomTooltip />} />
-                                        <Legend
-                                            wrapperStyle={{ paddingTop: "15px", fontSize: "12px" }}
-                                            iconType="line"
-                                        />
+                                    )}
+                                </LineChart>
+                            </ResponsiveContainer>
+                        </div>
+                    )}
+                </div>
 
-                                        {activeFilters.standing && (
-                                            <Line
-                                                type="monotone"
-                                                dataKey="standing"
-                                                stroke="#ef4444"
-                                                strokeWidth={2.5}
-                                                name={isRTL ? "القائم" : "Standing"}
-                                                dot={{
-                                                    fill: "#ef4444",
-                                                    r: 4,
-                                                    strokeWidth: 2,
-                                                    stroke: "#fff",
-                                                }}
-                                                activeDot={{ r: 6 }}
-                                                connectNulls
-                                            />
-                                        )}
-                                        {activeFilters.net && (
-                                            <Line
-                                                type="monotone"
-                                                dataKey="net"
-                                                stroke="#22c55e"
-                                                strokeWidth={2.5}
-                                                name={isRTL ? "الصافي" : "Net"}
-                                                dot={{
-                                                    fill: "#22c55e",
-                                                    r: 4,
-                                                    strokeWidth: 2,
-                                                    stroke: "#fff",
-                                                }}
-                                                activeDot={{ r: 6 }}
-                                                connectNulls
-                                            />
-                                        )}
-                                    </LineChart>
-                                </ResponsiveContainer>
+                <div className="hidden md:block bg-white rounded-xl shadow-lg p-4 mb-4 border border-gray-100">
+                    <div className="flex flex-wrap gap-3 justify-center mb-4">
+                        <FilterButton
+                            name="standing"
+                            label_ar="القائم"
+                            label_en="Standing"
+                            activeColor="bg-gradient-to-r from-red-500 to-red-600"
+                        />
+                        <FilterButton
+                            name="net"
+                            label_ar="الصافي"
+                            label_en="Net"
+                            activeColor="bg-gradient-to-r from-green-500 to-green-600"
+                        />
+                    </div>
+                    {loading ? (
+                        <SkeletonLoader />
+                    ) : error ? (
+                        <div className="text-center py-12">
+                            <div className="text-red-500 text-lg font-semibold mb-2">
+                                {error}
                             </div>
-                        </>
+                            <button
+                                onClick={fetchPrices}
+                                className="mt-3 px-5 py-2 cursor-pointer bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-semibold"
+                            >
+                                {isRTL ? "إعادة المحاولة" : "Retry"}
+                            </button>
+                        </div>
+                    ) : pricesData.length === 0 ? (
+                        <div className="text-center py-16 px-4">
+                            <div className="inline-block p-8 bg-gray-50 rounded-3xl mb-6">
+                                <svg className="w-24 h-24 text-gray-300 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                </svg>
+                            </div>
+                            <h3 className="text-xl md:text-2xl font-bold text-gray-700 mb-3">
+                                {isRTL ? "لا توجد بيانات متاحة" : "No data available"}
+                            </h3>
+                            <p className="text-sm md:text-base text-gray-500 max-w-md mx-auto">
+                                {isRTL 
+                                    ? "لم يتم تسجيل أي أسعار في هذه الفترة. جرب اختيار فترة زمنية أخرى أو محافظة مختلفة." 
+                                    : "No prices were recorded for this period. Try selecting a different time period or governorate."}
+                            </p>
+                        </div>
+                    ) : (
+                        <div className="px-0 mt-2">
+                            <ResponsiveContainer width="100%" height={400}>
+                                <LineChart
+                                    data={pricesData}
+                                    margin={{ top: 10, right: 40, left: 0, bottom: 20 }}
+                                >
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                                    <XAxis
+                                        dataKey="month"
+                                        tick={{ fontSize: 11, fontWeight: 600, fill: "#6b7280" }}
+                                        stroke="#9ca3af"
+                                        angle={pricesData.length > 6 ? -45 : 0}
+                                        textAnchor={pricesData.length > 6 ? "end" : "middle"}
+                                        height={pricesData.length > 6 ? 80 : 50}
+                                    />
+                                    <YAxis
+                                        tick={{ fontSize: 11, fontWeight: 600, fill: "#6b7280" }}
+                                        stroke="#9ca3af"
+                                    />
+                                    <Tooltip content={<CustomTooltip />} />
+                                    <Legend
+                                        wrapperStyle={{ paddingTop: "15px", fontSize: "12px" }}
+                                        iconType="line"
+                                    />
+
+                                    {activeFilters.standing && (
+                                        <Line
+                                            type="linear"
+                                            dataKey="standing"
+                                            stroke="#ef4444"
+                                            strokeWidth={4}
+                                            name={isRTL ? "القائم" : "Standing"}
+                                            dot={{
+                                                fill: "#ef4444",
+                                                r: 6,
+                                                strokeWidth: 3,
+                                                stroke: "#fff",
+                                            }}
+                                            activeDot={{ r: 8 }}
+                                            connectNulls
+                                            isAnimationActive={true}
+                                        />
+                                    )}
+                                    {activeFilters.net && (
+                                        <Line
+                                            type="linear"
+                                            dataKey="net"
+                                            stroke="#22c55e"
+                                            strokeWidth={4}
+                                            name={isRTL ? "الصافي" : "Net"}
+                                            dot={{
+                                                fill: "#22c55e",
+                                                r: 6,
+                                                strokeWidth: 3,
+                                                stroke: "#fff",
+                                            }}
+                                            activeDot={{ r: 8 }}
+                                            connectNulls
+                                            isAnimationActive={true}
+                                        />
+                                    )}
+                                </LineChart>
+                            </ResponsiveContainer>
+                        </div>
                     )}
                 </div>
             </div>

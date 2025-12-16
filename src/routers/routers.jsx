@@ -30,6 +30,7 @@ import ArticlesPage from "../pages/Dashboard/ArticlesPage";
 import ReportsPage from "../pages/Dashboard/ReportsPage";
 import ChatPage from "../pages/Dashboard/ChatPage";
 import AdminsPage from "../pages/Dashboard/AdminsPage";
+import NotificationsPage from "../pages/Dashboard/NotificationsPage";
 import VerifyAccountPage from "../pages/Profile/VerifyAccount";
 import EditProfilePage from "../pages/Profile/EditProfilePage";
 import ProfilePage from "../pages/Profile/ProfilePage";
@@ -54,7 +55,6 @@ import PreviousAuctionsList from "../pages/Auctions/PerviousAuctionsList";
 import AboutUsPage from "../pages/About/About";
 import TermsPage from "../pages/Terms/Terms";
 import Articles from "../pages/Articles/ArticlesPage";
-import SellerReviews from "../pages/SellerReviews/SellerReviews";
 import ArticleDetailsPage from "../pages/Articles/ArticleDetails";
 import SellerDetails from "../components/Products/SellerDetails";
 // import AuctionsList from "../pages/Auctions/AuctionsList";
@@ -164,14 +164,14 @@ export const routers = createBrowserRouter([
               </PublicRoute>
             ),
           },
-          {
-            path: "seller-reviews",
-            element: (
-              <PublicRoute>
-                <SellerReviews />
-              </PublicRoute>
-            ),
-          },
+          // {
+          //   path: "seller-reviews",
+          //   element: (
+          //     <PublicRoute>
+          //       <SellerReviews />
+          //     </PublicRoute>
+          //   ),
+          // },
 
           // Protected routes
           { 
@@ -366,6 +366,7 @@ export const routers = createBrowserRouter([
           { path: "products", element: <ProductsReview /> },
           { path: "auctions", element: <AuctionsManagement /> },
           { path: "admins", element: <AdminsPage /> },
+          { path: "notifications", element: <NotificationsPage /> },
           { path: "*", element: <Navigate to="/dashboard" replace /> },
         ],
       },

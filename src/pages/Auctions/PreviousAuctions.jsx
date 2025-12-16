@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { IoLocationOutline } from "react-icons/io5";
 import { getCachedAuctionProducts, getCachedCategories } from "../../api";
 import PlaceholderSVG from "../../assets/PlaceholderSVG";
@@ -12,8 +12,35 @@ function ProductItem({ item }) {
     const { id, images, image, name, name_ar, name_en, governorate, price, auction_price, description, description_ar, description_en, added_at } = item;
     const { i18n } = useTranslation();
     const isRTL = i18n.language === 'ar';
+    const navigate = useNavigate();
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
+    const navigateToProduct = () => {
+        navigate(`/product-details/${id}`);
+    };
 
-    const imageUrl = images && images.length > 0 ? images[0] : image;
+    // Get all images
+    const allImages = images && images.length > 0
+        ? images
+        : (image ? [image] : []);
+
+    const hasMultipleImages = allImages.length > 1;
+
+    // Auto-slide effect
+    useEffect(() => {
+        if (!hasMultipleImages) return;
+
+        const interval = setInterval(() => {
+            setCurrentImageIndex((prev) => (prev + 1) % allImages.length);
+        }, 3000);
+
+        return () => clearInterval(interval);
+    }, [hasMultipleImages, allImages.length]);
+
+    const goToImage = (e, index) => {
+        e.stopPropagation();
+        setCurrentImageIndex(index);
+    };
+
     const displayName = isRTL ? name_ar : name_en || name;
     const displayDescription = isRTL ? description_ar : description_en || description;
     const displayPrice = auction_price || price;
@@ -30,24 +57,47 @@ function ProductItem({ item }) {
 
     return (
         <div className="relative">
-            <div className="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden opacity-90">
-                <div className="h-36 bg-gray-100 relative">
-                    {imageUrl ? (
-                        <img
-                            src={imageUrl}
-                            alt={`image-logo-for-${id}`}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                                e.target.style.display = 'none';
-                                e.target.nextElementSibling.style.display = 'flex';
-                            }}
-                        />
-                    ) : null}
-                    <div
-                        className={`${imageUrl ? 'hidden' : 'flex'} w-full h-full items-center justify-center bg-gray-100`}
-                    >
-                        <PlaceholderSVG />
-                    </div>
+            <div onClick={navigateToProduct}
+                className="bg-white cursor-pointer rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden opacity-90">
+                {/* Image with Auto Slider */}
+                <div className="h-36 bg-gray-100 relative group">
+                    {allImages.length > 0 && allImages[currentImageIndex] ? (
+                        <>
+                            <img
+                                src={allImages[currentImageIndex]}
+                                alt={displayName}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                    e.target.style.display = 'none';
+                                    e.target.nextElementSibling.style.display = 'flex';
+                                }}
+                            />
+                            <div className="hidden w-full h-full items-center justify-center bg-gray-100 absolute top-0 left-0">
+                                <PlaceholderSVG />
+                            </div>
+                        </>
+                    ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                            <PlaceholderSVG />
+                        </div>
+                    )}
+
+                    {/* Image Indicators (Dots) */}
+                    {hasMultipleImages && (
+                        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 z-10 bg-black/30 px-2 py-1 rounded-full backdrop-blur-sm">
+                            {allImages.map((_, index) => (
+                                <button
+                                    key={index}
+                                    onClick={(e) => goToImage(e, index)}
+                                    className={`transition-all rounded-full cursor-pointer ${index === currentImageIndex
+                                            ? 'bg-white w-4 h-2'
+                                            : 'bg-white/50 hover:bg-white/75 w-2 h-2'
+                                        }`}
+                                    aria-label={`Go to image ${index + 1}`}
+                                />
+                            ))}
+                        </div>
+                    )}
                 </div>
 
                 <div className="p-3">
