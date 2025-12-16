@@ -38,11 +38,16 @@ const Sidebar = () => {
                 const data = res.data?.data?.countries || res.data?.countries || res.data?.data || [];
                 setCountries(Array.isArray(data) ? data : []);
                 
-                // Set initial selected country from user data or first country
-                if (userCountryId) {
+                // Set initial selected country from localStorage, user data, or first country
+                const savedCountryId = localStorage.getItem("adminSelectedCountryId");
+                if (savedCountryId) {
+                    setSelectedCountry(savedCountryId);
+                } else if (userCountryId) {
                     setSelectedCountry(userCountryId.toString());
+                    localStorage.setItem("adminSelectedCountryId", userCountryId.toString());
                 } else if (data.length > 0) {
                     setSelectedCountry(data[0].id.toString());
+                    localStorage.setItem("adminSelectedCountryId", data[0].id.toString());
                 }
             })
             .catch((err) => {
@@ -50,8 +55,12 @@ const Sidebar = () => {
                 setCountries([]);
                 
                 // Fallback to user country if API fails
-                if (userCountryId) {
+                const savedCountryId = localStorage.getItem("adminSelectedCountryId");
+                if (savedCountryId) {
+                    setSelectedCountry(savedCountryId);
+                } else if (userCountryId) {
                     setSelectedCountry(userCountryId.toString());
+                    localStorage.setItem("adminSelectedCountryId", userCountryId.toString());
                 }
             });
     }, [userCountryId]);
@@ -72,6 +81,7 @@ const Sidebar = () => {
         { label: t("dashboard.sidebar.admins"), path: "/dashboard/admins" },
         { label: t("dashboard.sidebar.subscriptions"), path: "/dashboard/subscriptions" },
         { label: t("dashboard.sidebar.invoices"), path: "/dashboard/invoices" },
+        { label: t("dashboard.sidebar.notifications"), path: "/dashboard/notifications" },
         { label: t("dashboard.sidebar.todayPrice"), path: "/dashboard/today-price" },
     ];
 
@@ -83,7 +93,10 @@ const Sidebar = () => {
     const handleCountryChange = (e) => {
         const countryId = e.target.value;
         setSelectedCountry(countryId);
-        // يمكنك إضافة logic إضافي هنا مثل تحديث localStorage أو إرسال request للسيرفر
+        // Save selected country ID to localStorage for API headers
+        localStorage.setItem("adminSelectedCountryId", countryId);
+        // Trigger a custom event to notify other components
+        window.dispatchEvent(new CustomEvent("adminCountryChanged", { detail: { countryId } }));
     };
 
     const handleMenuClick = (path) => {
@@ -134,6 +147,9 @@ const Sidebar = () => {
         }
         if (path === "/dashboard/reports") {
             return location.pathname.startsWith("/dashboard/reports");
+        }
+        if (path === "/dashboard/notifications") {
+            return location.pathname.startsWith("/dashboard/notifications");
         }
         return location.pathname === path;
     };

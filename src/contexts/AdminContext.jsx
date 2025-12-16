@@ -32,6 +32,7 @@ export const AdminProvider = ({ children }) => {
     const logout = () => {
         localStorage.removeItem("adminToken");
         localStorage.removeItem("adminData");
+        localStorage.removeItem("adminSelectedCountryId");
         setAdmin(null);
         setToken(null);
     };

@@ -390,6 +390,7 @@
       "subscriptions": "Subscriptions",
       "invoices": "Invoices",
       "todayPrice": "Today's Price",
+      "notifications": "Notifications",
       "logout": "Logout",
       "loggingOut": "Logging out...",
       "Egypt": "Egypt"
@@ -875,6 +876,107 @@
         "fetchError": "Error loading auctions",
         "updateError": "Error updating",
         "participantsError": "Error loading participants"
+      }
+    },
+    "notifications": {
+      "title": "Notifications Management",
+      "empty": "No notifications found",
+      "stats": {
+        "total": "Total Notifications",
+        "sent": "Sent",
+        "read": "Read",
+        "unread": "Unread"
+      },
+      "filters": {
+        "title": "Filters",
+        "userId": "User ID",
+        "userIdPlaceholder": "Enter user ID",
+        "type": "Type",
+        "status": "Status",
+        "allTypes": "All Types",
+        "allStatuses": "All Statuses",
+        "apply": "Apply",
+        "reset": "Reset"
+      },
+      "table": {
+        "id": "ID",
+        "title": "Title",
+        "type": "Type",
+        "status": "Status",
+        "createdAt": "Created At",
+        "actions": "Actions"
+      },
+      "status": {
+        "read": "Read",
+        "unread": "Unread"
+      },
+      "types": {
+        "info": "Info",
+        "warning": "Warning",
+        "success": "Success",
+        "error": "Error"
+      },
+      "pagination": {
+        "showing": "Showing",
+        "of": "of",
+        "page": "Page"
+      },
+      "actions": {
+        "send": "Send Notification",
+        "broadcast": "Broadcast by Country",
+        "viewDetails": "View Details",
+        "close": "Close",
+        "cancel": "Cancel"
+      },
+      "details": {
+        "title": "Notification Details",
+        "id": "ID",
+        "message": "Message",
+        "type": "Type",
+        "status": "Status",
+        "createdAt": "Created At"
+      },
+      "send": {
+        "title": "Send Notification",
+        "selectUsers": "Select Users",
+        "searchUsers": "Search users by name, email, or phone...",
+        "selectMultipleHint": "Hold Ctrl (Cmd on Mac) to select multiple users",
+        "selected": "selected",
+        "loadingUsers": "Loading users...",
+        "noUsersFound": "No users found",
+        "title": "Title",
+        "titlePlaceholder": "Enter notification title",
+        "message": "Message",
+        "messagePlaceholder": "Enter notification message",
+        "type": "Type",
+        "send": "Send",
+        "sending": "Sending..."
+      },
+      "broadcast": {
+        "title": "Broadcast Notification",
+        "country": "Country",
+        "selectCountry": "Select Country",
+        "title": "Title",
+        "titlePlaceholder": "Enter notification title",
+        "message": "Message",
+        "messagePlaceholder": "Enter notification message",
+        "type": "Type",
+        "broadcast": "Broadcast",
+        "sending": "Sending..."
+      },
+      "messages": {
+        "sendSuccess": "Notification sent successfully",
+        "broadcastSuccess": "Notification broadcasted successfully"
+      },
+      "errors": {
+        "fetch": "Failed to load notifications",
+        "fetchDetails": "Failed to load notification details",
+        "sendFailed": "Failed to send notification",
+        "broadcastFailed": "Failed to broadcast notification",
+        "titleRequired": "Title is required",
+        "messageRequired": "Message is required",
+        "usersRequired": "At least one user ID is required",
+        "countryRequired": "Country is required"
       }
     }
   }
