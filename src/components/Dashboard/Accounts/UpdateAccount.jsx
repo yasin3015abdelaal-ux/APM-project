@@ -32,10 +32,17 @@ const UpdateAccount = () => {
             setLoading(true);
             setError(null);
 
-            const response = await adminAPI.get(`/users/${userId}`);
-            const data = response.data?.data || response.data;
+            // Force fresh data by adding timestamp to prevent caching
+            const response = await adminAPI.get(`/users/${userId}?_t=${Date.now()}`);
+            const apiData = response.data?.data;
+            
+            // Combine user data with statistics
+            const combinedData = {
+                ...apiData.user,
+                statistics: apiData.statistics
+            };
 
-            setUserData(data);
+            setUserData(combinedData);
         } catch (err) {
             console.error('Error fetching user:', err);
             setError(err.response?.data?.message || err.message || t('dashboard.accounts.accountDetails.errorFetching'));
@@ -183,7 +190,7 @@ const UpdateAccount = () => {
                     {/* Email */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1.5 text-right">
-                            {t('dashboard.accounts.accountDetails.email')}
+                            {isRTL ? 'البريد الإلكتروني' : 'Email'}
                         </label>
                         <div className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-700 text-sm">
                             {userData.email || '-'}
@@ -193,7 +200,7 @@ const UpdateAccount = () => {
                     {/* Phone */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1.5 text-right">
-                            {t('dashboard.accounts.accountDetails.phoneNumber')}
+                            {isRTL ? 'رقم الهاتف' : 'Phone Number'}
                         </label>
                         <div className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-700 text-sm" dir="ltr" style={{ textAlign: isRTL ? 'right' : 'left' }}>
                             {userData.phone || '-'}
@@ -203,7 +210,7 @@ const UpdateAccount = () => {
                     {/* Address */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1.5 text-right">
-                            {t('dashboard.accounts.accountDetails.address')}
+                            {isRTL ? 'العنوان' : 'Address'}
                         </label>
                         <div className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-700 text-sm">
                             {userData.address || '-'}
@@ -213,107 +220,193 @@ const UpdateAccount = () => {
                     {/* Governorate */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1.5 text-right">
-                            {t('dashboard.accounts.accountDetails.governorate')}
+                            {isRTL ? 'المحافظة' : 'Governorate'}
                         </label>
                         <div className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-700 text-sm">
                             {userData.governorate ? (isRTL ? userData.governorate.name_ar : userData.governorate.name_en) : '-'}
                         </div>
                     </div>
 
+                    {/* Country */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5 text-right">
+                            {isRTL ? 'الدولة' : 'Country'}
+                        </label>
+                        <div className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-700 text-sm">
+                            {userData.country ? (isRTL ? userData.country.name_ar : userData.country.name_en) : '-'}
+                        </div>
+                    </div>
+
+                    {/* Activity Type */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5 text-right">
+                            {isRTL ? 'نوع النشاط' : 'Activity Type'}
+                        </label>
+                        <div className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-700 text-sm">
+                            {userData.activity_type ? (isRTL ? userData.activity_type.name_ar : userData.activity_type.name_en) : '-'}
+                        </div>
+                    </div>
+
                     {/* Account Type */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1.5 text-right">
-                            {t('dashboard.accounts.accountDetails.accountType')}
+                            {isRTL ? 'نوع الحساب' : 'Account Type'}
                         </label>
                         <div className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-700 text-sm">
                             {userData.type === 'individual'
-                                ? t('dashboard.accounts.accountDetails.individual')
-                                : t('dashboard.accounts.accountDetails.company')
+                                ? (isRTL ? 'فردي' : 'Individual')
+                                : userData.type === 'admin'
+                                ? (isRTL ? 'أدمن' : 'Admin')
+                                : (isRTL ? 'شركة' : 'Company')
                             }
                         </div>
                     </div>
 
-                    {/* Ads Count */}
+                    {/* Gender */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1.5 text-right">
-                            {t('dashboard.accounts.accountDetails.publishedAdsCount')}
-                        </label>
-                        <div className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-700 text-sm text-center font-medium">
-                            {userData.published_ads_count || userData.ads_count || 0}
-                        </div>
-                    </div>
-
-                    {/* Rejected Ads */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1.5 text-right">
-                            {t('dashboard.accounts.accountDetails.rejectedAdsCount')}
-                        </label>
-                        <div className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-700 text-sm text-center font-medium">
-                            {userData.rejected_ads_count || 0}
-                        </div>
-                    </div>
-
-                    {/* Under Review Ads */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1.5 text-right">
-                            {t('dashboard.accounts.accountDetails.underReviewAdsCount')}
-                        </label>
-                        <div className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-700 text-sm text-center font-medium">
-                            {userData.pending_ads_count || 0}
-                        </div>
-                    </div>
-
-                    {/* Reserved Ads */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1.5 text-right">
-                            {t('dashboard.accounts.accountDetails.reservedAdsCount')}
-                        </label>
-                        <div className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-700 text-sm text-center font-medium">
-                            {userData.reserved_ads_count || 0}
-                        </div>
-                    </div>
-
-                    {/* Expired Ads */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1.5 text-right">
-                            {t('dashboard.accounts.accountDetails.expiredAdsCount')}
-                        </label>
-                        <div className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-700 text-sm text-center font-medium">
-                            {userData.expired_ads_count || 0}
-                        </div>
-                    </div>
-
-                    {/* Subscriptions */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1.5 text-right">
-                            {t('dashboard.accounts.accountDetails.subscriptionsCount')}
+                            {isRTL ? 'الجنس' : 'Gender'}
                         </label>
                         <div className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-700 text-sm">
-                            {userData.subscriptions && userData.subscriptions.length > 0 ? (
-                                <div className="text-sm space-y-1">
-                                    {userData.subscriptions.map((sub, index) => (
-                                        <div key={index}>
-                                            {sub.name}: {sub.start_date} / {sub.end_date}
-                                        </div>
-                                    ))}
-                                </div>
+                            {userData.gender === 'male' 
+                                ? (isRTL ? 'ذكر' : 'Male') 
+                                : userData.gender === 'female' 
+                                ? (isRTL ? 'أنثى' : 'Female') 
+                                : '-'}
+                        </div>
+                    </div>
+
+                    {/* Commercial Registration - Only for companies */}
+                    {userData.type !== 'individual' && userData.type !== 'admin' && (
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1.5 text-right">
+                                {isRTL ? 'السجل التجاري' : 'Commercial Registration'}
+                            </label>
+                            <div className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-700 text-sm">
+                                {userData.commercial_registration || '-'}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Tax Number - Only for companies */}
+                    {userData.type !== 'individual' && userData.type !== 'admin' && (
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1.5 text-right">
+                                {isRTL ? 'الرقم الضريبي' : 'Tax Number'}
+                            </label>
+                            <div className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-700 text-sm">
+                                {userData.tax_number || '-'}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Is Trusted */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5 text-right">
+                            {isRTL ? 'حساب موثوق' : 'Trusted Account'}
+                        </label>
+                        <div className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-700 text-sm text-center font-medium">
+                            {userData.is_trusted ? (
+                                <span className="text-green-600">
+                                    ✓ {isRTL ? 'موثوق' : 'Trusted'}
+                                </span>
                             ) : (
-                                <div className="text-center text-gray-500">
-                                    {t('dashboard.accounts.accountDetails.noSubscriptions')}
-                                </div>
+                                <span className="text-gray-500">
+                                    {isRTL ? 'غير موثوق' : 'Not Trusted'}
+                                </span>
                             )}
                         </div>
                     </div>
 
-                    {/* Services Count */}
-                    {/* <div>
+                    {/* Rating Average */}
+                    <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1.5 text-right">
-                            {t('dashboard.accounts.accountDetails.servicesCount')}
+                            {isRTL ? 'متوسط التقييم' : 'Average Rating'}
                         </label>
                         <div className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-700 text-sm text-center font-medium">
-                            {userData.services_count || 0}
+                            {userData.rating_avg || '0.00'} ⭐
                         </div>
-                    </div> */}
+                    </div>
+
+                    {/* Reviews Count */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5 text-right">
+                            {isRTL ? 'عدد المراجعات' : 'Reviews Count'}
+                        </label>
+                        <div className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-700 text-sm text-center font-medium">
+                            {userData.reviews_count || 0}
+                        </div>
+                    </div>
+
+                    {/* Products Sold Count */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5 text-right">
+                            {isRTL ? 'المنتجات المباعة' : 'Products Sold'}
+                        </label>
+                        <div className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-700 text-sm text-center font-medium">
+                            {userData.products_sold_count || 0}
+                        </div>
+                    </div>
+
+                    {/* Published Products (Active) */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5 text-right">
+                            {isRTL ? 'المنتجات المنشورة' : 'Published Products'}
+                        </label>
+                        <div className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-700 text-sm text-center font-medium">
+                            {userData.statistics?.active_products || 0}
+                        </div>
+                    </div>
+
+                    {/* Rejected Products */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5 text-right">
+                            {isRTL ? 'المنتجات المرفوضة' : 'Rejected Products'}
+                        </label>
+                        <div className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-700 text-sm text-center font-medium">
+                            {userData.statistics?.rejected_products || 0}
+                        </div>
+                    </div>
+
+                    {/* Pending Products (Under Review) */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5 text-right">
+                            {isRTL ? 'المنتجات تحت المراجعة' : 'Pending Products'}
+                        </label>
+                        <div className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-700 text-sm text-center font-medium">
+                            {userData.statistics?.pending_products || 0}
+                        </div>
+                    </div>
+
+                    {/* Auction Count */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5 text-right">
+                            {isRTL ? 'عدد المزادات' : 'Auctions Count'}
+                        </label>
+                        <div className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-700 text-sm text-center font-medium">
+                            {userData.statistics?.auction_count || 0}
+                        </div>
+                    </div>
+
+                    {/* Expired Products */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5 text-right">
+                            {isRTL ? 'المنتجات المنتهية' : 'Expired Products'}
+                        </label>
+                        <div className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-700 text-sm text-center font-medium">
+                            {userData.statistics?.expired_products || 0}
+                        </div>
+                    </div>
+
+                    {/* Deleted Products */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5 text-right">
+                            {isRTL ? 'المنتجات المحذوفة' : 'Deleted Products'}
+                        </label>
+                        <div className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-700 text-sm text-center font-medium">
+                            {userData.statistics?.deleted_products || 0}
+                        </div>
+                    </div>
                 </div>
 
                 {/* Action Buttons */}
@@ -326,15 +419,15 @@ const UpdateAccount = () => {
                             }`}
                     >
                         {userData.verified_account === 1
-                            ? t('dashboard.accounts.accountDetails.deactivateAccount')
-                            : t('dashboard.accounts.accountDetails.activateAccount')
+                            ? (isRTL ? 'إلغاء تفعيل الحساب' : 'Deactivate Account')
+                            : (isRTL ? 'تفعيل الحساب' : 'Activate Account')
                         }
                     </button>
                     <button
                         onClick={() => setShowDeleteModal(true)}
                         className="flex-1 bg-red-500 cursor-pointer text-white py-3 rounded-lg font-medium hover:bg-red-600 transition-colors text-sm"
                     >
-                        {t('dashboard.accounts.accountDetails.deleteAccount')}
+                        {isRTL ? 'حذف الحساب' : 'Delete Account'}
                     </button>
                 </div>
 
@@ -344,8 +437,8 @@ const UpdateAccount = () => {
                         <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4">
                             <p className="text-center text-gray-800 mb-6">
                                 {userData.verified_account === 1
-                                    ? t('dashboard.accounts.accountDetails.confirmUnverify')
-                                    : t('dashboard.accounts.accountDetails.confirmVerify')
+                                    ? (isRTL ? 'هل أنت متأكد من إلغاء تفعيل هذا الحساب؟' : 'Are you sure you want to deactivate this account?')
+                                    : (isRTL ? 'هل أنت متأكد من تفعيل هذا الحساب؟' : 'Are you sure you want to activate this account?')
                                 }
                             </p>
                             <div className="flex gap-3">
@@ -353,13 +446,13 @@ const UpdateAccount = () => {
                                     onClick={handleToggleStatus}
                                     className="flex-1 cursor-pointer bg-main text-white py-2 rounded-lg hover:bg-green-600 transition-colors"
                                 >
-                                    {t('dashboard.additions.yes')}
+                                    {isRTL ? 'نعم' : 'Yes'}
                                 </button>
                                 <button
                                     onClick={() => setShowVerifyModal(false)}
                                     className="flex-1 cursor-pointer bg-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-400 transition-colors"
                                 >
-                                    {t('dashboard.additions.no')}
+                                    {isRTL ? 'لا' : 'No'}
                                 </button>
                             </div>
                         </div>
@@ -371,20 +464,20 @@ const UpdateAccount = () => {
                     <div className="fixed inset-0 bg-[#00000062] flex items-center justify-center z-50">
                         <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4">
                             <p className="text-center text-gray-800 mb-6">
-                                {t('dashboard.accounts.accountDetails.confirmDelete')}
+                                {isRTL ? 'هل أنت متأكد من حذف هذا الحساب نهائياً؟' : 'Are you sure you want to permanently delete this account?'}
                             </p>
                             <div className="flex gap-3">
                                 <button
                                     onClick={handleDeleteAccount}
                                     className="flex-1 cursor-pointer bg-red-500 text-white py-2 rounded-lg hover:bg-red-600 transition-colors"
                                 >
-                                    {t('dashboard.additions.yes')}
+                                    {isRTL ? 'نعم' : 'Yes'}
                                 </button>
                                 <button
                                     onClick={() => setShowDeleteModal(false)}
                                     className="flex-1 cursor-pointer bg-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-400 transition-colors"
                                 >
-                                    {t('dashboard.additions.no')}
+                                    {isRTL ? 'لا' : 'No'}
                                 </button>
                             </div>
                         </div>

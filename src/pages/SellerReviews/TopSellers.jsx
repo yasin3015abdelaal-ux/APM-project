@@ -32,7 +32,8 @@ const TopSellers = () => {
         try {
             setLoading(true);
             const data = await getCachedTopSellers({ limit: 3, min_reviews: 5 });
-            setSellers(data.data);
+
+            setSellers(data.data.sellers);
         } catch (error) {
             console.error("Error fetching top sellers:", error);
         } finally {
@@ -151,7 +152,7 @@ const TopSellers = () => {
                 </button>
             </div>
 
-            {sellers.length === 0 ? (
+            {sellers?.length === 0 ? (
                 <div className="text-center py-12 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-300">
                     <div className="text-gray-400 mb-2">
                         <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">

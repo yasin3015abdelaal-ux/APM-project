@@ -18,6 +18,13 @@ const TodayPrices = () => {
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [pagination, setPagination] = useState(null);
+  const [updatingUsers, setUpdatingUsers] = useState(new Set());
+  const [toast, setToast] = useState(null);
+
+  const showToast = (message, type = "success") => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 4000);
+  };
 
   useEffect(() => {
     const controller = new AbortController();
@@ -51,16 +58,80 @@ const TodayPrices = () => {
     return () => controller.abort();
   }, [selectedCategory, currentPage, t]);
 
+  const handleToggleVerification = async (userId, currentStatus) => {
+    if (!userId) return;
+
+    setUpdatingUsers((prev) => new Set(prev).add(userId));
+
+    try {
+      await adminAPI.put(`/users/${userId}/update-verification-status`, {
+        verified_account: currentStatus ? 0 : 1,
+      });
+
+      // Update local state
+      setRecords((prevRecords) =>
+        prevRecords.map((record) =>
+          record.user?.id === userId
+            ? {
+                ...record,
+                user: {
+                  ...record.user,
+                  verified_account: currentStatus ? 0 : 1,
+                },
+              }
+            : record
+        )
+      );
+
+      showToast(
+        i18n.language === "ar"
+          ? currentStatus
+            ? "تم تعطيل إدخال الأسعار"
+            : "تم تفعيل إدخال الأسعار"
+          : currentStatus
+          ? "Price entry disabled"
+          : "Price entry enabled",
+        "success"
+      );
+    } catch (err) {
+      console.error("Error updating verification status:", err);
+      showToast(
+        i18n.language === "ar"
+          ? "فشل في تحديث الحالة"
+          : "Failed to update status",
+        "error"
+      );
+    } finally {
+      setUpdatingUsers((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(userId);
+        return newSet;
+      });
+    }
+  };
+
   const handleExport = () => {
     const dataForExport = records.map((record) => ({
-      [t("dashboard.todayPrices.table.accountNumber")]: record.user?.id ? `APM${String(record.user.id).padStart(8, '0')}` : "-",
-      [t("dashboard.todayPrices.table.predictionDate")]: record.submitted_at || "-",
+      [t("dashboard.todayPrices.table.accountNumber")]: record.user?.id
+        ? `APM${String(record.user.id).padStart(8, "0")}`
+        : "-",
+      [t("dashboard.todayPrices.table.predictionDate")]:
+        record.submitted_at || "-",
       [t("dashboard.todayPrices.table.name")]: record.user?.name || "-",
-      [t("dashboard.todayPrices.table.accountType")]: i18n.language === "ar" 
-        ? record.governorate?.name_ar || "-"
-        : record.governorate?.name_en || "-",
+      [t("dashboard.todayPrices.table.accountType")]:
+        i18n.language === "ar"
+          ? record.governorate?.name_ar || "-"
+          : record.governorate?.name_en || "-",
       [t("dashboard.todayPrices.table.expected")]: record.net_price || 0,
       [t("dashboard.todayPrices.table.current")]: record.standing_price || 0,
+      [i18n.language === "ar" ? "حالة إدخال الأسعار" : "Price Entry Status"]:
+        record.user?.verified_account
+          ? i18n.language === "ar"
+            ? "مفعل"
+            : "Enabled"
+          : i18n.language === "ar"
+          ? "معطل"
+          : "Disabled",
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(dataForExport);
@@ -88,10 +159,55 @@ const TodayPrices = () => {
   }
 
   return (
-    <section
-      className="space-y-6"
-      dir={i18n.language === "ar" ? "rtl" : "ltr"}
-    >
+    <section className="space-y-6" dir={i18n.language === "ar" ? "rtl" : "ltr"}>
+      {/* Toast Notification */}
+      {toast && (
+        <div
+          className={`fixed top-4 ${
+            i18n.language === "ar" ? "left-4" : "right-4"
+          } z-50 animate-slide-in`}
+        >
+          <div
+            className={`px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 ${
+              toast.type === "success"
+                ? "bg-emerald-500 text-white"
+                : "bg-red-500 text-white"
+            }`}
+          >
+            {toast.type === "success" ? (
+              <svg
+                className="w-5 h-5 flex-shrink-0"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+            ) : (
+              <svg
+                className="w-5 h-5 flex-shrink-0"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            )}
+            <span className="font-semibold text-sm">{toast.message}</span>
+          </div>
+        </div>
+      )}
+
       <header className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <p className="text-sm uppercase tracking-widest text-emerald-500">
@@ -170,13 +286,16 @@ const TodayPrices = () => {
               <th className="whitespace-nowrap px-4 py-3 text-right font-medium">
                 {t("dashboard.todayPrices.table.standingPrice")}
               </th>
+              <th className="whitespace-nowrap px-4 py-3 text-center font-medium">
+                {i18n.language === "ar" ? "إدخال الأسعار" : "Price Entry"}
+              </th>
             </tr>
           </thead>
           <tbody>
             {records.length === 0 ? (
               <tr>
                 <td
-                  colSpan={6}
+                  colSpan={7}
                   className="px-4 py-8 text-center text-sm text-slate-500"
                 >
                   {t("dashboard.todayPrices.empty")}
@@ -189,7 +308,9 @@ const TodayPrices = () => {
                   className="border-t border-emerald-50 text-right text-slate-700"
                 >
                   <td className="whitespace-nowrap px-4 py-4 font-medium">
-                    {record.user?.id ? `APM${String(record.user.id).padStart(8, '0')}` : "-"}
+                    {record.user?.id
+                      ? `APM${String(record.user.id).padStart(8, "0")}`
+                      : "-"}
                   </td>
                   <td className="whitespace-nowrap px-4 py-4">
                     {record.submitted_at
@@ -198,17 +319,84 @@ const TodayPrices = () => {
                         )
                       : "-"}
                   </td>
-                  <td className="whitespace-nowrap px-4 py-4">{record.user?.name || "-"}</td>
                   <td className="whitespace-nowrap px-4 py-4">
-                    {i18n.language === "ar" 
+                    {record.user?.name || "-"}
+                  </td>
+                  <td className="whitespace-nowrap px-4 py-4">
+                    {i18n.language === "ar"
                       ? record.governorate?.name_ar || "-"
                       : record.governorate?.name_en || "-"}
                   </td>
                   <td className="whitespace-nowrap px-4 py-4">
-                    {record.net_price ? parseFloat(record.net_price).toFixed(2) : "-"}
+                    {record.net_price
+                      ? parseFloat(record.net_price).toFixed(2)
+                      : "-"}
                   </td>
                   <td className="whitespace-nowrap px-4 py-4">
-                    {record.standing_price ? parseFloat(record.standing_price).toFixed(2) : "-"}
+                    {record.standing_price
+                      ? parseFloat(record.standing_price).toFixed(2)
+                      : "-"}
+                  </td>
+                  <td className="whitespace-nowrap px-4 py-4 text-center">
+                    <button
+                      onClick={() =>
+                        handleToggleVerification(
+                          record.user?.id,
+                          record.user?.verified_account
+                        )
+                      }
+                      disabled={
+                        !record.user?.id ||
+                        updatingUsers.has(record.user?.id)
+                      }
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${
+                        record.user?.verified_account
+                          ? "bg-emerald-500 shadow-sm"
+                          : "bg-gray-300"
+                      }`}
+                      title={
+                        i18n.language === "ar"
+                          ? record.user?.verified_account
+                            ? "اضغط لتعطيل إدخال الأسعار"
+                            : "اضغط لتفعيل إدخال الأسعار"
+                          : record.user?.verified_account
+                          ? "Click to disable price entry"
+                          : "Click to enable price entry"
+                      }
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-md transition-transform duration-200 ${
+                          record.user?.verified_account
+                            ? i18n.language === "ar"
+                              ? "-translate-x-6"
+                              : "translate-x-6"
+                            : i18n.language === "ar"
+                            ? "-translate-x-1"
+                            : "translate-x-1"
+                        } ${updatingUsers.has(record.user?.id) ? "opacity-0" : "opacity-100"}`}
+                      />
+                      {updatingUsers.has(record.user?.id) && (
+                        <svg
+                          className="absolute inset-0 m-auto h-4 w-4 animate-spin text-white"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          />
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          />
+                        </svg>
+                      )}
+                    </button>
                   </td>
                 </tr>
               ))
@@ -270,7 +458,9 @@ const TodayPrices = () => {
 
           <button
             onClick={() =>
-              setCurrentPage((prev) => Math.min(pagination.last_page, prev + 1))
+              setCurrentPage((prev) =>
+                Math.min(pagination.last_page, prev + 1)
+              )
             }
             disabled={currentPage === pagination.last_page}
             className="flex items-center gap-1 rounded-lg border border-emerald-200 px-3 py-1.5 text-sm font-semibold text-emerald-600 transition hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-50"
