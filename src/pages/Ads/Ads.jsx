@@ -8,132 +8,211 @@ import { getCachedCategories, getCachedMyProducts, userAPI } from "../../api";
 import ProductCard from "../../components/ProductCard/ProductCard";
 import CustomSelect from "../../components/Ui/CustomSelect/CustomSelect";
 
-// Delete Confirmation Modal Component
-function DeleteConfirmModal({ isOpen, onClose, onConfirm, isRTL }) {
-  const [soldOnWebsite, setSoldOnWebsite] = useState(false);
-  const [changedMind, setChangedMind] = useState(false);
+function DeleteConfirmModal({ isOpen, onClose, onConfirm, isRTL = false }) {
+  const [selectedReason, setSelectedReason] = useState("");
+  const [otherReasonText, setOtherReasonText] = useState("");
   const [loading, setLoading] = useState(false);
-  const [toast, setToast] = useState(null);
 
-  const showToast = (message, type = "success") => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 4000);
-  };
+  const reasons = [
+    {
+      value: "product_sold",
+      labelAr: "تم بيع المنتج",
+      labelEn: "Product sold",
+      bgColor: "bg-green-50",
+      activeBg: "bg-green-100",
+      activeBorder: "border-green-600",
+      dotColor: "bg-green-600",
+    },
+    {
+      value: "no_longer_available",
+      labelAr: "المنتج لم يعد متاحاً",
+      labelEn: "No longer available",
+      bgColor: "bg-orange-50",
+      activeBg: "bg-orange-100",
+      activeBorder: "border-orange-600",
+      dotColor: "bg-orange-600",
+    },
+    {
+      value: "duplicate_listing",
+      labelAr: "إعلان مكرر",
+      labelEn: "Duplicate listing",
+      bgColor: "bg-blue-50",
+      activeBg: "bg-blue-100",
+      activeBorder: "border-blue-600",
+      dotColor: "bg-blue-600",
+    },
+    {
+      value: "wrong_information",
+      labelAr: "معلومات خاطئة",
+      labelEn: "Wrong information",
+      bgColor: "bg-red-50",
+      activeBg: "bg-red-100",
+      activeBorder: "border-red-600",
+      dotColor: "bg-red-600",
+    },
+    {
+      value: "other",
+      labelAr: "سبب آخر",
+      labelEn: "Other reason",
+      bgColor: "bg-purple-50",
+      activeBg: "bg-purple-100",
+      activeBorder: "border-purple-600",
+      dotColor: "bg-purple-600",
+    },
+  ];
 
-  const handleSoldChange = (checked) => {
-    if (checked) {
-      setChangedMind(false);
+
+  const handleReasonChange = (value) => {
+    setSelectedReason(value);
+    if (value !== "other") {
+      setOtherReasonText("");
     }
-    setSoldOnWebsite(checked);
-  };
-
-  const handleChangedMindChange = (checked) => {
-    if (checked) {
-      setSoldOnWebsite(false);
-    }
-    setChangedMind(checked);
   };
 
   const handleConfirm = async () => {
+    const finalReason = selectedReason === "other" ? otherReasonText : selectedReason;
+
     setLoading(true);
-    await onConfirm(soldOnWebsite);
-    showToast(
-      isRTL ? 'تم حذف الإعلان بنجاح' : 'Ad deleted successfully',
-      'success'
-    );
+    await onConfirm(finalReason);
     setLoading(false);
+    handleClose();
   };
 
-  const isConfirmDisabled = !soldOnWebsite && !changedMind;
+  const isConfirmDisabled = !selectedReason ||
+    (selectedReason === "other" && otherReasonText.trim() === "");
+
+  const handleClose = () => {
+    setSelectedReason("");
+    setOtherReasonText("");
+    onClose();
+  };
 
   if (!isOpen) return null;
 
   return (
     <div
-      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-      onClick={onClose}
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+      onClick={handleClose}
     >
-      {toast && (
-        <div className={`fixed top-4 sm:top-5 ${isRTL ? "left-4 sm:left-5" : "right-4 sm:right-5"} z-50 animate-slide-in max-w-[90%] sm:max-w-md`}>
-          <div className={`px-4 py-3 sm:px-6 sm:py-4 rounded-lg sm:rounded-xl shadow-lg flex items-center gap-2 sm:gap-3 ${toast.type === "success" ? "bg-main text-white" : "bg-red-500 text-white"}`}>
-            {toast.type === "success" ? (
-              <svg className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-            ) : (
-              <svg className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            )}
-            <span className="font-semibold text-sm sm:text-base break-words">{toast.message}</span>
-          </div>
-        </div>
-      )}
       <div
-        className="bg-white rounded-xl p-6 max-w-md w-full shadow-xl"
+        className="bg-white rounded-2xl p-6 max-w-md w-full shadow-xl"
         onClick={(e) => e.stopPropagation()}
         dir={isRTL ? 'rtl' : 'ltr'}
       >
-        <div className="flex items-center justify-between mb-5">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
           <h3 className="text-xl font-bold text-gray-900">
             {isRTL ? 'حذف الإعلان' : 'Delete Ad'}
           </h3>
           <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 cursor-pointer"
+            onClick={handleClose}
+            className="text-gray-400 cursor-pointer hover:text-gray-600 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <div className="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-100">
-          <label className="flex items-center gap-3 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={soldOnWebsite}
-              onChange={(e) => handleSoldChange(e.target.checked)}
-              className="w-5 h-5 text-main rounded cursor-pointer"
-            />
-            <span className="text-gray-800 font-medium text-sm">
-              {isRTL
-                ? 'هل تم البيع على الموقع؟'
-                : 'Was it sold on the website?'}
-            </span>
-          </label>
+        {/* Description */}
+        <p className="text-gray-600 text-sm mb-5">
+          {isRTL
+            ? 'الرجاء اختيار سبب حذف الإعلان:'
+            : 'Please select a reason for deletion:'}
+        </p>
+
+        {/* Reasons List */}
+        <div className="space-y-2 mb-5">
+          {reasons.map((reason) => {
+            const isSelected = selectedReason === reason.value;
+            return (
+              <label
+                key={reason.value}
+                className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer
+                transition-colors duration-200
+                ${isSelected
+                    ? `${reason.activeBg} border-2 ${reason.activeBorder}`
+                    : `${reason.bgColor} border border-transparent`
+                  }`}
+              >
+                {/* custom radio */}
+                <span
+                  className={`w-5 h-5 rounded-full border-2 flex items-center justify-center
+                transition-colors
+                ${isSelected ? reason.activeBorder : "border-gray-300"}
+              `}
+                >
+                  {isSelected && (
+                    <span
+                      className={`w-2.5 h-2.5 rounded-full ${reason.dotColor}`}
+                    />
+                  )}
+                </span>
+
+
+                {/* text */}
+                <span className="flex-1 font-medium text-sm">
+                  {isRTL ? reason.labelAr : reason.labelEn}
+                </span>
+
+                {/* hidden input */}
+                <input
+                  type="radio"
+                  name="deleteReason"
+                  value={reason.value}
+                  checked={isSelected}
+                  onChange={(e) => handleReasonChange(e.target.value)}
+                  className="hidden"
+                />
+              </label>
+
+            );
+          })}
         </div>
 
-        <div className="mb-6 p-4 bg-amber-50 rounded-lg border border-amber-100">
-          <label className="flex items-center gap-3 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={changedMind}
-              onChange={(e) => handleChangedMindChange(e.target.checked)}
-              className="w-5 h-5 text-amber-600 rounded cursor-pointer"
+        {/* Other reason textarea */}
+        {selectedReason === "other" && (
+          <div className="mb-5">
+            <textarea
+              value={otherReasonText}
+              onChange={(e) => setOtherReasonText(e.target.value)}
+              placeholder={isRTL ? "اكتب السبب هنا..." : "Write the reason here..."}
+              className="w-full p-3 border-2 border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 resize-none bg-purple-50"
+              rows="2"
+              maxLength="200"
             />
-            <span className="text-gray-800 font-medium text-sm">
-              {isRTL
-                ? 'هل غيرت رأيك من البيع؟'
-                : 'Did you change your mind about selling?'}
-            </span>
-          </label>
-        </div>
+            <p className="text-xs text-purple-600 mt-1 text-right font-medium">
+              {otherReasonText.length}/200
+            </p>
+          </div>
+        )}
 
+        {/* Buttons */}
         <div className="flex gap-3">
           <button
             onClick={handleConfirm}
             disabled={loading || isConfirmDisabled}
-            className="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-2 rounded-lg transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 cursor-pointer bg-red-600 hover:bg-red-700 text-white font-semibold py-3 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
-            {loading
-              ? (isRTL ? 'جاري...' : 'Loading...')
-              : (isRTL ? 'متابعة' : 'Continue')}
+            {loading ? (
+              <>
+                <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span>{isRTL ? 'جاري الحذف...' : 'Deleting...'}</span>
+              </>
+            ) : (
+              <>
+                <Trash2 className="w-5 h-5" />
+                <span>{isRTL ? 'تأكيد الحذف' : 'Confirm Delete'}</span>
+              </>
+            )}
           </button>
           <button
-            onClick={onClose}
+            onClick={handleClose}
             disabled={loading}
-            className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-2 rounded-lg transition cursor-pointer"
+            className="flex-1 cursor-pointer bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-3 rounded-lg transition disabled:opacity-50"
           >
-            {isRTL ? 'الرجوع عن الحذف' : 'Cancel Delete'}
+            {isRTL ? 'إلغاء' : 'Cancel'}
           </button>
         </div>
       </div>
@@ -164,9 +243,9 @@ function AdsItem({ item, onDelete }) {
     setShowDeleteModal(true);
   };
 
-  const handleConfirmDelete = async (soldOnWebsite) => {
+  const handleConfirmDelete = async (reason) => {
     try {
-      await onDelete(id, soldOnWebsite);
+      await onDelete(id, reason);
       setShowDeleteModal(false);
     } catch (error) {
       console.error('Error deleting ad:', error);
@@ -287,10 +366,13 @@ export default function Ads() {
     setFilteredAds(filtered);
   }, [filter, adsItems]);
 
-  const handleDelete = async (productId, soldOnWebsite) => {
+  const handleDelete = async (productId, reason) => {
     try {
       await userAPI.delete(`/products/${productId}`, {
-        data: { sold_on_website: soldOnWebsite }
+        data: {
+          reason: reason,
+          other_reason: reason === "other" ? reason : undefined
+        }
       });
 
       setAdsItems(prev => prev.filter(item => item.id !== productId));
@@ -380,7 +462,7 @@ export default function Ads() {
         <div className="flex flex-col sm:flex-row items-stretch justify-between sm:items-center gap-4 mb-6 bg-gradient-to-r from-gray-50 to-gray-100/50 p-5 rounded-2xl shadow-md border border-gray-200/60 backdrop-blur-sm relative z-20">
           {/* Desktop Button */}
           <div className={`hidden sm:block ${isRTL ? 'sm:order-2' : 'sm:order-1'}`}>
-            <button 
+            <button
               onClick={() => navigate("/ads/create")}
               className="flex items-center bg-main text-white py-3 px-8 whitespace-nowrap rounded-lg hover:bg-green-700 transition-all duration-200 text-base font-semibold cursor-pointer shadow-sm hover:shadow-md"
             >

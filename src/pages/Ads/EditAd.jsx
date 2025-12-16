@@ -1,116 +1,213 @@
 import { useState, useEffect } from 'react';
-import { Upload, X } from 'lucide-react';
+import { Upload, X, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getCachedSubCategories, userAPI } from '../../api';
 import Loader from '../../components/Ui/Loader/Loader';
 import CustomSelect from '../../components/Ui/CustomSelect/CustomSelect';
 
-function DeleteConfirmModal({ isOpen, onClose, onConfirm, isRTL, showToast }) {
-    const [soldOnWebsite, setSoldOnWebsite] = useState(false);
-    const [changedMind, setChangedMind] = useState(false);
+function DeleteConfirmModal({ isOpen, onClose, onConfirm, isRTL = false }) {
+    const [selectedReason, setSelectedReason] = useState("");
+    const [otherReasonText, setOtherReasonText] = useState("");
     const [loading, setLoading] = useState(false);
 
-    const handleSoldChange = (checked) => {
-        if (checked) {
-            setChangedMind(false);
-        }
-        setSoldOnWebsite(checked);
-    };
+    const reasons = [
+        {
+            value: "product_sold",
+            labelAr: "تم بيع المنتج",
+            labelEn: "Product sold",
+            bgColor: "bg-green-50",
+            activeBg: "bg-green-100",
+            activeBorder: "border-green-600",
+            dotColor: "bg-green-600",
+        },
+        {
+            value: "no_longer_available",
+            labelAr: "المنتج لم يعد متاحاً",
+            labelEn: "No longer available",
+            bgColor: "bg-orange-50",
+            activeBg: "bg-orange-100",
+            activeBorder: "border-orange-600",
+            dotColor: "bg-orange-600",
+        },
+        {
+            value: "duplicate_listing",
+            labelAr: "إعلان مكرر",
+            labelEn: "Duplicate listing",
+            bgColor: "bg-blue-50",
+            activeBg: "bg-blue-100",
+            activeBorder: "border-blue-600",
+            dotColor: "bg-blue-600",
+        },
+        {
+            value: "wrong_information",
+            labelAr: "معلومات خاطئة",
+            labelEn: "Wrong information",
+            bgColor: "bg-red-50",
+            activeBg: "bg-red-100",
+            activeBorder: "border-red-600",
+            dotColor: "bg-red-600",
+        },
+        {
+            value: "other",
+            labelAr: "سبب آخر",
+            labelEn: "Other reason",
+            bgColor: "bg-purple-50",
+            activeBg: "bg-purple-100",
+            activeBorder: "border-purple-600",
+            dotColor: "bg-purple-600",
+        },
+    ];
 
-    const handleChangedMindChange = (checked) => {
-        if (checked) {
-            setSoldOnWebsite(false);
+    const handleReasonChange = (value) => {
+        setSelectedReason(value);
+        if (value !== "other") {
+            setOtherReasonText("");
         }
-        setChangedMind(checked);
     };
 
     const handleConfirm = async () => {
+        const finalReason = selectedReason === "other" ? otherReasonText : selectedReason;
+
         setLoading(true);
-        await onConfirm(soldOnWebsite);
-        showToast(
-            isRTL ? 'تم حذف الإعلان بنجاح' : 'Ad deleted successfully',
-            'success'
-        );
+        await onConfirm(finalReason);
         setLoading(false);
+        handleClose();
     };
 
-    const isConfirmDisabled = !soldOnWebsite && !changedMind;
+    const isConfirmDisabled = !selectedReason ||
+        (selectedReason === "other" && otherReasonText.trim() === "");
+
+    const handleClose = () => {
+        setSelectedReason("");
+        setOtherReasonText("");
+        onClose();
+    };
 
     if (!isOpen) return null;
 
     return (
         <div
-            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-            onClick={onClose}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            onClick={handleClose}
         >
             <div
-                className="bg-white rounded-xl p-6 max-w-md w-full shadow-xl"
+                className="bg-white rounded-2xl p-6 max-w-md w-full shadow-xl"
                 onClick={(e) => e.stopPropagation()}
                 dir={isRTL ? 'rtl' : 'ltr'}
             >
-                <div className="flex items-center justify-between mb-5">
+                {/* Header */}
+                <div className="flex items-center justify-between mb-6">
                     <h3 className="text-xl font-bold text-gray-900">
                         {isRTL ? 'حذف الإعلان' : 'Delete Ad'}
                     </h3>
                     <button
-                        onClick={onClose}
-                        className="text-gray-400 hover:text-gray-600 cursor-pointer"
+                        onClick={handleClose}
+                        className="text-gray-400 cursor-pointer hover:text-gray-600 transition-colors"
                     >
                         <X className="w-5 h-5" />
                     </button>
                 </div>
 
-                <div className="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-100">
-                    <label className="flex items-center gap-3 cursor-pointer">
-                        <input
-                            type="checkbox"
-                            checked={soldOnWebsite}
-                            onChange={(e) => handleSoldChange(e.target.checked)}
-                            className="w-5 h-5 rounded cursor-pointer accent-green-600"
-                            style={{ accentColor: '#16a34a' }}
-                        />
-                        <span className="text-gray-800 font-medium text-sm">
-                            {isRTL
-                                ? 'تم البيع على الموقع'
-                                : 'Sold on the website'}
-                        </span>
-                    </label>
+                {/* Description */}
+                <p className="text-gray-600 text-sm mb-5">
+                    {isRTL
+                        ? 'الرجاء اختيار سبب حذف الإعلان:'
+                        : 'Please select a reason for deletion:'}
+                </p>
+
+                {/* Reasons List */}
+                <div className="space-y-2 mb-5">
+                    {reasons.map((reason) => {
+                        const isSelected = selectedReason === reason.value;
+                        return (
+                            <label
+                                key={reason.value}
+                                className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer
+                                transition-colors duration-200
+                                ${isSelected
+                                        ? `${reason.activeBg} border-2 ${reason.activeBorder}`
+                                        : `${reason.bgColor} border border-transparent`
+                                    }`}
+                            >
+                                {/* custom radio */}
+                                <span
+                                    className={`w-5 h-5 rounded-full border-2 flex items-center justify-center
+                                    transition-colors
+                                    ${isSelected ? reason.activeBorder : "border-gray-300"}
+                                `}
+                                >
+                                    {isSelected && (
+                                        <span
+                                            className={`w-2.5 h-2.5 rounded-full ${reason.dotColor}`}
+                                        />
+                                    )}
+                                </span>
+
+                                {/* text */}
+                                <span className="flex-1 font-medium text-sm">
+                                    {isRTL ? reason.labelAr : reason.labelEn}
+                                </span>
+
+                                {/* hidden input */}
+                                <input
+                                    type="radio"
+                                    name="deleteReason"
+                                    value={reason.value}
+                                    checked={isSelected}
+                                    onChange={(e) => handleReasonChange(e.target.value)}
+                                    className="hidden"
+                                />
+                            </label>
+                        );
+                    })}
                 </div>
 
-                <div className="mb-6 p-4 bg-amber-50 rounded-lg border border-amber-100">
-                    <label className="flex items-center gap-3 cursor-pointer">
-                        <input
-                            type="checkbox"
-                            checked={changedMind}
-                            onChange={(e) => handleChangedMindChange(e.target.checked)}
-                            className="w-5 h-5 rounded cursor-pointer accent-green-600"
-                            style={{ accentColor: '#16a34a' }}
+                {/* Other reason textarea */}
+                {selectedReason === "other" && (
+                    <div className="mb-5">
+                        <textarea
+                            value={otherReasonText}
+                            onChange={(e) => setOtherReasonText(e.target.value)}
+                            placeholder={isRTL ? "اكتب السبب هنا..." : "Write the reason here..."}
+                            className="w-full p-3 border-2 border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 resize-none bg-purple-50"
+                            rows="2"
+                            maxLength="200"
                         />
-                        <span className="text-gray-800 font-medium text-sm">
-                            {isRTL
-                                ? 'غيرت رأيك من البيع'
-                                : 'Change your mind about selling'}
-                        </span>
-                    </label>
-                </div>
+                        <p className="text-xs text-purple-600 mt-1 text-right font-medium">
+                            {otherReasonText.length}/200
+                        </p>
+                    </div>
+                )}
 
+                {/* Buttons */}
                 <div className="flex gap-3">
                     <button
                         onClick={handleConfirm}
                         disabled={loading || isConfirmDisabled}
-                        className="flex-1 bg-red-600 hover:bg-red-700 text-white font-semibold py-2.5 px-4 text-sm rounded-lg transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex-1 cursor-pointer bg-red-600 hover:bg-red-700 text-white font-semibold py-3 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
-                        {loading
-                            ? (isRTL ? 'جاري...' : 'Loading...')
-                            : (isRTL ? 'متابعة' : 'Continue')}
+                        {loading ? (
+                            <>
+                                <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                <span>{isRTL ? 'جاري الحذف...' : 'Deleting...'}</span>
+                            </>
+                        ) : (
+                            <>
+                                <Trash2 className="w-5 h-5" />
+                                <span>{isRTL ? 'تأكيد الحذف' : 'Confirm Delete'}</span>
+                            </>
+                        )}
                     </button>
                     <button
-                        onClick={onClose}
+                        onClick={handleClose}
                         disabled={loading}
-                        className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-2.5 px-4 text-sm rounded-lg transition cursor-pointer"
+                        className="flex-1 cursor-pointer bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-3 rounded-lg transition disabled:opacity-50"
                     >
-                        {isRTL ? 'الرجوع عن الحذف' : 'Cancel Delete'}
+                        {isRTL ? 'إلغاء' : 'Cancel'}
                     </button>
                 </div>
             </div>
@@ -122,7 +219,7 @@ const EditAds = () => {
     const { t, i18n } = useTranslation();
     const { id } = useParams();
     const navigate = useNavigate();
-    
+
     const currentLang = i18n.language || 'ar';
     const isRTL = currentLang === 'ar';
 
@@ -204,7 +301,7 @@ const EditAds = () => {
 
             if (productData) {
                 const categoryId = productData.category?.id || productData.category_id;
-                
+
                 if (categoryId) {
                     await loadCategoryAttributes(categoryId);
                     await loadSubCategories(categoryId);
@@ -275,11 +372,11 @@ const EditAds = () => {
 
     const handleImageChange = (e) => {
         const files = Array.from(e.target.files);
-        
+
         if (files.length > 0) {
             const newImages = [...formData.images, ...files];
             setFormData((prev) => ({ ...prev, images: newImages }));
-            
+
             files.forEach(file => {
                 if (file && file.type.startsWith('image/')) {
                     const reader = new FileReader();
@@ -290,7 +387,7 @@ const EditAds = () => {
                 }
             });
         }
-        
+
         e.target.value = '';
     };
 
@@ -419,7 +516,7 @@ const EditAds = () => {
 
     const handleUpdate = async (e) => {
         e.preventDefault();
-        
+
         if (existingImages.length === 0 && formData.images.length === 0) {
             showToast(
                 isRTL ? 'يجب إضافة صورة واحدة على الأقل' : 'Please add at least one image',
@@ -427,7 +524,7 @@ const EditAds = () => {
             );
             return;
         }
-        
+
         setLoading(true);
 
         try {
@@ -467,10 +564,10 @@ const EditAds = () => {
         } catch (error) {
             console.error("Error updating product:", error);
             console.error("Error response:", error.response?.data);
-            
+
             const validationErrors = error.response?.data?.errors;
             let errorMessage = '';
-            
+
             if (validationErrors) {
                 const firstErrorKey = Object.keys(validationErrors)[0];
                 const firstError = validationErrors[firstErrorKey];
@@ -478,17 +575,20 @@ const EditAds = () => {
             } else {
                 errorMessage = isRTL ? 'حدث خطأ أثناء تعديل الإعلان' : 'Error updating ad';
             }
-            
+
             showToast(errorMessage, 'error');
         } finally {
             setLoading(false);
         }
     };
 
-    const handleDelete = async (soldOnWebsite) => {
+    const handleDelete = async (reason) => {
         try {
             await userAPI.delete(`/products/${id}`, {
-                data: { sold_on_website: soldOnWebsite }
+                data: {
+                    reason: reason,
+                    other_reason: reason === "other" ? reason : undefined
+                }
             });
 
             showToast(
@@ -608,9 +708,9 @@ const EditAds = () => {
                             {/* Existing Images */}
                             {existingImages.map((img, index) => (
                                 <div key={`existing-${index}`} className="relative group">
-                                    <img 
-                                        src={typeof img === 'string' ? img : img.url} 
-                                        alt={`Existing ${index + 1}`} 
+                                    <img
+                                        src={typeof img === 'string' ? img : img.url}
+                                        alt={`Existing ${index + 1}`}
                                         className="w-full h-28 sm:h-32 object-cover rounded-lg border-2 border-gray-200"
                                     />
                                     <button
@@ -625,13 +725,13 @@ const EditAds = () => {
                                     </div>
                                 </div>
                             ))}
-                            
+
                             {/* New Images */}
                             {imagePreviews.map((preview, index) => (
                                 <div key={`new-${index}`} className="relative group">
-                                    <img 
-                                        src={preview} 
-                                        alt={`Preview ${index + 1}`} 
+                                    <img
+                                        src={preview}
+                                        alt={`Preview ${index + 1}`}
                                         className="w-full h-28 sm:h-32 object-cover rounded-lg border-2 border-green-500"
                                     />
                                     <button
@@ -654,11 +754,11 @@ const EditAds = () => {
                     <div className="space-y-4">
                         {leftColumnAttrs.map(attr => renderAttributeInput(attr))}
                     </div>
-                    
+
                     <div className="space-y-4">
                         {rightColumnAttrs.map(attr => renderAttributeInput(attr))}
                     </div>
-                    
+
                     {descriptionAttrs.map(attr => renderAttributeInput(attr))}
                 </div>
 
@@ -688,7 +788,6 @@ const EditAds = () => {
                 onClose={() => setShowDeleteConfirm(false)}
                 onConfirm={handleDelete}
                 isRTL={isRTL}
-                showToast={showToast}
             />
         </div>
     );
