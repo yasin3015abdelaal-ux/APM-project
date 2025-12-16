@@ -16,16 +16,19 @@ const SellerRatingModal = ({ isOpen, onClose, sellerId, sellerName }) => {
     const [hoveredQualityStar, setHoveredQualityStar] = useState(0);
     
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState("");
-    const [success, setSuccess] = useState(false);
+    const [toast, setToast] = useState(null);
+
+    const showToast = (message, type = "success") => {
+        setToast({ message, type });
+        setTimeout(() => setToast(null), 4000);
+    };
 
     const resetForm = () => {
         setHonestRating(0);
         setEasyToDealRating(0);
         setProductQualityRating(0);
         setComment("");
-        setError("");
-        setSuccess(false);
+        setToast(null);
         setHoveredHonestStar(0);
         setHoveredEasyStar(0);
         setHoveredQualityStar(0);
@@ -38,15 +41,20 @@ const SellerRatingModal = ({ isOpen, onClose, sellerId, sellerName }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setError("");
 
         if (honestRating === 0 || easyToDealRating === 0 || productQualityRating === 0) {
-            setError(isRTL ? "من فضلك اختر جميع التقييمات" : "Please select all ratings");
+            showToast(
+                isRTL ? "من فضلك اختر جميع التقييمات" : "Please select all ratings",
+                "error"
+            );
             return;
         }
 
         if (comment.length > 200) {
-            setError(isRTL ? "التعليق طويل جداً (الحد الأقصى 200 حرف)" : "Comment is too long (max 200 characters)");
+            showToast(
+                isRTL ? "التعليق طويل جداً (الحد الأقصى 200 حرف)" : "Comment is too long (max 200 characters)",
+                "error"
+            );
             return;
         }
 
@@ -62,7 +70,11 @@ const SellerRatingModal = ({ isOpen, onClose, sellerId, sellerName }) => {
 
             await userAPI.post('/seller-reviews', data);
 
-            setSuccess(true);
+            showToast(
+                isRTL ? "تم إرسال التقييم بنجاح!" : "Review submitted successfully!",
+                "success"
+            );
+
             setTimeout(() => {
                 handleClose();
             }, 2000);
@@ -70,9 +82,12 @@ const SellerRatingModal = ({ isOpen, onClose, sellerId, sellerName }) => {
         } catch (error) {
             console.error("Error submitting review:", error);
             if (error.response?.data?.message) {
-                setError(error.response.data.message);
+                showToast(error.response.data.message, "error");
             } else {
-                setError(isRTL ? "حدث خطأ أثناء إرسال التقييم" : "Error submitting review");
+                showToast(
+                    isRTL ? "حدث خطأ أثناء إرسال التقييم" : "Error submitting review",
+                    "error"
+                );
             }
         } finally {
             setLoading(false);
@@ -199,8 +214,28 @@ const SellerRatingModal = ({ isOpen, onClose, sellerId, sellerName }) => {
             className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
             onClick={handleClose}
         >
+            {/* Toast Notification */}
+            {toast && (
+                <div className={`fixed top-4 sm:top-5 ${isRTL ? "left-4 sm:left-5" : "right-4 sm:right-5"} z-[60] animate-slide-in max-w-[90%] sm:max-w-md`}>
+                    <div className={`px-4 py-3 sm:px-6 sm:py-4 rounded-lg sm:rounded-xl shadow-lg flex items-center gap-2 sm:gap-3 ${
+                        toast.type === "success" ? "bg-main text-white" : "bg-red-500 text-white"
+                    }`}>
+                        {toast.type === "success" ? (
+                            <svg className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                        ) : (
+                            <svg className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        )}
+                        <span className="font-semibold text-sm sm:text-base break-words">{toast.message}</span>
+                    </div>
+                </div>
+            )}
+
             <div 
-                className="bg-white rounded-3xl w-full max-w-md shadow-2xl animate-slide-up max-h-[90vh] overflow-y-auto"
+                className="bg-white rounded-3xl w-full max-w-md shadow-2xl animate-slide-up max-h-[90vh] overflow-hidden"
                 onClick={(e) => e.stopPropagation()}
                 dir={isRTL ? "rtl" : "ltr"}
             >
@@ -215,25 +250,6 @@ const SellerRatingModal = ({ isOpen, onClose, sellerId, sellerName }) => {
                         </h2>
                         <p className="text-gray-500 text-sm">{sellerName}</p>
                     </div>
-
-                    {success && (
-                        <div className="bg-green-50 border border-green-200 rounded-xl p-3 flex items-center gap-2">
-                            <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
-                                <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                                </svg>
-                            </div>
-                            <p className="text-sm font-medium text-green-800">
-                                {isRTL ? "تم إرسال التقييم بنجاح!" : "Review submitted successfully!"}
-                            </p>
-                        </div>
-                    )}
-
-                    {error && (
-                        <div className="bg-red-50 border border-red-200 rounded-xl p-3">
-                            <p className="text-sm text-red-800 text-center">{error}</p>
-                        </div>
-                    )}
 
                     {/* Honest Rating */}
                     <div className="bg-gradient-to-r from-blue-50 to-blue-100/50 rounded-2xl p-4">
@@ -253,7 +269,7 @@ const SellerRatingModal = ({ isOpen, onClose, sellerId, sellerName }) => {
                                 setRating={setHonestRating}
                                 hoveredStar={hoveredHonestStar}
                                 setHoveredStar={setHoveredHonestStar}
-                                disabled={loading || success}
+                                disabled={loading}
                             />
                         </div>
                     </div>
@@ -276,7 +292,7 @@ const SellerRatingModal = ({ isOpen, onClose, sellerId, sellerName }) => {
                                 setRating={setEasyToDealRating}
                                 hoveredStar={hoveredEasyStar}
                                 setHoveredStar={setHoveredEasyStar}
-                                disabled={loading || success}
+                                disabled={loading}
                             />
                         </div>
                     </div>
@@ -299,7 +315,7 @@ const SellerRatingModal = ({ isOpen, onClose, sellerId, sellerName }) => {
                                 setRating={setProductQualityRating}
                                 hoveredStar={hoveredQualityStar}
                                 setHoveredStar={setHoveredQualityStar}
-                                disabled={loading || success}
+                                disabled={loading}
                             />
                         </div>
                     </div>
@@ -316,7 +332,7 @@ const SellerRatingModal = ({ isOpen, onClose, sellerId, sellerName }) => {
                             className="w-full px-4 py-3 pb-8 border-2 border-gray-200 rounded-2xl outline-none focus:border-main focus:ring-2 focus:ring-main/20 transition-all resize-none text-sm bg-white placeholder-gray-400"
                             rows={3}
                             maxLength={200}
-                            disabled={loading || success}
+                            disabled={loading}
                         />
                         <div className={`absolute bottom-3 text-xs font-medium ${
                             comment.length >= 10 ? "text-main" : "text-gray-400"
@@ -328,8 +344,8 @@ const SellerRatingModal = ({ isOpen, onClose, sellerId, sellerName }) => {
                     {/* Submit Button */}
                     <button
                         type="submit"
-                        className="w-full py-3.5 bg-gradient-to-r from-main to-green-600 hover:from-green-600 hover:to-main text-white font-bold rounded-2xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98]"
-                        disabled={loading || success || honestRating === 0 || easyToDealRating === 0 || productQualityRating === 0}
+                        className="w-full py-3.5 cursor-pointer bg-gradient-to-r from-main to-green-600 hover:from-green-600 hover:to-main text-white font-bold rounded-2xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98]"
+                        disabled={loading || honestRating === 0 || easyToDealRating === 0 || productQualityRating === 0}
                     >
                         {loading ? (
                             <span className="flex items-center justify-center gap-2">
@@ -360,6 +376,21 @@ const SellerRatingModal = ({ isOpen, onClose, sellerId, sellerName }) => {
                 
                 .animate-slide-up {
                     animation: slide-up 0.3s ease-out;
+                }
+
+                @keyframes slide-in {
+                    from {
+                        transform: translateX(${isRTL ? '-' : ''}100%);
+                        opacity: 0;
+                    }
+                    to {
+                        transform: translateX(0);
+                        opacity: 1;
+                    }
+                }
+                
+                .animate-slide-in {
+                    animation: slide-in 0.3s ease-out;
                 }
             `}</style>
         </div>

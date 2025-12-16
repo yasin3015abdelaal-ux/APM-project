@@ -1,17 +1,20 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../../contexts/AuthContext";
 import { countriesFlags } from "../../data/flags";
-import { authAPI } from "../../api";
-import { VerifiedIcon } from "lucide-react";
+import { authAPI, dataAPI } from "../../api";
+import { BadgeCheck, LogOut } from "lucide-react";
+import CustomSelect from "../Ui/CustomSelect/CustomSelect";
 
-const ProfileHover = () => {
+const ProfileHover = ({ onClose }) => {
   const { t, i18n } = useTranslation();
-  const { user, logout } = useAuth(); 
+  const { user, logout, updateUser, isAuthenticated } = useAuth(); 
   const navigate = useNavigate();
   const [promoted, setpromoted] = useState(true);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [countries, setCountries] = useState([]);
+  const [isLoadingCountries, setIsLoadingCountries] = useState(false);
 
   const userCountryId = user?.country?.id;
 
@@ -28,18 +31,64 @@ const ProfileHover = () => {
       ? user?.country?.name_ar
       : user?.country?.name_en;
 
+  // Fetch countries on mount
+  useEffect(() => {
+    const fetchCountries = async () => {
+      try {
+        setIsLoadingCountries(true);
+        const countriesRes = await dataAPI.getCountries();
+        const countriesData =
+          countriesRes.data?.data?.countries ||
+          countriesRes.data?.countries ||
+          [];
+        setCountries(Array.isArray(countriesData) ? countriesData : []);
+      } catch (error) {
+        console.error("Error fetching countries:", error);
+      } finally {
+        setIsLoadingCountries(false);
+      }
+    };
+
+    if (isAuthenticated) {
+      fetchCountries();
+    }
+  }, [isAuthenticated]);
+
   const handleLogout = async () => {
     try {
       setIsLoggingOut(true);
       await authAPI.logout();
       logout();
+      if (onClose) onClose();
       navigate("/");
     } catch (error) {
       console.error("Logout error:", error);
       logout();
+      if (onClose) onClose();
       navigate("/");
     } finally {
       setIsLoggingOut(false);
+    }
+  };
+
+  const handleLanguageChange = (newLanguage) => {
+    i18n.changeLanguage(newLanguage);
+  };
+
+  const handleCountryChange = async (newCountryId) => {
+    try {
+      const selectedCountry = countries.find(c => c.id === parseInt(newCountryId));
+      if (selectedCountry && updateUser) {
+        const updatedUser = {
+          ...user,
+          country: selectedCountry,
+          country_id: selectedCountry.id
+        };
+        updateUser(updatedUser);
+        localStorage.setItem("userData", JSON.stringify(updatedUser));
+      }
+    } catch (error) {
+      console.error("Error updating country:", error);
     }
   };
 
@@ -67,119 +116,203 @@ const ProfileHover = () => {
   const handleMenuClick = (item) => {
     if (item.route) {
       navigate(item.route);
+      if (onClose) onClose();
     }
   };
 
+  const handleNavigation = (route) => {
+    navigate(route);
+    if (onClose) onClose();
+  };
+
+  // Prepare language options
+  const languageOptions = [
+    { value: "en", label: "English" },
+    { value: "ar", label: "عربي" }
+  ];
+
+  // Prepare country options
+  const countryOptions = countries.map(country => ({
+    value: country.id.toString(),
+    label: i18n.language === "ar" ? country.name_ar : country.name_en
+  }));
+
+  // Guest Mode View
+  if (!isAuthenticated) {
+    return (
+      <div
+        className={`w-[300px] sm:w-[340px] cursor-default flex flex-col rounded-xl shadow-2xl px-5 py-5 bg-white z-100 border border-gray-100 absolute top-12 ${
+          i18n.language === "ar" ? "left-0" : "right-0"
+        }`}
+        dir={i18n.language === "ar" ? "rtl" : "ltr"}
+      >
+        {/* Guest Profile Icon */}
+        <div className="flex flex-col items-center gap-4 pb-5 border-b border-gray-100">
+          <div className="w-24 h-24 rounded-full bg-gradient-to-br from-green-50 to-green-100 flex items-center justify-center shadow-md">
+            <svg
+              className="w-12 h-12 text-main"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+              />
+            </svg>
+          </div>
+
+          {/* Login Button */}
+          <button
+            onClick={() => handleNavigation("/login")}
+            className="w-full cursor-pointer bg-gradient-to-r from-main to-green-700 text-white py-2.5 px-4 rounded-xl hover:shadow-lg transform hover:scale-[1.02] transition-all duration-200 text-sm font-semibold"
+          >
+            {t("log in")}
+          </button>
+
+          {/* Create Account Button */}
+          <button
+            onClick={() => handleNavigation("/register")}
+            className="w-full cursor-pointer border-2 border-main text-main py-2.5 px-4 rounded-xl hover:bg-green-50 hover:shadow-md transform hover:scale-[1.02] transition-all duration-200 text-sm font-medium"
+          >
+            {t("create account")}
+          </button>
+        </div>
+
+        {/* Menu Items for Guests */}
+        <div className="flex flex-col mt-4 gap-1">
+          {menuItems
+            .filter(item => ["about us", "privacy, terms, and conditions"].includes(item.key))
+            .map((item) => (
+              <div
+                key={item.key}
+                onClick={() => handleMenuClick(item)}
+                className="flex justify-between items-center text-gray-700 hover:bg-green-50 hover:text-main p-3 rounded-lg transition-all duration-200 cursor-pointer group"
+              >
+                <div className="flex gap-3 text-sm sm:text-base items-center">
+                  <span className="material-symbols-outlined text-xl group-hover:scale-110 transition-transform">
+                    {item.icon}
+                  </span>
+                  <span className="font-medium">{t(item.key)}</span>
+                </div>
+                <span className="material-symbols-outlined text-xl text-gray-400 group-hover:text-main group-hover:translate-x-1 transition-all">
+                  {i18n.language === "ar"
+                    ? "keyboard_arrow_left"
+                    : "keyboard_arrow_right"}
+                </span>
+              </div>
+            ))}
+        </div>
+      </div>
+    );
+  }
+
+  // Authenticated User View
   return (
     <div
-      className={`h-auto max-h-[450px] w-[280px] sm:w-[320px] cursor-default flex flex-col overflow-auto border-2 rounded-lg px-3 pt-4 pb-2 bg-white z-100 border-main absolute top-10 ${
+      className={`max-h-[520px] w-[300px] sm:w-[340px] cursor-default flex flex-col overflow-y-auto overflow-x-hidden rounded-xl shadow-2xl px-5 pt-5 pb-4 bg-white z-100 border border-gray-100 absolute top-12 ${
         i18n.language === "ar" ? "left-0" : "right-0"
       }`}
       dir={i18n.language === "ar" ? "rtl" : "ltr"}
     >
       {/* Account Info */}
       <div className="flex flex-col justify-center items-center">
-        <div
-          className={`w-16 h-16 sm:w-20 sm:h-20 bg-gray-300 border-2 ${
-            promoted
-              ? "border-main"
-              : "border-[#BF9300] border-r-transparent"
-          } rounded-full relative`}
-        >
-          {user?.image ? (
+        <div className="relative">
+          <div
+            className={`w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-gray-100 to-gray-200 border-3 ${
+              promoted
+                ? "border-main shadow-lg shadow-green-200"
+                : "border-[#BF9300] border-r-transparent"
+            } rounded-full relative overflow-hidden`}
+          >
+            {user?.image ? (
+              <img
+                src={user.image}
+                className="w-full h-full object-cover"
+                alt="Profile"
+              />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-green-50 to-green-100 flex items-center justify-center">
+                <svg
+                  className="w-12 h-12 sm:w-14 sm:h-14 text-main"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                  />
+                </svg>
+              </div>
+            )}
+          </div>
+          {flagImage && (
             <img
-              src={user.image}
-              className="w-full h-full object-cover rounded-full"
-              alt="Profile"
+              src={flagImage}
+              className="absolute w-7 h-7 sm:w-10 sm:h-10 border-2 border-white rounded-full shadow-lg bottom-0 right-0"
+              alt="Flag"
             />
-          ) : (
-            <div className="w-full h-full rounded-full border-2 border-main bg-gray-100 flex items-center justify-center">
-              <svg
-                className="w-10 h-10 sm:w-12 sm:h-12 text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                />
-              </svg>
-            </div>
           )}
-          <img
-            src={flagImage}
-            className="absolute w-5 h-5 sm:w-9 sm:h-9 border rounded-full top-[60%] left-[60%]"
-            alt="Flag"
-          />
         </div>
         
-        <div className="flex items-center justify-center gap-2 mt-2">
-          <div className="text-base sm:text-lg font-semibold">
+        <div className="flex items-center justify-center gap-2 mt-3">
+          <div className="text-base sm:text-lg font-bold text-gray-800">
             {user?.name}
           </div>
           {user?.verified_account === 1 && (
-            <VerifiedIcon className="w-5 h-5 text-green-600 flex-shrink-0" />
+            <BadgeCheck className="w-5 h-5 text-green-600 flex-shrink-0" />
           )}
         </div>
 
         <button
-          onClick={() => navigate("/profile")}
-          className="border rounded-lg text-xs sm:text-base cursor-pointer text-white bg-main px-4 py-1.5 mt-2 sm:mt-3 hover:bg-green-700 transition w-full max-w-[180px]"
+          onClick={() => handleNavigation("/profile")}
+          className="rounded-xl text-xs sm:text-sm cursor-pointer text-white bg-gradient-to-r from-main to-green-700 px-6 py-2 mt-3 hover:shadow-lg transform hover:scale-[1.02] transition-all duration-200 w-full max-w-[200px] font-semibold"
         >
           {t("viewProfile")}
         </button>
 
+        {/* Country Select */}
         <div
           dir={i18n.language === "en" ? "ltr" : "rtl"}
-          className="w-full text-sm sm:text-base border border-main rounded-lg flex justify-between items-center p-2 mt-2 sm:mt-3"
+          className="w-full text-sm sm:text-base border border-gray-200 bg-gray-50 rounded-xl flex justify-between items-center p-3 mt-4 hover:border-main transition-colors"
         >
-          {t("country")}
-          <div className="bg-main text-white border rounded-lg px-2 py-1 text-xs sm:text-sm">
-            {countryName}
+          <span className="font-medium text-gray-700">{t("country")}</span>
+          <div className="w-32 sm:w-40">
+            <CustomSelect
+              options={countryOptions}
+              value={userCountryId?.toString()}
+              onChange={handleCountryChange}
+              placeholder={isLoadingCountries ? "..." : countryName}
+              isRTL={i18n.language === "ar"}
+              className="w-full"
+            />
           </div>
         </div>
       </div>
 
-      {/* Language Selector */}
-      <div
-        dir={i18n.language === "en" ? "ltr" : "rtl"}
-        className="w-full text-sm sm:text-base border border-main rounded-lg flex justify-between items-center p-1.5 mt-2"
-      >
-        {t("language")}
-        <div className="bg-main text-white border rounded-lg pr-1 flex items-center">
-          <span className="material-symbols-outlined text-xl sm:text-2xl p-0 m-0">
-            arrow_drop_down
-          </span>
-          <select
-            className="cursor-pointer bg-main px-1 text-white appearance-none outline-none focus:outline-none text-xs sm:text-sm"
-            name="selectedOption"
-            value={i18n.language}
-            onChange={(e) => i18n.changeLanguage(e.target.value)}
-          >
-            <option value="en">English</option>
-            <option value="ar">عربي</option>
-          </select>
-        </div>
-      </div>
+      {/* Divider */}
+      <div className="w-full h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent my-4"></div>
 
       {/* Menu Items */}
-      <div className="flex flex-col mt-2">
+      <div className="flex flex-col gap-1">
         {menuItems.map((item) => (
           <div
             key={item.key}
             onClick={() => handleMenuClick(item)}
-            className="flex justify-between my-1 text-main hover:bg-green-50 p-1.5 rounded-lg transition cursor-pointer"
+            className="flex justify-between items-center text-gray-700 hover:bg-green-50 hover:text-main p-3 rounded-lg transition-all duration-200 cursor-pointer group"
           >
-            <div className="flex gap-2 text-sm sm:text-base items-center">
-              <span className="material-symbols-outlined text-lg sm:text-xl">
+            <div className="flex gap-3 text-sm sm:text-base items-center">
+              <span className="material-symbols-outlined text-xl group-hover:scale-110 transition-transform">
                 {item.icon}
               </span>
-              {t(item.key)}
+              <span className="font-medium">{t(item.key)}</span>
             </div>
-            <span className="material-symbols-outlined text-lg sm:text-xl">
+            <span className="material-symbols-outlined text-xl text-gray-400 group-hover:text-main group-hover:translate-x-1 transition-all">
               {i18n.language === "ar"
                 ? "keyboard_arrow_left"
                 : "keyboard_arrow_right"}
@@ -187,12 +320,14 @@ const ProfileHover = () => {
           </div>
         ))}
 
+        {/* Logout Button */}
         <button
           onClick={handleLogout}
           disabled={isLoggingOut}
           dir={i18n.language === "en" ? "ltr" : "rtl"}
-          className="self-center w-full max-w-[160px] border-2 border-main rounded-lg text-sm sm:text-base text-main bg-white px-4 py-1.5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:bg-green-50 transition mt-2"
+          className="self-center w-full max-w-[180px] border-2 border-red-500 rounded-xl text-sm sm:text-base text-red-500 bg-white px-4 py-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:bg-red-50 hover:shadow-md transform hover:scale-[1.02] transition-all duration-200 mt-3 font-semibold flex items-center justify-center gap-2"
         >
+          <LogOut className="w-4 h-4" />
           {isLoggingOut ? t("auth.login.loggingOut") : t("log out")}
         </button>
       </div>

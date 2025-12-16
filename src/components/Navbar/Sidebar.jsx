@@ -1,17 +1,20 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../../contexts/AuthContext";
 import { countriesFlags } from "../../data/flags";
-import { authAPI } from "../../api";
+import { authAPI, dataAPI } from "../../api";
+import CustomSelect from "../Ui/CustomSelect/CustomSelect";
 
 const Sidebar = ({ isOpen, onClose }) => {
     const { t, i18n } = useTranslation();
-    const { isAuthenticated, logout } = useAuth();
+    const { isAuthenticated, logout, user, updateUser } = useAuth();
     const navigate = useNavigate();
     const [isLoggingOut, setIsLoggingOut] = React.useState(false);
+    const [countries, setCountries] = useState([]);
+    const [isLoadingCountries, setIsLoadingCountries] = useState(false);
 
-    const userData = JSON.parse(localStorage.getItem("userData"));
+    const userData = user || JSON.parse(localStorage.getItem("userData"));
     const userCountryId = userData?.country?.id;
 
     const userCountry = countriesFlags.find((c) => c.id === userCountryId);
@@ -22,10 +25,29 @@ const Sidebar = ({ isOpen, onClose }) => {
                 ? userCountry.flag
                 : userCountry.flag[Object.keys(userCountry.flag)[0]];
     }
-    const countryName =
-        i18n.language === "ar"
-            ? userData?.country?.name_ar
-            : userData?.country?.name_en;
+
+    // Fetch countries on mount
+    useEffect(() => {
+        const fetchCountries = async () => {
+            try {
+                setIsLoadingCountries(true);
+                const countriesRes = await dataAPI.getCountries();
+                const countriesData =
+                    countriesRes.data?.data?.countries ||
+                    countriesRes.data?.countries ||
+                    [];
+                setCountries(Array.isArray(countriesData) ? countriesData : []);
+            } catch (error) {
+                console.error("Error fetching countries:", error);
+            } finally {
+                setIsLoadingCountries(false);
+            }
+        };
+
+        if (isAuthenticated) {
+            fetchCountries();
+        }
+    }, [isAuthenticated]);
 
     useEffect(() => {
         if (isOpen) {
@@ -55,6 +77,27 @@ const Sidebar = ({ isOpen, onClose }) => {
         }
     };
 
+    const handleLanguageChange = (newLanguage) => {
+        i18n.changeLanguage(newLanguage);
+    };
+
+    const handleCountryChange = async (newCountryId) => {
+        try {
+            const selectedCountry = countries.find(c => c.id === parseInt(newCountryId));
+            if (selectedCountry && updateUser) {
+                const updatedUser = {
+                    ...userData,
+                    country: selectedCountry,
+                    country_id: selectedCountry.id
+                };
+                updateUser(updatedUser);
+                localStorage.setItem("userData", JSON.stringify(updatedUser));
+            }
+        } catch (error) {
+            console.error("Error updating country:", error);
+        }
+    };
+
     const menuItems = [
         { key: "favorite ads", icon: "favorite", route: "/favorites" },
         { key: "subscriptions", icon: "article", route: "/packages" },
@@ -79,8 +122,21 @@ const Sidebar = ({ isOpen, onClose }) => {
     const handleMenuClick = (item) => {
         if (item.route) {
             navigate(item.route);
+            onClose();
         }
     };
+
+    // Prepare language options
+    const languageOptions = [
+        { value: "en", label: "English" },
+        { value: "ar", label: "عربي" }
+    ];
+
+    // Prepare country options
+    const countryOptions = countries.map(country => ({
+        value: country.id.toString(),
+        label: i18n.language === "ar" ? country.name_ar : country.name_en
+    }));
 
     return (
         <>
@@ -93,12 +149,9 @@ const Sidebar = ({ isOpen, onClose }) => {
 
             {/* Sidebar */}
             <div
-                className={`fixed top-0 ${i18n.language === "ar" ? "right-0" : "left-0"
-                    } h-full w-80 max-w-[85vw] bg-white shadow-2xl z-50 transform transition-transform duration-300 lg:hidden ${isOpen
-                        ? "translate-x-0"
-                        : i18n.language === "ar"
-                            ? "translate-x-full"
-                            : "-translate-x-full"
+                className={`fixed top-0 h-full w-80 max-w-[85vw] bg-white shadow-2xl z-50 transition-all duration-300 lg:hidden ${i18n.language === "ar"
+                    ? `right-0 ${isOpen ? "translate-x-0" : "translate-x-full"}`
+                    : `left-0 ${isOpen ? "translate-x-0" : "-translate-x-full"}`
                     }`}
                 dir={i18n.language === "ar" ? "rtl" : "ltr"}
             >
@@ -120,7 +173,7 @@ const Sidebar = ({ isOpen, onClose }) => {
                     <div className="p-4 border-b border-gray-200">
                         {isAuthenticated ? (
                             <div className="flex flex-col items-center gap-3">
-                                <div className="relative flex-shrink-0">
+                                <div className="relative flex-shrink-0 order-1">
                                     <div className="w-20 h-20 bg-gray-300 border-2 border-main rounded-full relative cursor-pointer overflow-hidden">
                                         {userData?.image ? (
                                             <img
@@ -146,40 +199,73 @@ const Sidebar = ({ isOpen, onClose }) => {
                                             </div>
                                         )}
                                     </div>
-                                    <img
-                                        src={flagImage}
-                                        className="absolute w-8 h-8 border rounded-full top-[60%] left-[60%]"
-                                        alt="Flag"
-                                    />
+                                    {flagImage && (
+                                        <img
+                                            src={flagImage}
+                                            className="absolute w-8 h-8 border rounded-full top-[60%] left-[60%]"
+                                            alt="Flag"
+                                        />
+                                    )}
                                 </div>
-
-                                <div className="text-lg font-semibold text-center">
+                                <div className="text-lg font-semibold text-center order-2">
                                     {userData?.name}
+                                </div>
+                                {/* Country Select */}
+                                <div className="w-full border border-main rounded-lg p-2 flex justify-between items-center text-sm order-3">
+                                    <span>{t("country")}</span>
+                                    <div className="w-32">
+                                        <CustomSelect
+                                            options={countryOptions}
+                                            value={userCountryId?.toString()}
+                                            onChange={handleCountryChange}
+                                            placeholder={isLoadingCountries ? "..." : (i18n.language === "ar" ? userData?.country?.name_ar : userData?.country?.name_en)}
+                                            isRTL={i18n.language === "ar"}
+                                            className="w-full"
+                                        />
+                                    </div>
                                 </div>
                                 <button
                                     onClick={() => {
                                         navigate("/profile");
                                         onClose();
                                     }}
-                                    className="w-full bg-main text-white py-2 px-4 rounded-lg hover:bg-green-700 transition text-sm"
+                                    className="w-full bg-main text-white py-2 px-4 rounded-lg hover:bg-green-700 transition text-sm order-4"
                                 >
                                     {t("viewProfile")}
                                 </button>
-                                <div className="w-full border border-main rounded-lg p-2 flex justify-between items-center text-sm">
-                                    <span>{t("country")}</span>
-                                    <span className="bg-main text-white px-3 py-1 rounded-lg text-xs">
-                                        {countryName}
-                                    </span>
-                                </div>
+                                <button
+                                    onClick={handleLogout}
+                                    disabled={isLoggingOut}
+                                    className="w-full border-2 border-main text-main py-2 px-4 rounded-lg hover:bg-green-50 transition text-sm disabled:opacity-50 disabled:cursor-not-allowed order-5"
+                                >
+                                    {isLoggingOut
+                                        ? t("logging out...") || "جاري تسجيل الخروج..."
+                                        : t("log out")}
+                                </button>
                             </div>
                         ) : (
-                            <div className="flex flex-col gap-2">
+                            <div className="flex flex-col items-center gap-3">
+                                <div className="w-20 h-20 rounded-full border-2 border-main bg-gray-100 flex items-center justify-center order-1">
+                                    <svg
+                                        className="w-10 h-10 text-gray-400"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={1.5}
+                                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                                        />
+                                    </svg>
+                                </div>
                                 <button
                                     onClick={() => {
                                         navigate("/register");
                                         onClose();
                                     }}
-                                    className="w-full bg-main text-white py-2 px-4 rounded-lg hover:bg-green-700 transition text-sm"
+                                    className="w-full border-2 border-main text-main py-2 px-4 rounded-lg hover:bg-green-50 transition text-sm order-4"
                                 >
                                     {t("create account")}
                                 </button>
@@ -188,7 +274,7 @@ const Sidebar = ({ isOpen, onClose }) => {
                                         navigate("/login");
                                         onClose();
                                     }}
-                                    className="w-full border-2 border-main text-main py-2 px-4 rounded-lg hover:bg-green-50 transition text-sm"
+                                    className="w-full bg-main text-white py-2 px-4 rounded-lg hover:bg-green-700 transition text-sm font-semibold order-3"
                                 >
                                     {t("log in")}
                                 </button>
@@ -196,44 +282,46 @@ const Sidebar = ({ isOpen, onClose }) => {
                         )}
                     </div>
 
-                    {/* Quick Actions */}
-                    <div className="p-4 border-b border-gray-200 space-y-2">
-                        <button
-                        onClick={() => navigate("/auction")}
-                            className={`w-full px-4 py-3 border-2 border-main rounded-lg text-main hover:bg-green-50 transition font-medium
-                ${i18n.language === "ar" ? "text-lg" : "text-sm"}`}
-                        >
-                            {t("auctions")}
-                        </button>
-                        <button
-                            onClick={() => {
-                                navigate("/ads");
-                                onClose();
-                            }}
-                            className={`w-full px-4 py-3 bg-main text-white rounded-lg hover:bg-green-700 transition font-medium
-                ${i18n.language === "ar" ? "text-lg" : "text-sm"}`}
-                        >
-                            {t("shareAdv")}
-                        </button>
-                    </div>
-
                     {/* Language Selector */}
-                    <div className="p-4 border-b border-gray-200">
-                        <div className="flex justify-between items-center p-3 border border-main rounded-lg">
+                    {/* <div className="p-4 border-b border-gray-200">
+                        <div className="flex justify-between items-center p-2 border border-main rounded-lg">
                             <span className="text-sm font-medium">{t("language")}</span>
-                            <div className="bg-main text-white border rounded-lg pr-1 flex items-center">
-                                <span className="material-symbols-outlined text-2xl p-0 m-0">
-                                    arrow_drop_down
-                                </span>
-                                <select
-                                    className="cursor-pointer bg-main px-1 text-white appearance-none outline-none focus:outline-none text-sm"
+                            <div className="w-32">
+                                <CustomSelect
+                                    options={languageOptions}
                                     value={i18n.language}
-                                    onChange={(e) => i18n.changeLanguage(e.target.value)}
-                                >
-                                    <option value="en">English</option>
-                                    <option value="ar">عربي</option>
-                                </select>
+                                    onChange={handleLanguageChange}
+                                    placeholder={i18n.language === "ar" ? "عربي" : "English"}
+                                    isRTL={i18n.language === "ar"}
+                                    className="w-full"
+                                />
                             </div>
+                        </div>
+                    </div> */}
+
+{/* Quick Actions */}
+                    <div className="p-4 border-b border-gray-200">
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => {
+                                    navigate("/auction");
+                                    onClose();
+                                }}
+                                className={`flex-1 px-3 py-2 border-2 border-main rounded-lg text-main hover:bg-green-50 transition font-medium
+                    ${i18n.language === "ar" ? "text-base" : "text-xs"}`}
+                            >
+                                {t("auctions")}
+                            </button>
+                            <button
+                                onClick={() => {
+                                    navigate("/ads");
+                                    onClose();
+                                }}
+                                className={`flex-1 px-3 py-2 bg-main text-white rounded-lg hover:bg-green-700 transition font-medium
+                    ${i18n.language === "ar" ? "text-base" : "text-xs"}`}
+                            >
+                                {t("shareAdv")}
+                            </button>
                         </div>
                     </div>
 
@@ -259,17 +347,6 @@ const Sidebar = ({ isOpen, onClose }) => {
                                     </span>
                                 </button>
                             ))}
-                            {isAuthenticated && (
-                                <button
-                                    onClick={handleLogout}
-                                    disabled={isLoggingOut}
-                                    className="mt-3 w-full border-2 border-main text-main py-2 px-4 rounded-lg hover:bg-green-50 transition text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                    {isLoggingOut
-                                        ? t("logging out...") || "جاري تسجيل الخروج..."
-                                        : t("log out")}
-                                </button>
-                            )}
                         </div>
                     </div>
                 </div>

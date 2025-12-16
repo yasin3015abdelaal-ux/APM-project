@@ -5,7 +5,63 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { getCachedProducts, userAPI } from "../../../api";
 import PlaceholderSVG from "../../../assets/PlaceholderSVG";
-import Loader from "../../../components/Ui/Loader/Loader";
+
+// Skeleton Component
+const AdsCarouselSkeleton = ({ isRTL }) => (
+  <div className="mx-auto p-2 select-none" dir={isRTL ? "rtl" : "ltr"}>
+    {/* Header Skeleton */}
+    <div className="mb-3">
+      <div className="h-8 w-48 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded animate-pulse"
+           style={{animation: 'shimmer 1.5s ease-in-out infinite', backgroundSize: '200% 100%'}}></div>
+    </div>
+
+    {/* Cards Skeleton */}
+    <div className="py-3">
+      <div className="flex gap-4 overflow-hidden px-4">
+        {[...Array(4)].map((_, index) => (
+          <div
+            key={index}
+            className="relative w-1/4 min-w-[250px] border border-gray-200 rounded-2xl shadow-sm bg-white shrink-0"
+          >
+            {/* Image Skeleton */}
+            <div className="h-48 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded-t-2xl animate-pulse"
+                 style={{animation: 'shimmer 1.5s ease-in-out infinite', backgroundSize: '200% 100%'}}></div>
+
+            {/* Content Skeleton */}
+            <div className="p-3">
+              {/* Title */}
+              <div className="h-5 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded animate-pulse mb-2"
+                   style={{animation: 'shimmer 1.5s ease-in-out infinite', backgroundSize: '200% 100%', width: '80%'}}></div>
+
+              {/* Location */}
+              <div className="h-4 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded animate-pulse mb-2"
+                   style={{animation: 'shimmer 1.5s ease-in-out infinite', backgroundSize: '200% 100%', width: '60%'}}></div>
+
+              {/* Date */}
+              <div className="h-3 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded animate-pulse mb-3"
+                   style={{animation: 'shimmer 1.5s ease-in-out infinite', backgroundSize: '200% 100%', width: '40%'}}></div>
+
+              {/* Price and Button */}
+              <div className="flex items-center justify-between mt-3">
+                <div className="h-5 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded animate-pulse"
+                     style={{animation: 'shimmer 1.5s ease-in-out infinite', backgroundSize: '200% 100%', width: '80px'}}></div>
+                <div className="h-7 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded-full animate-pulse"
+                     style={{animation: 'shimmer 1.5s ease-in-out infinite', backgroundSize: '200% 100%', width: '100px'}}></div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    <style>{`
+      @keyframes shimmer {
+        0% { background-position: -200% 0; }
+        100% { background-position: 200% 0; }
+      }
+    `}</style>
+  </div>
+);
 
 function AdsCarousel() {
   const { t, i18n } = useTranslation();
@@ -21,7 +77,7 @@ function AdsCarousel() {
   const startX = useRef(0);
   const scrollLeft = useRef(0);
 
-useEffect(() => {
+  useEffect(() => {
     const fetchProducts = async () => {
       try {
         setLoading(true);
@@ -39,7 +95,7 @@ useEffect(() => {
     };
 
     fetchProducts();
-}, [t]);
+  }, [t]);
 
   // Auto-scroll effect
   useEffect(() => {
@@ -153,9 +209,7 @@ useEffect(() => {
   };
 
   if (loading) {
-    return (
-      <Loader />
-    );
+    return <AdsCarouselSkeleton isRTL={isRTL} />;
   }
 
   if (error) {
@@ -185,8 +239,8 @@ useEffect(() => {
   }
 
   return (
-    <div dir={dir} className="w-full select-none">
-      <h2 className="text-2xl font-bold text-main px-4">
+    <div dir={dir} className="mx-auto p-2 select-none">
+      <h2 className="text-2xl font-bold text-main">
         {t("home.adsSection.adsTitle")}
       </h2>
 

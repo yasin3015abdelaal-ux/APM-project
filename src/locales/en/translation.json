@@ -120,7 +120,23 @@
     },
     "countries": {
       "title": "Countries",
-      "country": ["Egypt", "Saudi Arabia", "Bahrain"]
+      "country": [
+        "Egypt",
+        "Saudi Arabia",
+        "Kuwait",
+        "United Arab Emirates",
+        "Jordan",
+        "Oman",
+        "Sudan",
+        "Libya",
+        "Tunisia",
+        "Algeria",
+        "Morocco",
+        "Qatar",
+        "Iraq",
+        "Mauritania",
+        "South Africa"
+      ]
     },
     "copyRight": "All rights reserved to Animal Production Market (APM) 2025",
     "development": "Developed by Soft Forte"
@@ -227,7 +243,15 @@
       "title": "Request Submitted",
       "message": "Your request has been submitted and will be reviewed as soon as possible",
       "backToHome": "Back to Home Page"
-    }
+    },
+    "deleteAccount": "Delete Account",
+    "deleteAccountTitle": "Delete Account Permanently",
+    "deleteAccountWarning": "Are you sure you want to delete your account? You won't be able to recover it after deletion.",
+    "confirmDelete": "Confirm Delete",
+    "cancel": "Cancel",
+    "deleting": "Deleting...",
+    "accountDeleted": "Your account has been successfully deleted",
+    "deleteError": "An error occurred while deleting the account"
   },
   "common": {
     "loading": "Loading...",
@@ -283,16 +307,35 @@
     "existingReviewNote": "You have an existing review for this seller. You can update it here.",
     "note": "Note:"
   },
-  "notifications": {
+"notifications": {
     "title": "Notifications",
-    "noNotifications": "No notifications",
-    "noNotificationsDesc": "Your notifications will appear here when available",
-    "unread": "unread",
+    "unread": "Unread",
     "markAsRead": "Mark as read",
     "markAllAsRead": "Mark all as read",
     "delete": "Delete",
     "clearAll": "Clear all",
-    "autoDelete": "Notifications will be automatically deleted after 30 days",
+    "refresh": "Refresh",
+    "marking": "Marking...",
+    "deleting": "Deleting...",
+    "markedAsRead": "Marked as read",
+    "allMarkedAsRead": "All marked as read",
+    "deleted": "Notification deleted",
+    "fetchError": "Failed to load notifications",
+    "markError": "Failed to mark as read",
+    "markAllError": "Failed to mark all as read",
+    "deleteError": "Failed to delete notification",
+    "noNotifications": "No notifications",
+    "noNotificationsDesc": "All your notifications will appear here when they arrive",
+    "autoDelete": "Notifications are automatically deleted after 30 days",
+    "page": "Page",
+    "of": "of",
+    "justNow": "Just now",
+    "minutesAgo": "",
+    "minutes": "minutes ago",
+    "hoursAgo": "",
+    "hours": "hours ago",
+    "daysAgo": "",
+    "days": "days ago",
     "filter": {
       "all": "All",
       "unread": "Unread",
