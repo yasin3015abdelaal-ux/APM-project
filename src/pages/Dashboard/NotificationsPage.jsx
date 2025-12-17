@@ -7,8 +7,9 @@ import { X, Eye, Send, Globe, BarChart3, Search, Filter, ChevronLeft, ChevronRig
 const NotificationsPage = () => {
   const { t, i18n } = useTranslation();
   const isRTL = i18n.language === "ar";
+  const isAr = i18n.language === "ar";
 
-  // State
+
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [countries, setCountries] = useState([]);
@@ -519,7 +520,7 @@ const NotificationsPage = () => {
             <h3 className="text-lg font-semibold text-gray-800">{t("dashboard.notifications.filters.title")}</h3>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div>
+            {/* <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 {t("dashboard.notifications.filters.userId")}
               </label>
@@ -530,7 +531,7 @@ const NotificationsPage = () => {
                 placeholder={t("dashboard.notifications.filters.userIdPlaceholder")}
                 className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border-2 border-gray-300 rounded-lg outline-none focus:border-main transition"
               />
-            </div>
+            </div> */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 {t("dashboard.notifications.filters.type")}
@@ -541,10 +542,9 @@ const NotificationsPage = () => {
                 className="w-full px-3 sm:px-4 py-2 text-sm sm:text-base border-2 border-gray-300 rounded-lg outline-none focus:border-main transition"
               >
                 <option value="">{t("dashboard.notifications.filters.allTypes")}</option>
-                <option value="info">{t("dashboard.notifications.types.info")}</option>
-                <option value="warning">{t("dashboard.notifications.types.warning")}</option>
-                <option value="success">{t("dashboard.notifications.types.success")}</option>
-                <option value="error">{t("dashboard.notifications.types.error")}</option>
+                <option value="custom">{!isAr?"Custom Notification":"إشعار مخصص"}</option>
+                <option value="admin_announcement">{!isAr?"Announcement":"اعلان"}</option>
+                
               </select>
             </div>
             <div>
@@ -585,22 +585,22 @@ const NotificationsPage = () => {
           <table className="w-full">
             <thead className="bg-main text-white">
               <tr>
-                <th className="px-4 py-3 text-sm sm:text-base font-semibold text-left">
+                <th className="px-4 py-3 text-sm sm:text-base font-semibold text-start">
                   {t("dashboard.notifications.table.id")}
                 </th>
-                <th className="px-4 py-3 text-sm sm:text-base font-semibold text-left">
+                <th className="px-4 py-3 text-sm sm:text-base font-semibold text-start">
                   {t("dashboard.notifications.table.title")}
                 </th>
-                <th className="px-4 py-3 text-sm sm:text-base font-semibold text-left">
+                <th className="px-4 py-3 text-sm sm:text-base font-semibold text-start">
                   {t("dashboard.notifications.table.type")}
                 </th>
-                <th className="px-4 py-3 text-sm sm:text-base font-semibold text-left">
+                <th className="px-4 py-3 text-sm sm:text-base font-semibold text-start">
                   {t("dashboard.notifications.table.status")}
                 </th>
-                <th className="px-4 py-3 text-sm sm:text-base font-semibold text-left">
+                <th className="px-4 py-3 text-sm sm:text-base font-semibold text-start">
                   {t("dashboard.notifications.table.createdAt")}
                 </th>
-                <th className="px-4 py-3 text-sm sm:text-base font-semibold text-left">
+                <th className="px-4 py-3 text-sm sm:text-base font-semibold text-start">
                   {t("dashboard.notifications.table.actions")}
                 </th>
               </tr>

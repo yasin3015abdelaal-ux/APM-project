@@ -99,7 +99,6 @@ const Sidebar = () => {
 
     // Menu items with their stat keys
     const menuItems = [
-<<<<<<< HEAD
         { 
             label: t("dashboard.sidebar.accounts"), 
             path: "/dashboard/accounts",
@@ -166,29 +165,15 @@ const Sidebar = () => {
             statKey: "invoices_count"
         },
         { 
+            label: t("dashboard.sidebar.notifications"), 
+            path: "/dashboard/notifications",
+            statKey: "notifications_count"
+        },
+        { 
             label: t("dashboard.sidebar.todayPrice"), 
             path: "/dashboard/today-price",
             statKey: null
         },
-=======
-        { label: t("dashboard.sidebar.accounts"), path: "/dashboard/accounts" },
-        // { label: t("dashboard.sidebar.posts"), path: "/dashboard/posts" },
-        { label: t("dashboard.sidebar.auctions"), path: "/dashboard/auctions" },
-        { label: t("dashboard.sidebar.additions"), path: "/dashboard/additions" },
-        { label: t("dashboard.sidebar.products"), path: "/dashboard/products" },
-        { label: t("dashboard.sidebar.packages"), path: "/dashboard/packages" },
-        { label: t("dashboard.sidebar.reports"), path: "/dashboard/reports" },
-        { label: t("dashboard.sidebar.messages"), path: "/dashboard/messages" },
-        { label: t("dashboard.sidebar.verification"), path: "/dashboard/verification" },
-        { label: t("dashboard.sidebar.logos"), path: "/dashboard/logos" },
-        { label: t("dashboard.sidebar.articles"), path: "/dashboard/articles" },
-        { label: t("dashboard.sidebar.ads"), path: "/dashboard/ads" },
-        { label: t("dashboard.sidebar.admins"), path: "/dashboard/admins" },
-        { label: t("dashboard.sidebar.subscriptions"), path: "/dashboard/subscriptions" },
-        { label: t("dashboard.sidebar.invoices"), path: "/dashboard/invoices" },
-        { label: t("dashboard.sidebar.notifications"), path: "/dashboard/notifications" },
-        { label: t("dashboard.sidebar.todayPrice"), path: "/dashboard/today-price" },
->>>>>>> b7111f78b7a46150144114db779c17808d129be7
     ];
 
     const toggleLanguage = () => {
@@ -199,13 +184,10 @@ const Sidebar = () => {
     const handleCountryChange = (e) => {
         const countryId = e.target.value;
         setSelectedCountry(countryId);
-<<<<<<< HEAD
-=======
         // Save selected country ID to localStorage for API headers
         localStorage.setItem("adminSelectedCountryId", countryId);
         // Trigger a custom event to notify other components
         window.dispatchEvent(new CustomEvent("adminCountryChanged", { detail: { countryId } }));
->>>>>>> b7111f78b7a46150144114db779c17808d129be7
     };
 
     const handleMenuClick = (path) => {
