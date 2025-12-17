@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import Navbar from "../components/Navbar/Navbar";
 import Footer from "../components/Footer/Footer";
 import Sidebar from "../components/Navbar/Sidebar";
-import SearchPage from "../components/Navbar/SearchPage";
+import SearchPage from "../components/Navbar/Searchpage";
 import { CartProvider } from "../contexts/CartContext";
 import { ChatProvider } from "../contexts/ChatContext";
 import { dataAPI } from "../api";

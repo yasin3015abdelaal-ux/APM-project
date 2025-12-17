@@ -99,23 +99,81 @@ const Sidebar = () => {
 
     // Menu items with their stat keys
     const menuItems = [
-        { label: t("dashboard.sidebar.accounts"), path: "/dashboard/accounts" },
-        // { label: t("dashboard.sidebar.posts"), path: "/dashboard/posts" },
-        { label: t("dashboard.sidebar.auctions"), path: "/dashboard/auctions" },
-        { label: t("dashboard.sidebar.additions"), path: "/dashboard/additions" },
-        { label: t("dashboard.sidebar.products"), path: "/dashboard/products" },
-        { label: t("dashboard.sidebar.packages"), path: "/dashboard/packages" },
-        { label: t("dashboard.sidebar.reports"), path: "/dashboard/reports" },
-        { label: t("dashboard.sidebar.messages"), path: "/dashboard/messages" },
-        { label: t("dashboard.sidebar.verification"), path: "/dashboard/verification" },
-        { label: t("dashboard.sidebar.logos"), path: "/dashboard/logos" },
-        { label: t("dashboard.sidebar.articles"), path: "/dashboard/articles" },
-        { label: t("dashboard.sidebar.ads"), path: "/dashboard/ads" },
-        { label: t("dashboard.sidebar.admins"), path: "/dashboard/admins" },
-        { label: t("dashboard.sidebar.subscriptions"), path: "/dashboard/subscriptions" },
-        { label: t("dashboard.sidebar.invoices"), path: "/dashboard/invoices" },
-        { label: t("dashboard.sidebar.notifications"), path: "/dashboard/notifications" },
-        { label: t("dashboard.sidebar.todayPrice"), path: "/dashboard/today-price" },
+        { 
+            label: t("dashboard.sidebar.accounts"), 
+            path: "/dashboard/accounts",
+            statKey: "users_count"
+        },
+        { 
+            label: t("dashboard.sidebar.auctions"), 
+            path: "/dashboard/auctions",
+            statKey: "auctions_count"
+        },
+        { 
+            label: t("dashboard.sidebar.additions"), 
+            path: "/dashboard/additions",
+            statKey: "additions_count"
+        },
+        { 
+            label: t("dashboard.sidebar.products"), 
+            path: "/dashboard/products",
+            statKey: "products_count"
+        },
+        { 
+            label: t("dashboard.sidebar.packages"), 
+            path: "/dashboard/packages",
+            statKey: "packages_count"
+        },
+        { 
+            label: t("dashboard.sidebar.reports"), 
+            path: "/dashboard/reports",
+            statKey: "reports_count"
+        },
+        { 
+            label: t("dashboard.sidebar.verification"), 
+            path: "/dashboard/verification",
+            statKey: "verifications_count"
+        },
+        { 
+            label: t("dashboard.sidebar.messages"), 
+            path: "/dashboard/messages",
+            statKey: "contact_messages_count"
+        },
+        { 
+            label: t("dashboard.sidebar.articles"), 
+            path: "/dashboard/articles",
+            statKey: "articles_count"
+        },
+        { 
+            label: t("dashboard.sidebar.ads"), 
+            path: "/dashboard/ads",
+            statKey: null
+        },
+        { 
+            label: t("dashboard.sidebar.admins"), 
+            path: "/dashboard/admins",
+            statKey: "admins_count"
+        },
+        { 
+            label: t("dashboard.sidebar.subscriptions"), 
+            path: "/dashboard/subscriptions",
+            statKey: null
+        },
+        { 
+            label: t("dashboard.sidebar.invoices"), 
+            path: "/dashboard/invoices",
+            statKey: "invoices_count"
+        },
+        { 
+            label: t("dashboard.sidebar.notifications"), 
+            path: "/dashboard/notifications",
+            statKey: "notifications_count"
+        },
+        { 
+            label: t("dashboard.sidebar.todayPrice"), 
+            path: "/dashboard/today-price",
+            statKey: null
+        },
     ];
 
     const toggleLanguage = () => {
