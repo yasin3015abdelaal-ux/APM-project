@@ -236,7 +236,7 @@ const TopSellersPage = () => {
                                                 </div>
                                             </div>
 
-                                            <div className="text-center pt-7 sm:pt-8">
+                                            <div className="text-center pt-7 sm:pt-12">
                                                 <div className="w-16 h-16 sm:w-24 sm:h-24 mx-auto rounded-full bg-gradient-to-br from-main/20 to-main/10 flex items-center justify-center overflow-hidden mb-2 sm:mb-4 border-2 border-main/30">
                                                     {topThree[1].image ? (
                                                         <img src={topThree[1].image} alt={topThree[1].name} className="w-full h-full object-cover" />
@@ -355,7 +355,7 @@ const TopSellersPage = () => {
                                                 </div>
                                             </div>
 
-                                            <div className="text-center pt-6 sm:pt-8">
+                                            <div className="text-center pt-6 sm:pt-12">
                                                 <div className="w-14 h-14 sm:w-24 sm:h-24 mx-auto rounded-full bg-gradient-to-br from-main/20 to-main/10 flex items-center justify-center overflow-hidden mb-2 sm:mb-4 border-2 border-main/30">
                                                     {topThree[2].image ? (
                                                         <img src={topThree[2].image} alt={topThree[2].name} className="w-full h-full object-cover" />
