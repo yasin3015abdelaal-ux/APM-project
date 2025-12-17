@@ -8,9 +8,9 @@ const TopSellersSkeleton = ({ isRTL }) => (
         {/* Header Skeleton */}
         <div className="flex items-center justify-between mb-2 px-3">
             <div className="h-8 w-32 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded animate-pulse"
-                 style={{animation: 'shimmer 1.5s ease-in-out infinite', backgroundSize: '200% 100%'}}></div>
+                style={{ animation: 'shimmer 1.5s ease-in-out infinite', backgroundSize: '200% 100%' }}></div>
             <div className="h-6 w-24 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded animate-pulse"
-                 style={{animation: 'shimmer 1.5s ease-in-out infinite', backgroundSize: '200% 100%'}}></div>
+                style={{ animation: 'shimmer 1.5s ease-in-out infinite', backgroundSize: '200% 100%' }}></div>
         </div>
 
         {/* Sellers Cards Skeleton */}
@@ -25,19 +25,19 @@ const TopSellersSkeleton = ({ isRTL }) => (
                         <div className="flex items-center gap-2.5">
                             {/* Avatar Skeleton */}
                             <div className="w-12 h-12 rounded-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 animate-pulse flex-shrink-0"
-                                 style={{animation: 'shimmer 1.5s ease-in-out infinite', backgroundSize: '200% 100%'}}></div>
+                                style={{ animation: 'shimmer 1.5s ease-in-out infinite', backgroundSize: '200% 100%' }}></div>
 
                             {/* Name Skeleton */}
                             <div className="flex-1 min-w-0">
                                 <div className="h-5 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded animate-pulse mb-1"
-                                     style={{animation: 'shimmer 1.5s ease-in-out infinite', backgroundSize: '200% 100%', width: '60%'}}></div>
+                                    style={{ animation: 'shimmer 1.5s ease-in-out infinite', backgroundSize: '200% 100%', width: '60%' }}></div>
                             </div>
 
                             {/* Stars Skeleton */}
                             <div className="flex items-center gap-1">
                                 {[1, 2, 3, 4, 5].map((star) => (
                                     <div key={star} className="w-4 h-4 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded animate-pulse"
-                                         style={{animation: 'shimmer 1.5s ease-in-out infinite', backgroundSize: '200% 100%'}}></div>
+                                        style={{ animation: 'shimmer 1.5s ease-in-out infinite', backgroundSize: '200% 100%' }}></div>
                                 ))}
                             </div>
                         </div>
@@ -46,7 +46,7 @@ const TopSellersSkeleton = ({ isRTL }) => (
                         <div className="flex flex-wrap gap-1.5 justify-center">
                             {[1, 2, 3, 4].map((badge) => (
                                 <div key={badge} className="h-6 w-20 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded-full animate-pulse"
-                                     style={{animation: 'shimmer 1.5s ease-in-out infinite', backgroundSize: '200% 100%'}}></div>
+                                    style={{ animation: 'shimmer 1.5s ease-in-out infinite', backgroundSize: '200% 100%' }}></div>
                             ))}
                         </div>
                     </div>
@@ -56,18 +56,18 @@ const TopSellersSkeleton = ({ isRTL }) => (
                         <div className="flex items-center gap-3 flex-1 min-w-0">
                             {/* Avatar Skeleton */}
                             <div className="w-16 h-16 rounded-full bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 animate-pulse flex-shrink-0"
-                                 style={{animation: 'shimmer 1.5s ease-in-out infinite', backgroundSize: '200% 100%'}}></div>
+                                style={{ animation: 'shimmer 1.5s ease-in-out infinite', backgroundSize: '200% 100%' }}></div>
 
                             <div className="flex-1 min-w-0">
                                 {/* Name Skeleton */}
                                 <div className="h-6 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded animate-pulse mb-2"
-                                     style={{animation: 'shimmer 1.5s ease-in-out infinite', backgroundSize: '200% 100%', width: '50%'}}></div>
-                                
+                                    style={{ animation: 'shimmer 1.5s ease-in-out infinite', backgroundSize: '200% 100%', width: '50%' }}></div>
+
                                 {/* Stars Skeleton */}
                                 <div className="flex items-center gap-1">
                                     {[1, 2, 3, 4, 5].map((star) => (
                                         <div key={star} className="w-5 h-5 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded animate-pulse"
-                                             style={{animation: 'shimmer 1.5s ease-in-out infinite', backgroundSize: '200% 100%'}}></div>
+                                            style={{ animation: 'shimmer 1.5s ease-in-out infinite', backgroundSize: '200% 100%' }}></div>
                                     ))}
                                 </div>
                             </div>
@@ -78,7 +78,7 @@ const TopSellersSkeleton = ({ isRTL }) => (
                             <div className="flex flex-wrap gap-2 justify-end">
                                 {[1, 2, 3, 4].map((badge) => (
                                     <div key={badge} className="h-7 w-24 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded-full animate-pulse"
-                                         style={{animation: 'shimmer 1.5s ease-in-out infinite', backgroundSize: '200% 100%'}}></div>
+                                        style={{ animation: 'shimmer 1.5s ease-in-out infinite', backgroundSize: '200% 100%' }}></div>
                                 ))}
                             </div>
                         </div>
@@ -104,7 +104,6 @@ const TopSellers = () => {
     const [sellers, setSellers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
-    const [showAll, setShowAll] = useState(false);
     const hasFetched = useRef(false);
 
     useEffect(() => {
@@ -209,6 +208,8 @@ const TopSellers = () => {
         return <TopSellersSkeleton isRTL={isRTL} />;
     }
 
+    const displayedSellers = sellers.slice(0, 3);
+
     return (
         <div className="mb-4" dir={isRTL ? "rtl" : "ltr"}>
             <style>{`
@@ -228,13 +229,10 @@ const TopSellers = () => {
                     {isRTL ? "افضل التجار" : "Top Sellers"}
                 </h2>
                 <button
-                    onClick={() => setShowAll(!showAll)}
+                    onClick={() => navigate('/top-sellers')}
                     className="text-main hover:text-main/80 cursor-pointer font-medium text-xs sm:text-sm flex items-center gap-1 transition-colors"
                 >
-                    {showAll 
-                        ? (isRTL ? "عرض أقل" : "Show Less")
-                        : (isRTL ? "عرض المزيد" : "View More")
-                    }
+                    {isRTL ? "عرض المزيد" : "View More"}
                     <svg className={`w-3 h-3 sm:w-4 sm:h-4 ${isRTL ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
@@ -268,133 +266,133 @@ const TopSellers = () => {
                 </div>
             ) : (
                 <div className="space-y-3 sm:space-y-4 px-3 sm:px-4">
-                    {(showAll ? sellers : sellers.slice(0, 3)).map((seller, index) => {
-                        const actualIndex = sellers.findIndex(s => s.id === seller.id);
-                        const showMedal = actualIndex < 3;
-                        
+                    {displayedSellers.map((seller, index) => {
+                        const showMedal = index < 3;
+
                         return (
-                        <div
-                            key={seller.id}
-                            onClick={() => navigate(`/seller/${seller.id}`)}
-                            className="bg-white border-2 border-main rounded-2xl sm:rounded-3xl p-3 sm:p-4 hover:shadow-xl transition-all duration-300 cursor-pointer relative overflow-hidden"
-                        >
-                            {showMedal && (
-                                <div
-                                    className="absolute flex-shrink-0 z-10 left-1/2 -translate-x-1/2"
-                                    style={{
-                                        top: '-3px',
-                                        animation: 'swing 2.5s ease-in-out infinite',
-                                        animationDelay: `${actualIndex * 0.3}s`,
-                                        transformOrigin: 'top center'
-                                    }}
-                                >
-                                    {/* Medal */}
+                            <div
+                                key={seller.id}
+                                onClick={() => navigate(`/seller/${seller.id}`)}
+                                className="bg-white border-2 border-main rounded-2xl sm:rounded-3xl p-3 sm:p-4 hover:shadow-xl transition-all duration-300 cursor-pointer relative overflow-hidden"
+                            >
+                                {showMedal && (
                                     <div
-                                        className="text-3xl sm:text-5xl relative"
+                                        className="absolute flex-shrink-0 z-10 left-1/2 -translate-x-1/2"
                                         style={{
-                                            filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.15))',
-                                            lineHeight: '1',
+                                            top: '-3px',
+                                            animation: 'swing 2.5s ease-in-out infinite',
+                                            animationDelay: `${index * 0.3}s`,
+                                            transformOrigin: 'top center'
                                         }}
                                     >
-                                        {actualIndex === 0 && "🥇"}
-                                        {actualIndex === 1 && "🥈"}
-                                        {actualIndex === 2 && "🥉"}
-                                    </div>
-                                </div>
-                            )}
-
-                            <div className="flex flex-col gap-3 sm:hidden">
-                                <div className="flex items-center gap-2.5">
-                                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-main/20 to-main/10 flex items-center justify-center border-2 border-main/20 overflow-hidden flex-shrink-0">
-                                        {seller.image ? (
-                                            <img src={seller.image} alt={seller.name} className="w-full h-full object-cover" />
-                                        ) : (
-                                            <span className="text-main font-bold text-xl">
-                                                {seller.name?.charAt(0).toUpperCase()}
-                                            </span>
-                                        )}
-                                    </div>
-
-                                    <div className="flex-1 min-w-0">
-                                        <h3 className="text-base font-bold text-gray-900 truncate">
-                                            {seller.name}
-                                        </h3>
-                                    </div>
-                                <div className="flex items-center justify-center">
-                                    <StarRating rating={seller.rating_avg || 0} />
-                                </div>
-                                </div>
-
-
-                                <div className="flex flex-wrap gap-1.5 justify-center">
-                                            <div className="bg-main text-white rounded-full px-2 py-1.5 text-[10px] font-bold whitespace-nowrap">
-                                        {isRTL ? "الاكثر مبيعا" : "Top Seller"}
-                                    </div>
-
-                                    {seller.rating_avg >= 4 && (
-                                            <div className="bg-main text-white rounded-full px-2 py-1.5 text-[10px] font-bold whitespace-nowrap">
-                                            {isRTL ? "امين" : "Honest"}
+                                        {/* Medal */}
+                                        <div
+                                            className="text-3xl sm:text-5xl relative"
+                                            style={{
+                                                filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.15))',
+                                                lineHeight: '1',
+                                            }}
+                                        >
+                                            {index === 0 && "🥇"}
+                                            {index === 1 && "🥈"}
+                                            {index === 2 && "🥉"}
                                         </div>
-                                    )}
+                                    </div>
+                                )}
 
-                                    {seller.rating_avg >= 4 && (
-                                            <div className="bg-main text-white rounded-full px-2 py-1.5 text-[10px] font-bold whitespace-nowrap">
-                                            {isRTL ? "سهل التعامل" : "Easy to Deal"}
+                                <div className="flex flex-col gap-3 sm:hidden">
+                                    <div className="flex items-center gap-2.5">
+                                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-main/20 to-main/10 flex items-center justify-center border-2 border-main/20 overflow-hidden flex-shrink-0">
+                                            {seller.image ? (
+                                                <img src={seller.image} alt={seller.name} className="w-full h-full object-cover" />
+                                            ) : (
+                                                <span className="text-main font-bold text-xl">
+                                                    {seller.name?.charAt(0).toUpperCase()}
+                                                </span>
+                                            )}
                                         </div>
-                                    )}
-                                    {seller.rating_avg >= 4 && (
-                                            <div className="bg-main text-white rounded-full px-2 py-1.5 text-[10px] font-bold whitespace-nowrap">
-                                                {isRTL ? "بضاعة ممتازة" : "Great Product Quality"}
-                                            </div>
-                                        )}
-                                </div>
-                            </div>
 
-                            <div className="hidden sm:flex items-center justify-between gap-4">
-                                <div className="flex items-center gap-3 flex-1 min-w-0">
-                                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-main/20 to-main/10 flex items-center justify-center border-2 border-main/20 overflow-hidden flex-shrink-0">
-                                        {seller.image ? (
-                                            <img src={seller.image} alt={seller.name} className="w-full h-full object-cover" />
-                                        ) : (
-                                            <span className="text-main font-bold text-2xl">
-                                                {seller.name?.charAt(0).toUpperCase()}
-                                            </span>
-                                        )}
+                                        <div className="flex-1 min-w-0">
+                                            <h3 className="text-base font-bold text-gray-900 truncate">
+                                                {seller.name}
+                                            </h3>
+                                        </div>
+                                        <div className="flex items-center justify-center">
+                                            <StarRating rating={seller.rating_avg || 0} />
+                                        </div>
                                     </div>
 
-                                    <div className="flex-1 min-w-0">
-                                        <h3 className="text-lg font-bold text-gray-900 truncate">
-                                            {seller.name}
-                                        </h3>
-                                        <StarRating rating={seller.rating_avg || 0} />
-                                    </div>
-                                </div>
 
-                                <div className="flex items-center gap-2 flex-shrink-0">
-                                    <div className="flex flex-wrap gap-2 justify-end">
-                                        <div className="bg-main text-white rounded-full px-3 py-1.5 text-xs font-bold whitespace-nowrap">
+                                    <div className="flex flex-wrap gap-1.5 justify-center">
+                                        <div className="bg-main text-white rounded-full px-2 py-1.5 text-[10px] font-bold whitespace-nowrap">
                                             {isRTL ? "الاكثر مبيعا" : "Top Seller"}
                                         </div>
+
                                         {seller.rating_avg >= 4 && (
-                                            <div className="bg-main text-white rounded-full px-3 py-1.5 text-xs font-bold whitespace-nowrap">
+                                            <div className="bg-main text-white rounded-full px-2 py-1.5 text-[10px] font-bold whitespace-nowrap">
                                                 {isRTL ? "امين" : "Honest"}
                                             </div>
                                         )}
+
                                         {seller.rating_avg >= 4 && (
-                                            <div className="bg-main text-white rounded-full px-3 py-1.5 text-xs font-bold whitespace-nowrap">
+                                            <div className="bg-main text-white rounded-full px-2 py-1.5 text-[10px] font-bold whitespace-nowrap">
                                                 {isRTL ? "سهل التعامل" : "Easy to Deal"}
                                             </div>
                                         )}
                                         {seller.rating_avg >= 4 && (
-                                            <div className="bg-main text-white rounded-full px-3 py-1.5 text-xs font-bold whitespace-nowrap">
+                                            <div className="bg-main text-white rounded-full px-2 py-1.5 text-[10px] font-bold whitespace-nowrap">
                                                 {isRTL ? "بضاعة ممتازة" : "Great Product Quality"}
                                             </div>
                                         )}
                                     </div>
                                 </div>
+
+                                <div className="hidden sm:flex items-center justify-between gap-4">
+                                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                                        <div className="w-16 h-16 rounded-full bg-gradient-to-br from-main/20 to-main/10 flex items-center justify-center border-2 border-main/20 overflow-hidden flex-shrink-0">
+                                            {seller.image ? (
+                                                <img src={seller.image} alt={seller.name} className="w-full h-full object-cover" />
+                                            ) : (
+                                                <span className="text-main font-bold text-2xl">
+                                                    {seller.name?.charAt(0).toUpperCase()}
+                                                </span>
+                                            )}
+                                        </div>
+
+                                        <div className="flex-1 min-w-0">
+                                            <h3 className="text-lg font-bold text-gray-900 truncate">
+                                                {seller.name}
+                                            </h3>
+                                            <StarRating rating={seller.rating_avg || 0} />
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-2 flex-shrink-0">
+                                        <div className="flex flex-wrap gap-2 justify-end">
+                                            <div className="bg-main text-white rounded-full px-3 py-1.5 text-xs font-bold whitespace-nowrap">
+                                                {isRTL ? "الاكثر مبيعا" : "Top Seller"}
+                                            </div>
+                                            {seller.rating_avg >= 4 && (
+                                                <div className="bg-main text-white rounded-full px-3 py-1.5 text-xs font-bold whitespace-nowrap">
+                                                    {isRTL ? "امين" : "Honest"}
+                                                </div>
+                                            )}
+                                            {seller.rating_avg >= 4 && (
+                                                <div className="bg-main text-white rounded-full px-3 py-1.5 text-xs font-bold whitespace-nowrap">
+                                                    {isRTL ? "سهل التعامل" : "Easy to Deal"}
+                                                </div>
+                                            )}
+                                            {seller.rating_avg >= 4 && (
+                                                <div className="bg-main text-white rounded-full px-3 py-1.5 text-xs font-bold whitespace-nowrap">
+                                                    {isRTL ? "بضاعة ممتازة" : "Great Product Quality"}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    )})}
+                        )
+                    })}
                 </div>
             )}
         </div>

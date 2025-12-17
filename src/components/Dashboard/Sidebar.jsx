@@ -99,78 +99,6 @@ const Sidebar = () => {
 
     // Menu items with their stat keys
     const menuItems = [
-<<<<<<< HEAD
-        { 
-            label: t("dashboard.sidebar.accounts"), 
-            path: "/dashboard/accounts",
-            statKey: "users_count"
-        },
-        { 
-            label: t("dashboard.sidebar.auctions"), 
-            path: "/dashboard/auctions",
-            statKey: "auctions_count"
-        },
-        { 
-            label: t("dashboard.sidebar.additions"), 
-            path: "/dashboard/additions",
-            statKey: "additions_count"
-        },
-        { 
-            label: t("dashboard.sidebar.products"), 
-            path: "/dashboard/products",
-            statKey: "products_count"
-        },
-        { 
-            label: t("dashboard.sidebar.packages"), 
-            path: "/dashboard/packages",
-            statKey: "packages_count"
-        },
-        { 
-            label: t("dashboard.sidebar.reports"), 
-            path: "/dashboard/reports",
-            statKey: "reports_count"
-        },
-        { 
-            label: t("dashboard.sidebar.verification"), 
-            path: "/dashboard/verification",
-            statKey: "verifications_count"
-        },
-        { 
-            label: t("dashboard.sidebar.messages"), 
-            path: "/dashboard/messages",
-            statKey: "contact_messages_count"
-        },
-        { 
-            label: t("dashboard.sidebar.articles"), 
-            path: "/dashboard/articles",
-            statKey: "articles_count"
-        },
-        { 
-            label: t("dashboard.sidebar.ads"), 
-            path: "/dashboard/ads",
-            statKey: null
-        },
-        { 
-            label: t("dashboard.sidebar.admins"), 
-            path: "/dashboard/admins",
-            statKey: "admins_count"
-        },
-        { 
-            label: t("dashboard.sidebar.subscriptions"), 
-            path: "/dashboard/subscriptions",
-            statKey: null
-        },
-        { 
-            label: t("dashboard.sidebar.invoices"), 
-            path: "/dashboard/invoices",
-            statKey: "invoices_count"
-        },
-        { 
-            label: t("dashboard.sidebar.todayPrice"), 
-            path: "/dashboard/today-price",
-            statKey: null
-        },
-=======
         { label: t("dashboard.sidebar.accounts"), path: "/dashboard/accounts" },
         // { label: t("dashboard.sidebar.posts"), path: "/dashboard/posts" },
         { label: t("dashboard.sidebar.auctions"), path: "/dashboard/auctions" },
@@ -188,7 +116,6 @@ const Sidebar = () => {
         { label: t("dashboard.sidebar.invoices"), path: "/dashboard/invoices" },
         { label: t("dashboard.sidebar.notifications"), path: "/dashboard/notifications" },
         { label: t("dashboard.sidebar.todayPrice"), path: "/dashboard/today-price" },
->>>>>>> b7111f78b7a46150144114db779c17808d129be7
     ];
 
     const toggleLanguage = () => {
@@ -199,13 +126,10 @@ const Sidebar = () => {
     const handleCountryChange = (e) => {
         const countryId = e.target.value;
         setSelectedCountry(countryId);
-<<<<<<< HEAD
-=======
         // Save selected country ID to localStorage for API headers
         localStorage.setItem("adminSelectedCountryId", countryId);
         // Trigger a custom event to notify other components
         window.dispatchEvent(new CustomEvent("adminCountryChanged", { detail: { countryId } }));
->>>>>>> b7111f78b7a46150144114db779c17808d129be7
     };
 
     const handleMenuClick = (path) => {
