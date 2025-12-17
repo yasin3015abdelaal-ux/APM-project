@@ -8,6 +8,7 @@ import logo from "../../assets/images/logo.jpg";
 import { useAdminAuth } from "../../contexts/AdminContext";
 import { adminAuthAPI } from "../../api";
 import { countriesFlags } from "../../data/flags";
+import { adminAPI } from "../../api";
 
 const Sidebar = () => {
     const { t, i18n } = useTranslation();
@@ -19,6 +20,8 @@ const Sidebar = () => {
     const [isOpen, setIsOpen] = useState(false);
     const [countries, setCountries] = useState([]);
     const [selectedCountry, setSelectedCountry] = useState("");
+    const [stats, setStats] = useState({});
+    const [loadingStats, setLoadingStats] = useState(false);
 
     const isRTL = i18n.language === "ar";
 
@@ -38,11 +41,16 @@ const Sidebar = () => {
                 const data = res.data?.data?.countries || res.data?.countries || res.data?.data || [];
                 setCountries(Array.isArray(data) ? data : []);
                 
-                // Set initial selected country from user data or first country
-                if (userCountryId) {
+                // Set initial selected country from localStorage, user data, or first country
+                const savedCountryId = localStorage.getItem("adminSelectedCountryId");
+                if (savedCountryId) {
+                    setSelectedCountry(savedCountryId);
+                } else if (userCountryId) {
                     setSelectedCountry(userCountryId.toString());
+                    localStorage.setItem("adminSelectedCountryId", userCountryId.toString());
                 } else if (data.length > 0) {
                     setSelectedCountry(data[0].id.toString());
+                    localStorage.setItem("adminSelectedCountryId", data[0].id.toString());
                 }
             })
             .catch((err) => {
@@ -50,13 +58,119 @@ const Sidebar = () => {
                 setCountries([]);
                 
                 // Fallback to user country if API fails
-                if (userCountryId) {
+                const savedCountryId = localStorage.getItem("adminSelectedCountryId");
+                if (savedCountryId) {
+                    setSelectedCountry(savedCountryId);
+                } else if (userCountryId) {
                     setSelectedCountry(userCountryId.toString());
+                    localStorage.setItem("adminSelectedCountryId", userCountryId.toString());
                 }
             });
     }, [userCountryId]);
 
+    // Fetch sidebar statistics
+    const fetchSidebarStats = async (countryId) => {
+        if (!countryId) return;
+        
+        try {
+            setLoadingStats(true);
+            const response = await adminAPI.get('/sidebar-stats', {
+                headers: {
+                    'country_id': countryId
+                }
+            });
+            
+            const data = response.data?.data || response.data;
+            setStats(data);
+        } catch (error) {
+            console.error("Error fetching sidebar stats:", error);
+            setStats({});
+        } finally {
+            setLoadingStats(false);
+        }
+    };
+
+    // Fetch stats when country changes
+    useEffect(() => {
+        if (selectedCountry) {
+            fetchSidebarStats(selectedCountry);
+        }
+    }, [selectedCountry]);
+
+    // Menu items with their stat keys
     const menuItems = [
+<<<<<<< HEAD
+        { 
+            label: t("dashboard.sidebar.accounts"), 
+            path: "/dashboard/accounts",
+            statKey: "users_count"
+        },
+        { 
+            label: t("dashboard.sidebar.auctions"), 
+            path: "/dashboard/auctions",
+            statKey: "auctions_count"
+        },
+        { 
+            label: t("dashboard.sidebar.additions"), 
+            path: "/dashboard/additions",
+            statKey: "additions_count"
+        },
+        { 
+            label: t("dashboard.sidebar.products"), 
+            path: "/dashboard/products",
+            statKey: "products_count"
+        },
+        { 
+            label: t("dashboard.sidebar.packages"), 
+            path: "/dashboard/packages",
+            statKey: "packages_count"
+        },
+        { 
+            label: t("dashboard.sidebar.reports"), 
+            path: "/dashboard/reports",
+            statKey: "reports_count"
+        },
+        { 
+            label: t("dashboard.sidebar.verification"), 
+            path: "/dashboard/verification",
+            statKey: "verifications_count"
+        },
+        { 
+            label: t("dashboard.sidebar.messages"), 
+            path: "/dashboard/messages",
+            statKey: "contact_messages_count"
+        },
+        { 
+            label: t("dashboard.sidebar.articles"), 
+            path: "/dashboard/articles",
+            statKey: "articles_count"
+        },
+        { 
+            label: t("dashboard.sidebar.ads"), 
+            path: "/dashboard/ads",
+            statKey: null
+        },
+        { 
+            label: t("dashboard.sidebar.admins"), 
+            path: "/dashboard/admins",
+            statKey: "admins_count"
+        },
+        { 
+            label: t("dashboard.sidebar.subscriptions"), 
+            path: "/dashboard/subscriptions",
+            statKey: null
+        },
+        { 
+            label: t("dashboard.sidebar.invoices"), 
+            path: "/dashboard/invoices",
+            statKey: "invoices_count"
+        },
+        { 
+            label: t("dashboard.sidebar.todayPrice"), 
+            path: "/dashboard/today-price",
+            statKey: null
+        },
+=======
         { label: t("dashboard.sidebar.accounts"), path: "/dashboard/accounts" },
         // { label: t("dashboard.sidebar.posts"), path: "/dashboard/posts" },
         { label: t("dashboard.sidebar.auctions"), path: "/dashboard/auctions" },
@@ -72,7 +186,9 @@ const Sidebar = () => {
         { label: t("dashboard.sidebar.admins"), path: "/dashboard/admins" },
         { label: t("dashboard.sidebar.subscriptions"), path: "/dashboard/subscriptions" },
         { label: t("dashboard.sidebar.invoices"), path: "/dashboard/invoices" },
+        { label: t("dashboard.sidebar.notifications"), path: "/dashboard/notifications" },
         { label: t("dashboard.sidebar.todayPrice"), path: "/dashboard/today-price" },
+>>>>>>> b7111f78b7a46150144114db779c17808d129be7
     ];
 
     const toggleLanguage = () => {
@@ -83,7 +199,13 @@ const Sidebar = () => {
     const handleCountryChange = (e) => {
         const countryId = e.target.value;
         setSelectedCountry(countryId);
-        // يمكنك إضافة logic إضافي هنا مثل تحديث localStorage أو إرسال request للسيرفر
+<<<<<<< HEAD
+=======
+        // Save selected country ID to localStorage for API headers
+        localStorage.setItem("adminSelectedCountryId", countryId);
+        // Trigger a custom event to notify other components
+        window.dispatchEvent(new CustomEvent("adminCountryChanged", { detail: { countryId } }));
+>>>>>>> b7111f78b7a46150144114db779c17808d129be7
     };
 
     const handleMenuClick = (path) => {
@@ -94,14 +216,11 @@ const Sidebar = () => {
     const handleLogout = async () => {
         try {
             setIsLoggingOut(true);
-            // Call admin logout API
             await adminAuthAPI.logout();
-            // Clear admin data and redirect
             logout();
             navigate("/admin/login");
         } catch (error) {
             console.error("Logout error:", error);
-            // Even if API call fails, clear local data and redirect
             logout();
             navigate("/admin/login");
         } finally {
@@ -135,6 +254,9 @@ const Sidebar = () => {
         if (path === "/dashboard/reports") {
             return location.pathname.startsWith("/dashboard/reports");
         }
+        if (path === "/dashboard/notifications") {
+            return location.pathname.startsWith("/dashboard/notifications");
+        }
         return location.pathname === path;
     };
 
@@ -161,9 +283,10 @@ const Sidebar = () => {
             {/* Sidebar */}
             <aside
                 className={`
-                    fixed lg:sticky
+                    fixed
                     ${isRTL ? "right-0" : "left-0"}
-                    top-0 h-screen
+                    top-0 
+                    h-screen
                     w-64 lg:w-60
                     bg-white border-2 border-main rounded-xl
                     flex flex-col justify-between
@@ -240,14 +363,26 @@ const Sidebar = () => {
                             <li key={index}>
                                 <button
                                     onClick={() => handleMenuClick(item.path)}
-                                    className={`w-full text-base font-medium rounded-md px-3 py-1.5 transition text-right cursor-pointer
+                                    className={`w-full text-base font-medium rounded-md px-3 py-1.5 transition cursor-pointer flex items-center justify-between
                                     ${isMenuItemActive(item.path)
                                         ? "bg-main text-white"
                                         : "text-main hover:translate-x-[-5px]"
                                     }`}
-                                    style={{ textAlign: isRTL ? "right" : "left" }}
                                 >
-                                    {item.label}
+                                    <span style={{ textAlign: isRTL ? "right" : "left" }}>
+                                        {item.label}
+                                    </span>
+                                    
+                                    {/* Statistics Badge */}
+                                    {item.statKey && stats[item.statKey] !== undefined && (
+                                        <span className={`flex items-center justify-center min-w-[24px] h-6 px-2 rounded-full text-xs font-bold ${
+                                            isMenuItemActive(item.path)
+                                                ? "bg-white text-main"
+                                                : "bg-main text-white"
+                                        }`}>
+                                            {loadingStats ? "..." : stats[item.statKey]}
+                                        </span>
+                                    )}
                                 </button>
                             </li>
                         ))}

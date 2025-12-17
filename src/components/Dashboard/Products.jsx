@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Check, X, Download, XCircle, User, MapPin, Calendar, DollarSign, Package, Phone, Mail } from 'lucide-react';
+import { Check, X, Download, XCircle, User, MapPin, Calendar, DollarSign, Package, Phone, Mail, ChevronLeft, ChevronRight } from 'lucide-react';
 import { adminAPI } from '../../api';
 import Loader from '../../components/Ui/Loader/Loader';
 import { useTranslation } from 'react-i18next';
@@ -17,6 +17,10 @@ const ProductsReview = () => {
     const [statusFilter, setStatusFilter] = useState('all');
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [showModal, setShowModal] = useState(false);
+    
+    // Pagination states
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 8;
 
     const showToast = (message, type = "success") => {
         setToast({ message, type });
@@ -29,6 +33,7 @@ const ProductsReview = () => {
 
     useEffect(() => {
         filterProducts();
+        setCurrentPage(1); // Reset to first page when filter changes
     }, [products, statusFilter]);
 
     const fetchProducts = async () => {
@@ -52,6 +57,17 @@ const ProductsReview = () => {
         }
 
         setFilteredProducts(filtered);
+    };
+
+    // Pagination calculations
+    const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const currentProducts = filteredProducts.slice(startIndex, endIndex);
+
+    const goToPage = (page) => {
+        setCurrentPage(page);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     const handleAcceptProduct = async (productId) => {
@@ -177,8 +193,8 @@ const ProductsReview = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 py-6" dir={isRTL ? 'rtl' : 'ltr'}>
-            <div className="container mx-auto px-4">
+        <div className="min-h-screen py-6" dir={isRTL ? 'rtl' : 'ltr'}>
+            <div className="w-full px-4">
                 {toast && (
                     <div className={`fixed top-4 sm:top-5 ${isRTL ? "left-4 sm:left-5" : "right-4 sm:right-5"} z-50 animate-slide-in max-w-[90%] sm:max-w-md`}>
                         <div className={`px-4 py-3 sm:px-6 sm:py-4 rounded-lg sm:rounded-xl shadow-lg flex items-center gap-2 sm:gap-3 ${toast.type === "success" ? "bg-main text-white" : "bg-red-500 text-white"}`}>
@@ -268,19 +284,19 @@ const ProductsReview = () => {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                    {filteredProducts.length === 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pb-6">
+                    {currentProducts.length === 0 ? (
                         <p className="col-span-full text-center text-xl md:text-2xl font-bold min-h-96 flex items-center justify-center text-gray-500">
                             {t('dashboard.products.noProducts')}
                         </p>
                     ) : (
-                        filteredProducts.map((product) => (
+                        currentProducts.map((product) => (
                             <div
                                 key={product.id}
                                 onClick={() => openProductModal(product)}
-                                className="flex flex-col rounded-lg border border-gray-200 bg-white shadow-sm hover:shadow-lg transition-all cursor-pointer overflow-hidden"
+                                className="flex flex-col rounded-lg border border-gray-200 bg-white shadow-sm hover:shadow-lg transition-all cursor-pointer overflow-hidden h-full"
                             >
-                                <div className="relative w-full h-48 bg-gray-50">
+                                <div className="relative w-full h-48 bg-gray-50 flex-shrink-0">
                                     {product.image ? (
                                         <img
                                             src={product.image}
@@ -299,7 +315,7 @@ const ProductsReview = () => {
                                         <PlaceholderSVG />
                                     </div>
                                     
-                                    <div className="absolute top-2 right-2">
+                                    <div className={`absolute top-2 ${isRTL ? 'left-2' : 'right-2'}`}>
                                         {getStatusBadge(product.status)}
                                     </div>
                                 </div>
@@ -309,11 +325,11 @@ const ProductsReview = () => {
                                         {isRTL ? product.name_ar : product.name_en}
                                     </h3>
 
-                                    <p className="text-sm text-gray-600 line-clamp-2 mb-3">
+                                    <p className="text-sm text-gray-600 line-clamp-2 mb-3 flex-grow">
                                         {isRTL ? product.description_ar : product.description_en}
                                     </p>
 
-                                    <div className="mt-auto">
+                                    <div className="mt-auto pt-2 border-t border-gray-100">
                                         <h6 className="font-bold text-lg text-main">
                                             {product.price} {product.country?.currency || (isRTL ? 'جنيه' : 'EGP')}
                                         </h6>
@@ -324,14 +340,77 @@ const ProductsReview = () => {
                     )}
                 </div>
 
+                {/* Pagination */}
+                {totalPages > 1 && (
+                    <div className="flex items-center justify-center gap-2 mt-6 pb-6">
+                        <button
+                            onClick={() => goToPage(currentPage - 1)}
+                            disabled={currentPage === 1}
+                            className={`p-2 rounded-lg border transition ${
+                                currentPage === 1
+                                    ? 'border-gray-200 text-gray-400 cursor-not-allowed'
+                                    : 'border-main text-main hover:bg-green-50 cursor-pointer'
+                            }`}
+                        >
+                            {isRTL ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
+                        </button>
+
+                        <div className="flex gap-1">
+                            {[...Array(totalPages)].map((_, index) => {
+                                const pageNumber = index + 1;
+                                const showPage = 
+                                    pageNumber === 1 || 
+                                    pageNumber === totalPages || 
+                                    (pageNumber >= currentPage - 1 && pageNumber <= currentPage + 1);
+
+                                if (!showPage && pageNumber === currentPage - 2) {
+                                    return <span key={pageNumber} className="px-2 py-1 text-gray-500">...</span>;
+                                }
+                                if (!showPage && pageNumber === currentPage + 2) {
+                                    return <span key={pageNumber} className="px-2 py-1 text-gray-500">...</span>;
+                                }
+                                if (!showPage) {
+                                    return null;
+                                }
+
+                                return (
+                                    <button
+                                        key={pageNumber}
+                                        onClick={() => goToPage(pageNumber)}
+                                        className={`min-w-[40px] px-3 py-2 rounded-lg font-medium transition ${
+                                            currentPage === pageNumber
+                                                ? 'bg-main text-white'
+                                                : 'border border-gray-200 text-gray-700 hover:border-main hover:text-main cursor-pointer'
+                                        }`}
+                                    >
+                                        {pageNumber}
+                                    </button>
+                                );
+                            })}
+                        </div>
+
+                        <button
+                            onClick={() => goToPage(currentPage + 1)}
+                            disabled={currentPage === totalPages}
+                            className={`p-2 rounded-lg border transition ${
+                                currentPage === totalPages
+                                    ? 'border-gray-200 text-gray-400 cursor-not-allowed'
+                                    : 'border-main text-main hover:bg-green-50 cursor-pointer'
+                            }`}
+                        >
+                            {isRTL ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
+                        </button>
+                    </div>
+                )}
+
                 {/* Product Details Modal */}
                 {showModal && selectedProduct && (
                     <div 
-                        className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+                        className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto"
                         onClick={closeModal}
                     >
                         <div 
-                            className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+                            className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto my-8"
                             onClick={(e) => e.stopPropagation()}
                             dir={isRTL ? 'rtl' : 'ltr'}
                         >

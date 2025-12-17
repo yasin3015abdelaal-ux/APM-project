@@ -48,8 +48,6 @@ export const adminChatAPI = axios.create({
 });
 
 export const adminChatMessagesAPI = axios.create({
-    baseURL: `${BASE_URL}/admin`,
-    headers: { "Content-Type": "application/json" },
     baseURL: `${BASE_URL}/admin/chat`,
     headers: { 
         "Content-Type": "application/json",
@@ -117,6 +115,15 @@ adminAPI.interceptors.request.use((config) => {
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;
     }
+    
+    // Add country ID to headers if available
+    const countryId = localStorage.getItem("adminSelectedCountryId");
+    if (countryId) {
+        config.headers["Country-Id"] = countryId;
+        // Also add as X-Country-Id if backend expects that format
+        config.headers["X-Country-Id"] = countryId;
+    }
+    
     if (config.data instanceof FormData) {
         delete config.headers["Content-Type"];
     }
@@ -143,6 +150,14 @@ adminAPI.interceptors.response.use(
 adminChatAPI.interceptors.request.use((config) => {
     const token = localStorage.getItem("adminToken");
     if (token) config.headers.Authorization = `Bearer ${token}`;
+    
+    // Add country ID to headers if available
+    const countryId = localStorage.getItem("adminSelectedCountryId");
+    if (countryId) {
+        config.headers["Country-Id"] = countryId;
+        config.headers["X-Country-Id"] = countryId;
+    }
+    
     if (config.data instanceof FormData) {
         delete config.headers["Content-Type"];
     }
@@ -174,6 +189,14 @@ adminChatAPI.interceptors.response.use(
 adminChatMessagesAPI.interceptors.request.use((config) => {
     const token = localStorage.getItem("adminToken");
     if (token) config.headers.Authorization = `Bearer ${token}`;
+    
+    // Add country ID to headers if available
+    const countryId = localStorage.getItem("adminSelectedCountryId");
+    if (countryId) {
+        config.headers["Country-Id"] = countryId;
+        config.headers["X-Country-Id"] = countryId;
+    }
+    
     if (config.data instanceof FormData) {
         delete config.headers["Content-Type"];
     }
@@ -733,6 +756,40 @@ export const adminManagementAPI = {
             ['admins']
         );
         return response;
+    },
+};
+
+// ====== Admin Notifications APIs ======
+export const adminNotificationsAPI = {
+    // Get notifications list with filters
+    getNotifications: (params = {}) => {
+        const queryParams = {
+            per_page: params.per_page || 20,
+            ...(params.user_id && { user_id: params.user_id }),
+            ...(params.type && { type: params.type }),
+            ...(params.status && { status: params.status }),
+            ...(params.all && { all: params.all }),
+            ...(params.page && { page: params.page }),
+        };
+        return adminAPI.get("/notifications", { params: queryParams });
+    },
+    
+    // Get notification details
+    getNotification: (notificationId) => adminAPI.get(`/notifications/${notificationId}`),
+    
+    // Send notification to specific users
+    sendNotification: (data) => adminAPI.post("/notifications/send", data),
+    
+    // Broadcast notification by country
+    broadcastNotification: (data) => adminAPI.post("/notifications/broadcast", data),
+    
+    // Get notification statistics
+    getStatistics: (params = {}) => {
+        const queryParams = {};
+        if (params.user_id) {
+            queryParams.user_id = params.user_id;
+        }
+        return adminAPI.get("/notifications/statistics", { params: queryParams });
     },
 };
 

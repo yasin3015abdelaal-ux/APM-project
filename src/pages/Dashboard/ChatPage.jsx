@@ -105,15 +105,12 @@ const ChatPage = () => {
   const [sendingMessage, setSendingMessage] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [unreadCount, setUnreadCount] = useState(0);
-  // Track if we're initiating a conversation to avoid duplicate message fetches
   const initiatingRef = useRef(false);
 
   const showToast = (message, type = "success") => {
-    // Toast implementation can be added if needed
     console.log(`${type}: ${message}`);
   };
 
-  // Auto-scroll to bottom when new messages arrive
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -122,17 +119,15 @@ const ChatPage = () => {
     scrollToBottom();
   }, [messages]);
 
-  // Fetch unread count
   const fetchUnreadCount = useCallback(async () => {
     try {
-      const response = await chatMessagesAPI.get("/messages/unread-count");
+      const response = await adminChatAPI.get("/messages/unread-count");
       setUnreadCount(response.data?.data?.count || response.data?.count || 0);
     } catch (err) {
       console.error("Error fetching unread count:", err);
     }
   }, []);
 
-  // Fetch all users
   const fetchAllUsers = useCallback(async () => {
     try {
       setUsersLoading(true);
@@ -153,25 +148,20 @@ const ChatPage = () => {
     }
   }, []);
 
-  // Fetch messages for a conversation (defined first to avoid hoisting issues)
   const fetchMessages = useCallback(
     async (conversationId, page = 1) => {
       if (!conversationId) return;
       try {
         setMessagesLoading(true);
-        // Use chatMessagesAPI for GET messages endpoint
-        const response = await chatMessagesAPI.get(`/conversations/${conversationId}/messages`, {
+        const response = await adminChatAPI.get(`/conversations/${conversationId}/messages`, {
           params: { page, limit: 50 },
         });
         const messagesList = parseArray(response.data).map(formatMessage);
-        setMessages(messagesList);
+        setMessages(messagesList.reverse());
         
-        // Mark messages as read
         try {
-          await chatMessagesAPI.post(`/conversations/${conversationId}/mark-read`);
-          // Update unread count
+          await adminChatAPI.post(`/conversations/${conversationId}/mark-read`);
           fetchUnreadCount();
-          // Update conversation unread count
           setConversations((prev) =>
             prev.map((conv) =>
               conv.id === conversationId ? { ...conv, unread: 0 } : conv
@@ -190,7 +180,6 @@ const ChatPage = () => {
     [t, fetchUnreadCount]
   );
 
-  // Initiate conversation with a user
   const initiateConversationWithUser = useCallback(async (userId) => {
     try {
       initiatingRef.current = true;
@@ -198,13 +187,20 @@ const ChatPage = () => {
         user_id: userId,
       });
       
-      // Extract conversation data from response
-      // Response structure: { success: true, data: { id, user_one, user_two, ... } }
       const convData = response.data?.data || response.data;
       
-      // user_one is the regular user (the one admin is chatting with)
-      // user_two is the admin user
-      const userData = convData.user_one || convData.user || { id: userId };
+      // Find the correct user (not the admin)
+      let userData = convData.user_one;
+      if (userData?.role === 'admin' || userData?.role === 'super_admin' ||
+          userData?.name?.toLowerCase().includes('admin') ||
+          userData?.username?.toLowerCase().includes('admin')) {
+        userData = convData.user_two || convData.user_one;
+      }
+      
+      // If still not found, use the userId to find from allUsers
+      if (!userData || userData.id === undefined) {
+        userData = allUsers.find(u => u.id === userId) || { id: userId };
+      }
       
       const newConv = {
         id: convData.id || convData.conversation_id,
@@ -216,8 +212,6 @@ const ChatPage = () => {
       setConversations((prev) => [newConv, ...prev]);
       setSelectedConversation(newConv);
       
-      // Immediately fetch messages after initiating conversation
-      // The useEffect will also trigger, but we want immediate loading
       if (newConv.id) {
         await fetchMessages(newConv.id);
       }
@@ -229,37 +223,41 @@ const ChatPage = () => {
       initiatingRef.current = false;
       throw err;
     }
-  }, [t, fetchMessages]);
+  }, [t, fetchMessages, allUsers]);
 
-  // Fetch conversations list
   const fetchConversations = useCallback(async (skipAutoSelect = false) => {
     try {
       setConversationsLoading(true);
       setConversationsError(null);
       
-      // Use adminChatAPI with correct endpoint (baseURL is now /admin, path is /conversations)
       const response = await adminChatAPI.get("/conversations", {
         params: {
-          user_id: '',
-          type: '',
+          user_id: 14,
+          // type: '',
           page: 1
         }
       });
       
-      // Handle response structure - check if response has success field
       if (response.data && response.data.success === false) {
         throw new Error(response.data.message || 'Failed to fetch conversations');
       }
       
-      // Extract conversations array from response
-      // Response might be: { success: true, data: [...] } or just [...]
       const conversationsData = response.data?.data || response.data;
       const conversationsArray = Array.isArray(conversationsData) ? conversationsData : [];
       
       const list = conversationsArray.map((conv) => {
-        // user_one is the regular user (the one admin is chatting with)
-        // user_two is the admin user
-        const userData = conv.user_one || conv.user || conv.client || conv.participant || {};
+        // Check both user_one and user_two to find the non-admin user
+        let userData = conv.user_one;
+        
+        // If user_one is admin/super_admin, use user_two instead
+        if (userData?.role === 'admin' || userData?.role === 'super_admin' || 
+            userData?.name?.toLowerCase().includes('admin') ||
+            userData?.username?.toLowerCase().includes('admin')) {
+          userData = conv.user_two || conv.user_one;
+        }
+        
+        // Fallback to other possible fields
+        userData = userData || conv.user || conv.client || conv.participant || {};
         
         return {
           id: conv.id,
@@ -271,15 +269,11 @@ const ChatPage = () => {
       setConversations(list);
     } catch (err) {
       console.error("Error fetching conversations:", err);
-      console.error("Request URL:", err.config?.url);
-      console.error("Full URL:", err.config?.baseURL + err.config?.url);
-      console.error("Response:", err.response?.data);
       setConversationsError(t("dashboard.chat.errors.fetchConversations"));
     } finally {
       setConversationsLoading(false);
     }
   }, [t]);
-
 
   useEffect(() => {
     fetchConversations();
@@ -287,14 +281,12 @@ const ChatPage = () => {
     fetchUnreadCount();
   }, [fetchConversations, fetchAllUsers, fetchUnreadCount]);
 
-  // Fetch messages when conversation is selected
   useEffect(() => {
     if (selectedConversation?.id && !initiatingRef.current) {
       fetchMessages(selectedConversation.id);
     } else if (!selectedConversation?.id) {
       setMessages([]);
     }
-    // Reset the flag after a short delay
     if (initiatingRef.current) {
       setTimeout(() => {
         initiatingRef.current = false;
@@ -302,7 +294,6 @@ const ChatPage = () => {
     }
   }, [selectedConversation?.id, fetchMessages]);
 
-  // Handle user selection from URL params (after users are loaded)
   useEffect(() => {
     const userIdParam = searchParams.get("user_id");
     if (userIdParam && allUsers.length > 0 && !selectedConversation) {
@@ -312,16 +303,13 @@ const ChatPage = () => {
         if (existingConv) {
           setSelectedConversation(existingConv);
         } else {
-          // Initiate conversation for this user
           initiateConversationWithUser(parseInt(userIdParam));
         }
       }
     }
   }, [searchParams, allUsers, conversations, selectedConversation, initiateConversationWithUser]);
 
-  // Merge conversations with all users to show all users in sidebar
   const allUsersWithConversations = useMemo(() => {
-    // Create a map of user_id to conversation for quick lookup
     const convMap = new Map();
     conversations.forEach((conv) => {
       if (conv.user?.id) {
@@ -329,38 +317,35 @@ const ChatPage = () => {
       }
     });
 
-    // Map all users and merge with their conversations if they exist
     return allUsers.map((user) => {
       const existingConv = convMap.get(user.id);
       if (existingConv) {
         return existingConv;
       }
-      // User without conversation - create a placeholder conversation object
       return {
-        id: null, // No conversation ID yet
+        id: null,
         user: user,
         last_message: null,
         unread: 0,
-        isNewUser: true, // Flag to indicate this user doesn't have a conversation yet
+        isNewUser: true,
       };
     });
   }, [allUsers, conversations]);
 
   const filteredConversations = useMemo(() => {
-    const itemsToFilter = allUsersWithConversations.length > 0 ? allUsersWithConversations : conversations;
-    if (!searchTerm.trim()) return itemsToFilter;
+    // Use conversations directly (not allUsersWithConversations for the list)
+    if (!searchTerm.trim()) return conversations;
     const lower = searchTerm.toLowerCase();
-    return itemsToFilter.filter((item) => {
+    return conversations.filter((item) => {
       const name =
         item.user?.name || item.user?.full_name || item.user?.username || "";
       const preview =
         item.last_message?.body || item.last_message?.message || "";
       return name.toLowerCase().includes(lower) || preview.toLowerCase().includes(lower);
     });
-  }, [allUsersWithConversations, conversations, searchTerm]);
+  }, [conversations, searchTerm]);
 
   const handleConversationSelect = async (conversation) => {
-    // If this is a new user without a conversation, initiate one
     if (conversation.isNewUser && conversation.user?.id) {
       try {
         await initiateConversationWithUser(conversation.user.id);
@@ -389,15 +374,11 @@ const ChatPage = () => {
       setMessages((prev) => [...prev, optimisticMessage]);
       setNewMessage("");
       
-      // Send message using chatMessagesAPI
-      await chatMessagesAPI.post(`/conversations/${selectedConversation.id}/messages`, {
+      await adminChatAPI.post(`/conversations/${selectedConversation.id}/messages`, {
         message: messageText,
       });
 
-      // Refresh messages to get the actual message from server
       await fetchMessages(selectedConversation.id);
-      
-      // Refresh conversations to update last message
       fetchConversations();
     } catch (err) {
       console.error("Error sending message:", err);
@@ -411,10 +392,11 @@ const ChatPage = () => {
 
   const renderedMessages = useMemo(() => {
     return messages.map((message) => {
-      const isAdmin = message.sender_type === "admin" || message.sender_type === "support";
+      // Check if sender is USER (not admin) - user messages should be white
+      const isUser = message.sender_type === "user" || message.sender_type === "client";
       return {
         ...message,
-        sender: isAdmin ? "me" : "other",
+        sender: isUser ? "other" : "me", // User = other (white), Admin = me (green)
         text: message.body,
         time: new Date(message.created_at).toLocaleTimeString(
           i18n.language === "ar" ? "ar-EG" : "en-US",
@@ -441,7 +423,6 @@ const ChatPage = () => {
     </div>
   );
 
-  // Memoize the onChange handler to prevent input from losing focus
   const handleMessageChange = useCallback((e) => {
     setNewMessage(e.target.value);
   }, []);
@@ -452,13 +433,23 @@ const ChatPage = () => {
 
   return (
     <div className="h-screen flex flex-col" dir={isRTL ? "rtl" : "ltr"}>
+      <style>
+        {`
+          .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+          }
+          .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+          }
+        `}
+      </style>
       {conversationsError && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-2 text-sm">
           {conversationsError}
         </div>
       )}
       <div className={`flex-1 flex ${selectedConversation ? "gap-0" : ""} overflow-hidden`}>
-        {/* Sidebar - Conversations List */}
         <div
           className={`${
             selectedConversation
@@ -492,9 +483,65 @@ const ChatPage = () => {
             </div>
           </div>
 
+          <div className="border-b-2 border-gray-200 bg-white px-4 py-3">
+            <h3 className="text-sm font-semibold text-gray-700 mb-2">{t("dashboard.chat.allUsers") || "All Users"}</h3>
+            <div className="overflow-x-auto hide-scrollbar">
+              <div className="flex gap-4 pb-2">
+                {allUsers.map((user) => {
+                  const userName = user.name || user.full_name || user.username || "Unknown";
+                  const hasConversation = conversations.some(conv => conv.user?.id === user.id);
+                  const isSelected = selectedConversation?.user?.id === user.id;
+                  
+                  return (
+                    <div
+                      key={user.id}
+                      onClick={() => {
+                        const existingConv = conversations.find(c => c.user?.id === user.id);
+                        if (existingConv) {
+                          setSelectedConversation(existingConv);
+                        } else {
+                          initiateConversationWithUser(user.id);
+                        }
+                      }}
+                      className="flex flex-col items-center gap-2 cursor-pointer flex-shrink-0 group"
+                    >
+                      <div className={`relative ${isSelected ? 'ring-4 ring-main rounded-full' : ''}`}>
+                        {user.image ? (
+                          <img
+                            src={user.image}
+                            alt={userName}
+                            className="w-16 h-16 rounded-full object-cover border-2 border-gray-300 group-hover:border-main transition"
+                          />
+                        ) : (
+                          <div className="w-16 h-16 rounded-full bg-gray-200 border-2 border-gray-300 group-hover:border-main flex items-center justify-center transition">
+                            <span className="text-xl font-semibold text-gray-600">
+                              {userName.charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                        )}
+                        {hasConversation && (
+                          <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white"></div>
+                        )}
+                      </div>
+                      <span className="text-xs text-gray-700 font-medium text-center max-w-[70px] truncate">
+                        {userName}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
           <div className="flex-1 overflow-y-auto">
             {filteredConversations.length === 0 ? (
-              <EmptyState />
+              <div className="flex flex-col items-center justify-center h-full py-8 px-4">
+                <p className="text-gray-500 text-center">
+                  {searchTerm.trim() 
+                    ? (t("dashboard.chat.noResults") || "No conversations found") 
+                    : (t("dashboard.chat.noConversations") || "No conversations yet")}
+                </p>
+              </div>
             ) : (
               filteredConversations.map((conversation) => (
                 <MessageCard
@@ -508,7 +555,6 @@ const ChatPage = () => {
           </div>
         </div>
 
-        {/* Chat Area */}
         {selectedConversation ? (
           <div className="flex-1">
             {!selectedConversation.id && selectedConversation.isNewUser ? (

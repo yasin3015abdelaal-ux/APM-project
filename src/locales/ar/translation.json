@@ -442,6 +442,7 @@
       "subscriptions": "الاشتراكات",
       "invoices": "الفواتير",
       "todayPrice": "السعر اليوم",
+      "notifications": "الإشعارات",
       "logout": "تسجيل الخروج",
       "loggingOut": "جاري تسجيل الخروج...",
       "Egypt": "مصر"
@@ -929,6 +930,107 @@
         "fetchError": "حدث خطأ في تحميل المزادات",
         "updateError": "حدث خطأ في التحديث",
         "participantsError": "حدث خطأ في تحميل المشاركين"
+      }
+    },
+    "notifications": {
+      "title": "إدارة الإشعارات",
+      "empty": "لا توجد إشعارات",
+      "stats": {
+        "total": "إجمالي الإشعارات",
+        "sent": "مرسلة",
+        "read": "مقروءة",
+        "unread": "غير مقروءة"
+      },
+      "filters": {
+        "title": "الفلاتر",
+        "userId": "رقم المستخدم",
+        "userIdPlaceholder": "أدخل رقم المستخدم",
+        "type": "النوع",
+        "status": "الحالة",
+        "allTypes": "جميع الأنواع",
+        "allStatuses": "جميع الحالات",
+        "apply": "تطبيق",
+        "reset": "إعادة تعيين"
+      },
+      "table": {
+        "id": "الرقم",
+        "title": "العنوان",
+        "type": "النوع",
+        "status": "الحالة",
+        "createdAt": "تاريخ الإنشاء",
+        "actions": "الإجراءات"
+      },
+      "status": {
+        "read": "مقروءة",
+        "unread": "غير مقروءة"
+      },
+      "types": {
+        "info": "معلومات",
+        "warning": "تحذير",
+        "success": "نجاح",
+        "error": "خطأ"
+      },
+      "pagination": {
+        "showing": "عرض",
+        "of": "من",
+        "page": "صفحة"
+      },
+      "actions": {
+        "send": "إرسال إشعار",
+        "broadcast": "بث حسب الدولة",
+        "viewDetails": "عرض التفاصيل",
+        "close": "إغلاق",
+        "cancel": "إلغاء"
+      },
+      "details": {
+        "title": "تفاصيل الإشعار",
+        "id": "الرقم",
+        "message": "الرسالة",
+        "type": "النوع",
+        "status": "الحالة",
+        "createdAt": "تاريخ الإنشاء"
+      },
+      "send": {
+        "title": "إرسال إشعار",
+        "selectUsers": "اختر المستخدمين",
+        "searchUsers": "ابحث عن المستخدمين بالاسم، البريد الإلكتروني، أو رقم الهاتف...",
+        "selectMultipleHint": "اضغط Ctrl (Cmd على Mac) لاختيار عدة مستخدمين",
+        "selected": "محدد",
+        "loadingUsers": "جاري تحميل المستخدمين...",
+        "noUsersFound": "لم يتم العثور على مستخدمين",
+        "title": "العنوان",
+        "titlePlaceholder": "أدخل عنوان الإشعار",
+        "message": "الرسالة",
+        "messagePlaceholder": "أدخل رسالة الإشعار",
+        "type": "النوع",
+        "send": "إرسال",
+        "sending": "جاري الإرسال..."
+      },
+      "broadcast": {
+        "title": "بث إشعار",
+        "country": "الدولة",
+        "selectCountry": "اختر الدولة",
+        "title": "العنوان",
+        "titlePlaceholder": "أدخل عنوان الإشعار",
+        "message": "الرسالة",
+        "messagePlaceholder": "أدخل رسالة الإشعار",
+        "type": "النوع",
+        "broadcast": "بث",
+        "sending": "جاري الإرسال..."
+      },
+      "messages": {
+        "sendSuccess": "تم إرسال الإشعار بنجاح",
+        "broadcastSuccess": "تم بث الإشعار بنجاح"
+      },
+      "errors": {
+        "fetch": "فشل في تحميل الإشعارات",
+        "fetchDetails": "فشل في تحميل تفاصيل الإشعار",
+        "sendFailed": "فشل في إرسال الإشعار",
+        "broadcastFailed": "فشل في بث الإشعار",
+        "titleRequired": "العنوان مطلوب",
+        "messageRequired": "الرسالة مطلوبة",
+        "usersRequired": "يجب إدخال رقم مستخدم واحد على الأقل",
+        "countryRequired": "الدولة مطلوبة"
       }
     }
   }

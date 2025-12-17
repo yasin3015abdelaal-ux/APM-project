@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import * as XLSX from "xlsx";
 import { adminAPI } from "../../api";
 import Loader from "../../components/Ui/Loader/Loader";
@@ -17,6 +18,10 @@ const ReportsPage = () => {
   const [selectedReport, setSelectedReport] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [toast, setToast] = useState(null);
+  
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 15; // عدد العناصر في كل صفحة
 
   const showToast = (message, type = "success") => {
     setToast({ message, type });
@@ -103,6 +108,144 @@ const ReportsPage = () => {
     if (selectedFilter === "all") return reports;
     return reports.filter((r) => r.type === selectedFilter);
   }, [selectedFilter, reports]);
+
+  // Pagination calculations - بتشتغل على filteredReports مش reports
+  const totalPages = Math.ceil(filteredReports.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedReports = filteredReports.slice(startIndex, endIndex); // Frontend pagination
+
+  // Reset to page 1 when filter changes - عشان لما تفلتر يرجع أول صفحة
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedFilter]);
+
+  const goToPage = (page) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+      // Scroll to top of table
+      document.querySelector('.table-container')?.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  const renderPagination = () => {
+    if (totalPages <= 1) return null;
+
+    const pages = [];
+    const showEllipsisStart = currentPage > 3;
+    const showEllipsisEnd = currentPage < totalPages - 2;
+
+    // First page
+    pages.push(
+      <button
+        key={1}
+        onClick={() => goToPage(1)}
+        className={`min-w-[35px] px-3 py-1.5 rounded-lg text-sm font-medium transition ${
+          currentPage === 1
+            ? "bg-emerald-500 text-white"
+            : "border border-gray-200 text-gray-700 hover:border-emerald-500 hover:text-emerald-500"
+        }`}
+      >
+        1
+      </button>
+    );
+
+    if (showEllipsisStart) {
+      pages.push(
+        <span key="ellipsis-start" className="px-2 text-gray-500">
+          ...
+        </span>
+      );
+    }
+
+    const startPage = Math.max(2, currentPage - 1);
+    const endPage = Math.min(totalPages - 1, currentPage + 1);
+
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(
+        <button
+          key={i}
+          onClick={() => goToPage(i)}
+          className={`min-w-[35px] px-3 py-1.5 rounded-lg text-sm font-medium transition ${
+            currentPage === i
+              ? "bg-emerald-500 text-white"
+              : "border border-gray-200 text-gray-700 hover:border-emerald-500 hover:text-emerald-500"
+          }`}
+        >
+          {i}
+        </button>
+      );
+    }
+
+    if (showEllipsisEnd) {
+      pages.push(
+        <span key="ellipsis-end" className="px-2 text-gray-500">
+          ...
+        </span>
+      );
+    }
+
+    if (totalPages > 1) {
+      pages.push(
+        <button
+          key={totalPages}
+          onClick={() => goToPage(totalPages)}
+          className={`min-w-[35px] px-3 py-1.5 rounded-lg text-sm font-medium transition ${
+            currentPage === totalPages
+              ? "bg-emerald-500 text-white"
+              : "border border-gray-200 text-gray-700 hover:border-emerald-500 hover:text-emerald-500"
+          }`}
+        >
+          {totalPages}
+        </button>
+      );
+    }
+
+    return (
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 border-t border-emerald-100 bg-white">
+        <div className="text-sm text-gray-600 order-2 sm:order-1">
+          {isRTL ? (
+            <>
+              عرض {startIndex + 1} - {Math.min(endIndex, filteredReports.length)} من {filteredReports.length}
+            </>
+          ) : (
+            <>
+              Showing {startIndex + 1} - {Math.min(endIndex, filteredReports.length)} of {filteredReports.length}
+            </>
+          )}
+        </div>
+        <div className="flex items-center gap-2 order-1 sm:order-2">
+          <button
+            onClick={() => goToPage(currentPage - 1)}
+            disabled={currentPage === 1}
+            className={`p-2 rounded-lg border transition ${
+              currentPage === 1
+                ? "border-gray-200 text-gray-400 cursor-not-allowed"
+                : "border-emerald-500 text-emerald-500 hover:bg-emerald-50"
+            }`}
+            aria-label={isRTL ? "الصفحة السابقة" : "Previous page"}
+          >
+            {isRTL ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+          </button>
+
+          <div className="flex gap-1">{pages}</div>
+
+          <button
+            onClick={() => goToPage(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className={`p-2 rounded-lg border transition ${
+              currentPage === totalPages
+                ? "border-gray-200 text-gray-400 cursor-not-allowed"
+                : "border-emerald-500 text-emerald-500 hover:bg-emerald-50"
+            }`}
+            aria-label={isRTL ? "الصفحة التالية" : "Next page"}
+          >
+            {isRTL ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}
+          </button>
+        </div>
+      </div>
+    );
+  };
 
   const handleExport = () => {
     try {
@@ -219,8 +362,8 @@ const ReportsPage = () => {
       </div>
 
       {/* Table Container with Internal Scroll */}
-      <div className="rounded-xl border border-emerald-300 bg-white shadow-sm">
-        <div className="overflow-x-auto max-h-[calc(100vh-400px)] sm:max-h-[calc(100vh-350px)]">
+      <div className="rounded-xl border border-emerald-300 bg-white shadow-sm table-container">
+        <div className="overflow-x-auto max-h-[calc(100vh-450px)] sm:max-h-[calc(100vh-400px)]">
           <table className="min-w-full text-xs sm:text-sm">
             <thead className="bg-emerald-500 text-white sticky top-0 z-10">
               <tr>
@@ -248,7 +391,7 @@ const ReportsPage = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredReports.length === 0 ? (
+              {paginatedReports.length === 0 ? (
                 <tr>
                   <td
                     colSpan="7"
@@ -258,7 +401,7 @@ const ReportsPage = () => {
                   </td>
                 </tr>
               ) : (
-                filteredReports.map((report) => (
+                paginatedReports.map((report) => (
                   <tr
                     key={report.id}
                     className="border-t border-emerald-100 text-center text-slate-800 transition hover:bg-emerald-50"
@@ -315,6 +458,9 @@ const ReportsPage = () => {
             </tbody>
           </table>
         </div>
+        
+        {/* Pagination */}
+        {renderPagination()}
       </div>
 
       {/* Modal */}
@@ -448,19 +594,18 @@ const ReportsPage = () => {
             <div className="flex justify-end gap-3 p-4 sm:p-6 border-t border-gray-200 bg-gray-50 sticky bottom-0">
               <button
                 onClick={() => {
-                  console.log("THIS IS THE SELECTED REPORT ::", selectedReport);
-                  if (selectedReport?.user.id) {
+                  if (selectedReport?.user_id) {
                     navigate(`/dashboard/messages?user_id=${selectedReport.user_id}`);
                     closeModal();
                   }
                 }}
                 className="px-4 sm:px-6 py-2 bg-main text-white rounded-lg hover:bg-green-700 transition-colors font-medium text-sm sm:text-base flex items-center gap-2"
-                disabled={!selectedReport?.user.id}
+                disabled={!selectedReport?.user_id}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
                 </svg>
-                {isRTL ? "رد   ,,,,,," : "Reply"}
+                {isRTL ? "رد" : "Reply"}
               </button>
               <button
                 onClick={closeModal}

@@ -30,6 +30,7 @@ import ArticlesPage from "../pages/Dashboard/ArticlesPage";
 import ReportsPage from "../pages/Dashboard/ReportsPage";
 import ChatPage from "../pages/Dashboard/ChatPage";
 import AdminsPage from "../pages/Dashboard/AdminsPage";
+import NotificationsPage from "../pages/Dashboard/NotificationsPage";
 import VerifyAccountPage from "../pages/Profile/VerifyAccount";
 import EditProfilePage from "../pages/Profile/EditProfilePage";
 import ProfilePage from "../pages/Profile/ProfilePage";
@@ -365,6 +366,7 @@ export const routers = createBrowserRouter([
           { path: "products", element: <ProductsReview /> },
           { path: "auctions", element: <AuctionsManagement /> },
           { path: "admins", element: <AdminsPage /> },
+          { path: "notifications", element: <NotificationsPage /> },
           { path: "*", element: <Navigate to="/dashboard" replace /> },
         ],
       },

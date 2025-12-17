@@ -1,115 +1,194 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { adminAPI } from "../../api";
-import Loader from "../../components/Ui/Loader/Loader";
+// import { useEffect, useState } from "react";
+// import { useNavigate } from "react-router-dom";
+// import { ChevronLeft, ChevronRight } from "lucide-react";
+// import { adminAPI } from "../../api";
+// import Loader from "../../components/Ui/Loader/Loader";
 
-const normalizeAuctions = (raw) => {
-  if (!Array.isArray(raw)) return [];
+// const normalizeAuctions = (raw) => {
+//   if (!Array.isArray(raw)) return [];
 
-  return raw.map((item, index) => {
-    const id = item.id ?? item.auction_id ?? String(index + 1);
-    const dateValue = item.date ?? item.start_date ?? item.created_at ?? "";
+//   return raw.map((item, index) => {
+//     const id = item.id ?? item.auction_id ?? String(index + 1);
+//     const dateValue = item.date ?? item.start_date ?? item.created_at ?? "";
 
-    let dateLabel = "غير معروف";
-    let dayName = "";
+//     let dateLabel = "غير معروف";
+//     let dayName = "";
 
-    if (dateValue) {
-      const d = new Date(dateValue);
-      if (!Number.isNaN(d.getTime())) {
-        dateLabel = d.toLocaleDateString("ar-EG");
-        dayName = d.toLocaleDateString("ar-EG", { weekday: "long" });
-      }
-    }
+//     if (dateValue) {
+//       const d = new Date(dateValue);
+//       if (!Number.isNaN(d.getTime())) {
+//         dateLabel = d.toLocaleDateString("ar-EG");
+//         dayName = d.toLocaleDateString("ar-EG", { weekday: "long" });
+//       }
+//     }
 
-    return { id, dateLabel, dayName };
-  });
-};
+//     return { id, dateLabel, dayName };
+//   });
+// };
 
-const AuctionsList = () => {
-  const navigate = useNavigate();
-  const [auctions, setAuctions] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+// const AuctionsList = () => {
+//   const navigate = useNavigate();
+//   const [auctions, setAuctions] = useState([]);
+//   const [loading, setLoading] = useState(true);
+//   const [error, setError] = useState(null);
+  
+//   // Pagination states
+//   const [currentPage, setCurrentPage] = useState(1);
+//   const itemsPerPage = 8;
 
-  useEffect(() => {
-    const fetchAuctions = async () => {
-      try {
-        setLoading(true);
-        setError(null);
+//   useEffect(() => {
+//     const fetchAuctions = async () => {
+//       try {
+//         setLoading(true);
+//         setError(null);
 
-        const response = await adminAPI.get("/auctions");
+//         const response = await adminAPI.get("/auctions");
 
-        let data = [];
-        if (Array.isArray(response.data)) {
-          data = response.data;
-        } else if (Array.isArray(response.data?.data)) {
-          data = response.data.data;
-        } else if (Array.isArray(response.data?.data?.auctions)) {
-          data = response.data.data.auctions;
-        }
+//         let data = [];
+//         if (Array.isArray(response.data)) {
+//           data = response.data;
+//         } else if (Array.isArray(response.data?.data)) {
+//           data = response.data.data;
+//         } else if (Array.isArray(response.data?.data?.auctions)) {
+//           data = response.data.data.auctions;
+//         }
 
-        setAuctions(normalizeAuctions(data));
-      } catch (err) {
-        console.error("Error fetching auctions:", err);
-        setError("فشل في تحميل المزادات");
-      } finally {
-        setLoading(false);
-      }
-    };
+//         setAuctions(normalizeAuctions(data));
+//       } catch (err) {
+//         console.error("Error fetching auctions:", err);
+//         setError("فشل في تحميل المزادات");
+//       } finally {
+//         setLoading(false);
+//       }
+//     };
 
-    fetchAuctions();
-  }, []);
+//     fetchAuctions();
+//   }, []);
 
-  if (loading) {
-    return <Loader />;
-  }
+//   // Pagination calculations
+//   const totalPages = Math.ceil(auctions.length / itemsPerPage);
+//   const startIndex = (currentPage - 1) * itemsPerPage;
+//   const endIndex = startIndex + itemsPerPage;
+//   const currentAuctions = auctions.slice(startIndex, endIndex);
 
-  if (error) {
-    return (
-      <section className="flex min-h-[50vh] flex-col items-center justify-center space-y-3">
-        <p className="text-lg font-semibold text-rose-600">{error}</p>
-        <p className="text-sm text-slate-500">
-          حاول إعادة تحميل الصفحة أو التحقق من الاتصال بالإنترنت.
-        </p>
-      </section>
-    );
-  }
+//   const goToPage = (page) => {
+//     setCurrentPage(page);
+//     window.scrollTo({ top: 0, behavior: 'smooth' });
+//   };
 
-  return (
-    <section className="flex flex-col gap-6">
-      <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <button className="inline-flex items-center justify-center rounded-lg bg-emerald-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-600">
-          تصدير
-        </button>
-        <h1 className="text-center text-2xl font-semibold text-emerald-700 sm:text-3xl">
-          المزادات
-        </h1>
-      </header>
+//   if (loading) {
+//     return <Loader />;
+//   }
 
-      <div className="mx-auto flex w-full max-w-xl flex-col gap-3">
-        {auctions.length === 0 ? (
-          <p className="text-center text-sm text-slate-500">
-            لا توجد مزادات متاحة حالياً.
-          </p>
-        ) : (
-          auctions.map((auction, index) => (
-            <button
-              key={auction.id}
-              onClick={() => navigate(`/dashboard/auctions/${auction.id}`)}
-              className={`flex items-center justify-between rounded-lg border border-emerald-400 px-4 py-2 text-sm font-semibold text-emerald-700 shadow-sm transition hover:bg-emerald-50 ${
-                index === 0 ? "bg-emerald-500 text-white" : "bg-white"
-              }`}
-            >
-              <span>{auction.dayName}</span>
-              <span>{auction.dateLabel}</span>
-            </button>
-          ))
-        )}
-      </div>
-    </section>
-  );
-};
+//   if (error) {
+//     return (
+//       <section className="flex min-h-[50vh] flex-col items-center justify-center space-y-3">
+//         <p className="text-lg font-semibold text-rose-600">{error}</p>
+//         <p className="text-sm text-slate-500">
+//           حاول إعادة تحميل الصفحة أو التحقق من الاتصال بالإنترنت.
+//         </p>
+//       </section>
+//     );
+//   }
 
-export default AuctionsList;
+//   return (
+//     <section className="flex flex-col gap-6" dir="rtl">
+//       <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+//         <button className="inline-flex items-center justify-center rounded-lg bg-emerald-500 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-600">
+//           تصدير
+//         </button>
+//         <h1 className="text-center text-2xl font-semibold text-emerald-700 sm:text-3xl">
+//           المزادات
+//         </h1>
+//       </header>
 
+//       <div className="mx-auto flex w-full max-w-xl flex-col gap-3">
+//         {auctions.length === 0 ? (
+//           <p className="text-center text-sm text-slate-500">
+//             لا توجد مزادات متاحة حالياً.
+//           </p>
+//         ) : (
+//           <>
+//             {currentAuctions.map((auction, index) => (
+//               <button
+//                 key={auction.id}
+//                 onClick={() => navigate(`/dashboard/auctions/${auction.id}`)}
+//                 className={`flex items-center justify-between rounded-lg border border-emerald-400 px-4 py-2 text-sm font-semibold text-emerald-700 shadow-sm transition hover:bg-emerald-50 ${
+//                   index === 0 && currentPage === 1 ? "bg-emerald-500 text-white" : "bg-white"
+//                 }`}
+//               >
+//                 <span>{auction.dayName}</span>
+//                 <span>{auction.dateLabel}</span>
+//               </button>
+//             ))}
 
+//             {/* Pagination */}
+//             {totalPages > 1 && (
+//               <div className="flex items-center justify-center gap-2 mt-4">
+//                 <button
+//                   onClick={() => goToPage(currentPage - 1)}
+//                   disabled={currentPage === 1}
+//                   className={`p-2 rounded-lg border transition ${
+//                     currentPage === 1
+//                       ? 'border-gray-200 text-gray-400 cursor-not-allowed'
+//                       : 'border-emerald-500 text-emerald-500 hover:bg-emerald-50 cursor-pointer'
+//                   }`}
+//                 >
+//                   <ChevronRight size={20} />
+//                 </button>
+
+//                 <div className="flex gap-1">
+//                   {[...Array(totalPages)].map((_, index) => {
+//                     const pageNumber = index + 1;
+//                     const showPage = 
+//                       pageNumber === 1 || 
+//                       pageNumber === totalPages || 
+//                       (pageNumber >= currentPage - 1 && pageNumber <= currentPage + 1);
+
+//                     if (!showPage && pageNumber === currentPage - 2) {
+//                       return <span key={pageNumber} className="px-2 py-1 text-gray-500">...</span>;
+//                     }
+//                     if (!showPage && pageNumber === currentPage + 2) {
+//                       return <span key={pageNumber} className="px-2 py-1 text-gray-500">...</span>;
+//                     }
+//                     if (!showPage) {
+//                       return null;
+//                     }
+
+//                     return (
+//                       <button
+//                         key={pageNumber}
+//                         onClick={() => goToPage(pageNumber)}
+//                         className={`min-w-[40px] px-3 py-2 rounded-lg font-medium transition ${
+//                           currentPage === pageNumber
+//                             ? 'bg-emerald-500 text-white'
+//                             : 'border border-gray-200 text-gray-700 hover:border-emerald-500 hover:text-emerald-500 cursor-pointer'
+//                         }`}
+//                       >
+//                         {pageNumber}
+//                       </button>
+//                     );
+//                   })}
+//                 </div>
+
+//                 <button
+//                   onClick={() => goToPage(currentPage + 1)}
+//                   disabled={currentPage === totalPages}
+//                   className={`p-2 rounded-lg border transition ${
+//                     currentPage === totalPages
+//                       ? 'border-gray-200 text-gray-400 cursor-not-allowed'
+//                       : 'border-emerald-500 text-emerald-500 hover:bg-emerald-50 cursor-pointer'
+//                   }`}
+//                 >
+//                   <ChevronLeft size={20} />
+//                 </button>
+//               </div>
+//             )}
+//           </>
+//         )}
+//       </div>
+//     </section>
+//   );
+// };
+
+// export default AuctionsList;
