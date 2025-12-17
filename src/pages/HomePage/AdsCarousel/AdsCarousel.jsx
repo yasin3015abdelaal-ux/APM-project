@@ -9,44 +9,36 @@ import PlaceholderSVG from "../../../assets/PlaceholderSVG";
 // Skeleton Component
 const AdsCarouselSkeleton = ({ isRTL }) => (
   <div className="mx-auto p-2 select-none" dir={isRTL ? "rtl" : "ltr"}>
-    {/* Header Skeleton */}
     <div className="mb-3">
       <div className="h-8 w-48 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded animate-pulse"
-           style={{animation: 'shimmer 1.5s ease-in-out infinite', backgroundSize: '200% 100%'}}></div>
+        style={{ animation: 'shimmer 1.5s ease-in-out infinite', backgroundSize: '200% 100%' }}></div>
     </div>
 
-    {/* Cards Skeleton */}
     <div className="py-3">
       <div className="flex gap-4 overflow-hidden px-4">
         {[...Array(4)].map((_, index) => (
           <div
             key={index}
-            className="relative w-1/4 min-w-[250px] border border-gray-200 rounded-2xl shadow-sm bg-white shrink-0"
+            className="relative lg:w-1/4 xl:w-1/5 min-w-[180px] border border-gray-200 rounded-2xl shadow-sm bg-white shrink-0"
           >
-            {/* Image Skeleton */}
-            <div className="h-48 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded-t-2xl animate-pulse"
-                 style={{animation: 'shimmer 1.5s ease-in-out infinite', backgroundSize: '200% 100%'}}></div>
+            <div className="h-40 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded-t-2xl animate-pulse"
+              style={{ animation: 'shimmer 1.5s ease-in-out infinite', backgroundSize: '200% 100%' }}></div>
 
-            {/* Content Skeleton */}
-            <div className="p-3">
-              {/* Title */}
-              <div className="h-5 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded animate-pulse mb-2"
-                   style={{animation: 'shimmer 1.5s ease-in-out infinite', backgroundSize: '200% 100%', width: '80%'}}></div>
-
-              {/* Location */}
+            <div className="p-2.5">
               <div className="h-4 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded animate-pulse mb-2"
-                   style={{animation: 'shimmer 1.5s ease-in-out infinite', backgroundSize: '200% 100%', width: '60%'}}></div>
+                style={{ animation: 'shimmer 1.5s ease-in-out infinite', backgroundSize: '200% 100%', width: '80%' }}></div>
 
-              {/* Date */}
-              <div className="h-3 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded animate-pulse mb-3"
-                   style={{animation: 'shimmer 1.5s ease-in-out infinite', backgroundSize: '200% 100%', width: '40%'}}></div>
+              <div className="h-3 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded animate-pulse mb-2"
+                style={{ animation: 'shimmer 1.5s ease-in-out infinite', backgroundSize: '200% 100%', width: '60%' }}></div>
 
-              {/* Price and Button */}
-              <div className="flex items-center justify-between mt-3">
-                <div className="h-5 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded animate-pulse"
-                     style={{animation: 'shimmer 1.5s ease-in-out infinite', backgroundSize: '200% 100%', width: '80px'}}></div>
-                <div className="h-7 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded-full animate-pulse"
-                     style={{animation: 'shimmer 1.5s ease-in-out infinite', backgroundSize: '200% 100%', width: '100px'}}></div>
+              <div className="h-3 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded animate-pulse mb-2"
+                style={{ animation: 'shimmer 1.5s ease-in-out infinite', backgroundSize: '200% 100%', width: '40%' }}></div>
+
+              <div className="flex items-center justify-between mt-2">
+                <div className="h-4 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded animate-pulse"
+                  style={{ animation: 'shimmer 1.5s ease-in-out infinite', backgroundSize: '200% 100%', width: '70px' }}></div>
+                <div className="h-6 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded-full animate-pulse"
+                  style={{ animation: 'shimmer 1.5s ease-in-out infinite', backgroundSize: '200% 100%', width: '90px' }}></div>
               </div>
             </div>
           </div>
@@ -69,7 +61,7 @@ function AdsCarousel() {
   const isRTL = i18n.language === "ar";
   const navigate = useNavigate();
   const scrollRef = useRef(null);
-  
+
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -83,7 +75,7 @@ function AdsCarousel() {
         setLoading(true);
         const { data, fromCache } = await getCachedProducts();
         console.log(fromCache ? '📦 Products من الكاش' : '🌐 Products من API');
-        
+
         setProducts(data);
         setError(null);
       } catch (err) {
@@ -104,7 +96,7 @@ function AdsCarousel() {
     const interval = setInterval(() => {
       if (scrollRef.current && !isDragging.current) {
         const container = scrollRef.current;
-        const cardWidth = 250;
+        const cardWidth = 220;
         const gap = 16;
         const cardsToScroll = 4;
         const scrollAmount = (cardWidth + gap) * cardsToScroll;
@@ -131,7 +123,7 @@ function AdsCarousel() {
         }
       }
     }, 5000);
-    
+
     return () => clearInterval(interval);
   }, [dir, products]);
 
@@ -159,18 +151,18 @@ function AdsCarousel() {
 
   const toggleFavorite = async (productId, e) => {
     e.stopPropagation();
-    
+
     try {
       const product = products.find(p => p.id === productId);
-      
+
       if (product.is_favorited) {
         await userAPI.delete(`/favorites/${productId}`);
       } else {
         await userAPI.post(`/favorites/${productId}`);
       }
-      
+
       // Update local state
-      setProducts(prev => prev.map(p => 
+      setProducts(prev => prev.map(p =>
         p.id === productId ? { ...p, is_favorited: !p.is_favorited } : p
       ));
     } catch (err) {
@@ -184,7 +176,7 @@ function AdsCarousel() {
 
   const formatDate = (dateString) => {
     if (!dateString) return '';
-    
+
     const date = new Date(dateString);
     const now = new Date();
     const diffTime = Math.abs(now - date);
@@ -260,31 +252,30 @@ function AdsCarousel() {
         >
           {products.map((product) => {
             const imageUrl = product.image || product.images?.[0];
-            
+
             return (
               <div
                 draggable={false}
                 key={product.id}
-                className="relative w-1/4 min-w-[250px] snap-start border border-gray-200 rounded-2xl shadow-sm bg-white shrink-0 hover:shadow-md transition-transform hover:scale-[1.02] select-none cursor-pointer"
+                className="relative lg:w-1/4 xl:w-1/5 min-w-[180px] snap-start border border-gray-200 rounded-2xl shadow-sm bg-white shrink-0 hover:shadow-md transition-transform hover:scale-[1.02] select-none cursor-pointer"
                 onClick={() => navigateToProduct(product.id)}
               >
                 {/* Favorite Button */}
                 <button
                   onClick={(e) => toggleFavorite(product.id, e)}
-                  className={`absolute top-2 ${isRTL ? 'left-2' : 'right-2'} cursor-pointer rounded-full p-1.5 shadow-sm hover:scale-110 transition-all z-10 ${
-                    product.is_favorited 
-                      ? 'bg-red-500 hover:bg-red-600' 
+                  className={`absolute top-2 ${isRTL ? 'left-2' : 'right-2'} cursor-pointer rounded-full p-1.5 shadow-sm hover:scale-110 transition-all z-10 ${product.is_favorited
+                      ? 'bg-red-500 hover:bg-red-600'
                       : 'bg-white hover:bg-gray-50'
-                  }`}
+                    }`}
                 >
                   <Heart
-                    size={20}
+                    size={18}
                     className={product.is_favorited ? 'fill-white text-white' : 'text-gray-400'}
                   />
                 </button>
 
                 {/* Product Image */}
-                <div className="flex justify-center border-b border-main h-48 bg-gray-100 rounded-t-2xl">
+                <div className="flex justify-center border-b border-main h-40 bg-gray-100 rounded-t-2xl">
                   {imageUrl ? (
                     <img
                       src={imageUrl}
@@ -296,7 +287,7 @@ function AdsCarousel() {
                       }}
                     />
                   ) : null}
-                  <div 
+                  <div
                     className={`${imageUrl ? 'hidden' : 'flex'} w-[70%] h-full rounded-2xl items-center justify-center`}
                     style={{ display: imageUrl ? 'none' : 'flex' }}
                   >
@@ -305,26 +296,41 @@ function AdsCarousel() {
                 </div>
 
                 {/* Product Info */}
-                <div className="p-3 text-right">
-                  <h3 className="font-bold text-md mb-1 truncate">
+                <div className="p-2.5 text-right">
+                  <h3 className="font-bold text-sm mb-1 truncate">
                     {isRTL ? product.name_ar : product.name_en}
                   </h3>
 
-                  <div className="flex items-center text-sm mb-1">
-                    <HiOutlineLocationMarker size={20} className={`${isRTL ? 'ml-1' : 'mr-1'} text-main`} />
+                  <div className="flex items-center text-xs mb-1">
+                    <HiOutlineLocationMarker size={16} className={`${isRTL ? 'ml-1' : 'mr-1'} text-main`} />
                     <span className="truncate">
-                      {product.governorate 
+                      {product.governorate
                         ? (isRTL ? product.governorate.name_ar : product.governorate.name_en)
                         : (isRTL ? 'غير محدد' : 'Not specified')}
                     </span>
                   </div>
 
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-gray-500 mb-2">
                     {formatDate(product.created_at)}
                   </p>
 
-                  <div className="flex items-center justify-between mt-3">
-                    <span className="font-bold text-sm">
+                  {/* Views and Interested Count */}
+                  <div className="flex items-center gap-3 mb-2 text-xs text-gray-600">
+                    <div className="flex items-center gap-1">
+                      <svg className="w-3.5 h-3.5 text-main" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                      <span>{product.watchers_count || 0}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Heart size={14} className="text-red-500" />
+                      <span>{product.interested_count || 0}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-100">
+                    <span className="font-bold text-sm text-main">
                       {product.price} {isRTL ? "جنيه" : "EGP"}
                     </span>
                     <button
@@ -332,9 +338,9 @@ function AdsCarousel() {
                         e.stopPropagation();
                         navigateToProduct(product.id);
                       }}
-                      className="bg-main text-white text-xs px-3 py-1.5 rounded-full hover:opacity-90 transition"
+                      className="bg-main cursor-pointer text-white text-xs px-3 py-1.5 rounded-full hover:opacity-90 transition"
                     >
-                      {t("home.adsSection.contactSeller")}
+                      {isRTL ? "تفاصيل المنتج" : "Product Details"}
                     </button>
                   </div>
                 </div>
