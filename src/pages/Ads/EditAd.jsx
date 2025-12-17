@@ -421,8 +421,10 @@ const EditAds = () => {
             ];
 
             return (
-                <div key={attribute.id}>
-                    <label className="block text-gray-700 font-medium mb-2 text-sm">{label}</label>
+                <div key={attribute.id} className="w-full">
+                    <label className="block text-gray-700 font-semibold mb-2.5 text-sm">
+                        {label}
+                    </label>
                     <CustomSelect
                         options={governorateOptions}
                         value={value}
@@ -445,8 +447,10 @@ const EditAds = () => {
             ];
 
             return (
-                <div key={attribute.id}>
-                    <label className="block text-gray-700 font-medium mb-2 text-sm">{label}</label>
+                <div key={attribute.id} className="w-full">
+                    <label className="block text-gray-700 font-semibold mb-2.5 text-sm">
+                        {label}
+                    </label>
                     <CustomSelect
                         options={subCategoryOptions}
                         value={formData.sub_category_id}
@@ -470,8 +474,10 @@ const EditAds = () => {
             ];
 
             return (
-                <div key={attribute.id}>
-                    <label className="block text-gray-700 font-medium mb-2 text-sm">{label}</label>
+                <div key={attribute.id} className="w-full">
+                    <label className="block text-gray-700 font-semibold mb-2.5 text-sm">
+                        {label}
+                    </label>
                     <CustomSelect
                         options={dropdownOptions}
                         value={value}
@@ -485,22 +491,27 @@ const EditAds = () => {
 
         if (attribute.name_en.includes('description')) {
             return (
-                <div key={attribute.id} className="lg:col-span-2">
-                    <label className="block text-gray-700 font-medium mb-2 text-sm">{label}</label>
+                <div key={attribute.id} className="w-full">
+                    <label className="block text-gray-700 font-semibold mb-2.5 text-sm">
+                        {label}
+                    </label>
                     <textarea
                         value={value}
                         onChange={(e) => handleAttributeChange(attribute.name_en, e.target.value)}
-                        rows="2"
+                        rows="3"
                         placeholder={label}
-                        className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-md focus:ring-1 focus:ring-green-500 focus:border-transparent resize-none"
+                        className="w-full px-4 py-3 text-sm border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none transition-all hover:border-gray-300"
+                        style={{ direction: isRTL ? 'rtl' : 'ltr' }}
                     />
                 </div>
             );
         }
 
         return (
-            <div key={attribute.id}>
-                <label className="block text-gray-700 font-medium mb-2 text-sm">{label}</label>
+            <div key={attribute.id} className="w-full">
+                <label className="block text-gray-700 font-semibold mb-2.5 text-sm">
+                    {label}
+                </label>
                 <input
                     type={attribute.name_en === 'price' || attribute.name_en === 'quantity' ? 'number' : 'text'}
                     value={value}
@@ -508,7 +519,8 @@ const EditAds = () => {
                     placeholder={label}
                     min={attribute.name_en === 'price' || attribute.name_en === 'quantity' ? '0' : undefined}
                     step={attribute.name_en === 'price' ? '0.01' : undefined}
-                    className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-md focus:ring-1 focus:ring-green-500 focus:border-transparent"
+                    className="w-full px-4 py-3 text-sm border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all hover:border-gray-300"
+                    style={{ direction: isRTL ? 'rtl' : 'ltr' }}
                 />
             </div>
         );
@@ -655,7 +667,7 @@ const EditAds = () => {
     const rightColumnAttrs = regularAttrs.filter((_, idx) => idx % 2 !== 0);
 
     return (
-        <div className={`w-full max-w-5xl mx-auto bg-white ${isRTL ? "rtl" : "ltr"} px-4 sm:px-6`} dir={isRTL ? "rtl" : "ltr"}>
+        <div className="w-full max-w-5xl mx-auto bg-white px-4 sm:px-6 py-6" dir={isRTL ? "rtl" : "ltr"}>
             {toast && (
                 <div className={`fixed top-4 sm:top-5 ${isRTL ? "left-4 sm:left-5" : "right-4 sm:right-5"} z-50 animate-slide-in max-w-[90%] sm:max-w-md`}>
                     <div className={`px-4 py-3 sm:px-6 sm:py-4 rounded-lg sm:rounded-xl shadow-lg flex items-center gap-2 sm:gap-3 ${toast.type === "success" ? "bg-main text-white" : "bg-red-500 text-white"}`}>
@@ -673,14 +685,17 @@ const EditAds = () => {
                 </div>
             )}
 
-            <div className="text-main text-center py-6">
+            <div className="text-main text-center mb-8">
                 <h1 className="text-2xl sm:text-3xl font-bold">{t("ads.editYourAd")}</h1>
             </div>
 
-            <form onSubmit={handleUpdate} className="pb-6 space-y-6">
-                {/* Images Upload */}
-                <div className="space-y-4">
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 sm:p-8">
+            <form onSubmit={handleUpdate} className="space-y-8">
+                <div className="bg-gray-50 rounded-xl p-6 space-y-5">
+                    <h2 className="text-lg font-bold text-gray-800 mb-4">
+                        {isRTL ? 'صور الإعلان' : 'Ad Images'}
+                    </h2>
+                    
+                    <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 bg-white hover:border-main transition-colors">
                         <input
                             type="file"
                             accept="image/*"
@@ -691,57 +706,56 @@ const EditAds = () => {
                         />
                         <label htmlFor="images-upload" className="cursor-pointer block">
                             <div className="flex flex-col items-center">
-                                <Upload className="w-10 h-10 sm:w-12 sm:h-12 text-gray-400 mb-3" />
-                                <p className="text-gray-600 font-medium mb-1 text-sm sm:text-base">
+                                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                                    <Upload className="w-8 h-8 text-main" />
+                                </div>
+                                <p className="text-gray-700 font-semibold mb-2 text-base">
                                     {isRTL ? 'اضغط لإضافة صور' : 'Click to add images'}
                                 </p>
-                                <p className="text-gray-400 text-xs sm:text-sm">
+                                <p className="text-gray-500 text-sm">
                                     {isRTL ? 'يمكنك اختيار أكثر من صورة' : 'You can select multiple images'}
                                 </p>
                             </div>
                         </label>
                     </div>
 
-                    {/* Display Image Previews */}
                     {(existingImages.length > 0 || imagePreviews.length > 0) && (
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4">
-                            {/* Existing Images */}
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                             {existingImages.map((img, index) => (
                                 <div key={`existing-${index}`} className="relative group">
                                     <img
                                         src={typeof img === 'string' ? img : img.url}
                                         alt={`Existing ${index + 1}`}
-                                        className="w-full h-28 sm:h-32 object-cover rounded-lg border-2 border-gray-200"
+                                        className="w-full h-32 sm:h-36 object-cover rounded-xl border-2 border-blue-300 shadow-sm group-hover:shadow-md transition-shadow"
                                     />
                                     <button
                                         type="button"
                                         onClick={() => removeExistingImage(index)}
-                                        className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center cursor-pointer transition shadow-lg opacity-0 group-hover:opacity-100"
+                                        className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center cursor-pointer transition shadow-lg"
                                     >
-                                        <X className="w-3 h-3 sm:w-4 sm:h-4" />
+                                        <X className="w-4 h-4" />
                                     </button>
-                                    <div className="absolute bottom-2 left-2 bg-blue-500 text-white text-[10px] sm:text-xs px-2 py-1 rounded font-medium">
+                                    <div className="absolute bottom-2 left-2 bg-blue-500 text-white text-xs px-2.5 py-1 rounded-md font-semibold shadow">
                                         {isRTL ? 'موجودة' : 'Existing'}
                                     </div>
                                 </div>
                             ))}
 
-                            {/* New Images */}
                             {imagePreviews.map((preview, index) => (
                                 <div key={`new-${index}`} className="relative group">
                                     <img
                                         src={preview}
                                         alt={`Preview ${index + 1}`}
-                                        className="w-full h-28 sm:h-32 object-cover rounded-lg border-2 border-green-500"
+                                        className="w-full h-32 sm:h-36 object-cover rounded-xl border-2 border-green-400 shadow-sm group-hover:shadow-md transition-shadow"
                                     />
                                     <button
                                         type="button"
                                         onClick={() => removeNewImage(index)}
-                                        className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center cursor-pointer transition shadow-lg opacity-0 group-hover:opacity-100"
+                                        className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center cursor-pointer transition shadow-lg"
                                     >
-                                        <X className="w-3 h-3 sm:w-4 sm:h-4" />
+                                        <X className="w-4 h-4" />
                                     </button>
-                                    <div className="absolute bottom-2 left-2 bg-green-500 text-white text-[10px] sm:text-xs px-2 py-1 rounded font-medium">
+                                    <div className="absolute bottom-2 left-2 bg-green-500 text-white text-xs px-2.5 py-1 rounded-md font-semibold shadow">
                                         {isRTL ? 'جديدة' : 'New'}
                                     </div>
                                 </div>
@@ -750,33 +764,65 @@ const EditAds = () => {
                     )}
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-                    <div className="space-y-4">
-                        {leftColumnAttrs.map(attr => renderAttributeInput(attr))}
+                <div className="bg-gray-50 rounded-xl p-6">
+                    <h2 className="text-lg font-bold text-gray-800 mb-6">
+                        {isRTL ? 'بيانات الإعلان' : 'Ad Details'}
+                    </h2>
+                    
+                    <div className={`grid grid-cols-1 lg:grid-cols-2 gap-6 ${isRTL ? 'rtl' : 'ltr'}`}>
+                        {isRTL ? (
+                            <>
+                                <div className="space-y-6">
+                                    {rightColumnAttrs.map(attr => renderAttributeInput(attr))}
+                                </div>
+                                <div className="space-y-6">
+                                    {leftColumnAttrs.map(attr => renderAttributeInput(attr))}
+                                </div>
+                            </>
+                        ) : (
+                            <>
+                                <div className="space-y-6">
+                                    {leftColumnAttrs.map(attr => renderAttributeInput(attr))}
+                                </div>
+                                <div className="space-y-6">
+                                    {rightColumnAttrs.map(attr => renderAttributeInput(attr))}
+                                </div>
+                            </>
+                        )}
                     </div>
-
-                    <div className="space-y-4">
-                        {rightColumnAttrs.map(attr => renderAttributeInput(attr))}
-                    </div>
-
-                    {descriptionAttrs.map(attr => renderAttributeInput(attr))}
+                    
+                    {descriptionAttrs.length > 0 && (
+                        <div className="mt-6 space-y-6">
+                            {descriptionAttrs.map(attr => renderAttributeInput(attr))}
+                        </div>
+                    )}
                 </div>
 
-                {/* Action Buttons */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full cursor-pointer bg-main hover:bg-green-700 text-white font-semibold py-3 sm:py-3.5 rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed text-base sm:text-lg"
+                        className="w-full bg-main hover:bg-green-700 text-white font-bold py-4 rounded-xl transition-all disabled:bg-gray-400 disabled:cursor-not-allowed text-base sm:text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                     >
-                        {loading ? (isRTL ? 'جاري التعديل...' : 'Updating...') : t("ads.update")}
+                        {loading ? (
+                            <span className="flex items-center justify-center gap-3">
+                                <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                {isRTL ? 'جاري التعديل...' : 'Updating...'}
+                            </span>
+                        ) : (
+                            t("ads.update")
+                        )}
                     </button>
 
                     <button
                         type="button"
                         onClick={() => setShowDeleteConfirm(true)}
-                        className="w-full cursor-pointer bg-white hover:bg-red-50 text-red-600 font-semibold py-3 sm:py-3.5 rounded-lg border-2 border-red-600 transition-colors text-base sm:text-lg"
+                        className="w-full bg-white hover:bg-red-50 text-red-600 font-bold py-4 rounded-xl border-2 border-red-600 transition-all text-base sm:text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center gap-2"
                     >
+                        <Trash2 className="w-5 h-5" />
                         {t('ads.delete')}
                     </button>
                 </div>

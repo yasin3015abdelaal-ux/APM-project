@@ -1,12 +1,87 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { FaRegEdit } from "react-icons/fa";
-import { Trash2, X } from "lucide-react";
+import { Trash2, X, RefreshCw } from "lucide-react";
 import Loader from "../../components/Ui/Loader/Loader";
 import { useNavigate } from "react-router-dom";
 import { getCachedCategories, getCachedMyProducts, userAPI } from "../../api";
 import ProductCard from "../../components/ProductCard/ProductCard";
 import CustomSelect from "../../components/Ui/CustomSelect/CustomSelect";
+
+function RenewConfirmModal({ isOpen, onClose, onConfirm, isRTL = false, loading = false }) {
+  if (!isOpen) return null;
+
+  return (
+    <div
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-2xl p-6 max-w-md w-full shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+        dir={isRTL ? 'rtl' : 'ltr'}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-xl font-bold text-gray-900">
+            {isRTL ? 'تجديد الإعلان' : 'Renew Ad'}
+          </h3>
+          <button
+            onClick={onClose}
+            className="text-gray-400 cursor-pointer hover:text-gray-600 transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Icon */}
+        <div className="flex justify-center mb-4">
+          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+            <RefreshCw className="w-8 h-8 text-main" />
+          </div>
+        </div>
+
+        {/* Description */}
+        <p className="text-gray-600 text-center mb-6">
+          {isRTL
+            ? 'هل تريد تجديد هذا الإعلان؟ سيظهر الإعلان مرة أخرى لمدة 3 أشهر'
+            : 'Do you want to renew this ad? The ad will appear again for 3 months'}
+        </p>
+
+        {/* Buttons */}
+        <div className="flex gap-3">
+          <button
+            onClick={onConfirm}
+            disabled={loading}
+            className="flex-1 cursor-pointer bg-main hover:bg-green-700 text-white font-semibold py-3 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          >
+            {loading ? (
+              <>
+                <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span>{isRTL ? 'جاري التجديد...' : 'Renewing...'}</span>
+              </>
+            ) : (
+              <>
+                <RefreshCw className="w-5 h-5" />
+                <span>{isRTL ? 'تأكيد التجديد' : 'Confirm Renewal'}</span>
+              </>
+            )}
+          </button>
+          <button
+            onClick={onClose}
+            disabled={loading}
+            className="flex-1 cursor-pointer bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-3 rounded-lg transition disabled:opacity-50"
+          >
+            {isRTL ? 'إلغاء' : 'Cancel'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function DeleteConfirmModal({ isOpen, onClose, onConfirm, isRTL = false }) {
   const [selectedReason, setSelectedReason] = useState("");
@@ -61,7 +136,6 @@ function DeleteConfirmModal({ isOpen, onClose, onConfirm, isRTL = false }) {
     },
   ];
 
-
   const handleReasonChange = (value) => {
     setSelectedReason(value);
     if (value !== "other") {
@@ -99,7 +173,6 @@ function DeleteConfirmModal({ isOpen, onClose, onConfirm, isRTL = false }) {
         onClick={(e) => e.stopPropagation()}
         dir={isRTL ? 'rtl' : 'ltr'}
       >
-        {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-xl font-bold text-gray-900">
             {isRTL ? 'حذف الإعلان' : 'Delete Ad'}
@@ -112,14 +185,12 @@ function DeleteConfirmModal({ isOpen, onClose, onConfirm, isRTL = false }) {
           </button>
         </div>
 
-        {/* Description */}
         <p className="text-gray-600 text-sm mb-5">
           {isRTL
             ? 'الرجاء اختيار سبب حذف الإعلان:'
             : 'Please select a reason for deletion:'}
         </p>
 
-        {/* Reasons List */}
         <div className="space-y-2 mb-5">
           {reasons.map((reason) => {
             const isSelected = selectedReason === reason.value;
@@ -133,7 +204,6 @@ function DeleteConfirmModal({ isOpen, onClose, onConfirm, isRTL = false }) {
                     : `${reason.bgColor} border border-transparent`
                   }`}
               >
-                {/* custom radio */}
                 <span
                   className={`w-5 h-5 rounded-full border-2 flex items-center justify-center
                 transition-colors
@@ -147,13 +217,10 @@ function DeleteConfirmModal({ isOpen, onClose, onConfirm, isRTL = false }) {
                   )}
                 </span>
 
-
-                {/* text */}
                 <span className="flex-1 font-medium text-sm">
                   {isRTL ? reason.labelAr : reason.labelEn}
                 </span>
 
-                {/* hidden input */}
                 <input
                   type="radio"
                   name="deleteReason"
@@ -163,12 +230,10 @@ function DeleteConfirmModal({ isOpen, onClose, onConfirm, isRTL = false }) {
                   className="hidden"
                 />
               </label>
-
             );
           })}
         </div>
 
-        {/* Other reason textarea */}
         {selectedReason === "other" && (
           <div className="mb-5">
             <textarea
@@ -185,7 +250,6 @@ function DeleteConfirmModal({ isOpen, onClose, onConfirm, isRTL = false }) {
           </div>
         )}
 
-        {/* Buttons */}
         <div className="flex gap-3">
           <button
             onClick={handleConfirm}
@@ -220,14 +284,26 @@ function DeleteConfirmModal({ isOpen, onClose, onConfirm, isRTL = false }) {
   );
 }
 
-function AdsItem({ item, onDelete }) {
-  const { id, images, image, name, name_ar, name_en, governorate, price, created_at } = item;
+function AdsItem({ item, onDelete, onRenew }) {
+  const { id, images, image, name, name_ar, name_en, governorate, price, created_at, renewed_at } = item;
   const { i18n } = useTranslation();
   const isRTL = i18n.language === 'ar';
   const navigate = useNavigate();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showRenewModal, setShowRenewModal] = useState(false);
+  const [isRenewing, setIsRenewing] = useState(false);
 
   const allImages = images && images.length > 0 ? images : (image ? [image] : []);
+
+  const checkNeedsRenewal = () => {
+    const lastUpdateDate = renewed_at ? new Date(renewed_at) : new Date(created_at);
+    const currentDate = new Date();
+    const diffTime = Math.abs(currentDate - lastUpdateDate);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays >= 90; 
+  };
+
+  const needsRenewal = checkNeedsRenewal();
 
   const handleProductClick = (productId) => {
     navigate(`/product-details/${productId}`);
@@ -243,12 +319,29 @@ function AdsItem({ item, onDelete }) {
     setShowDeleteModal(true);
   };
 
+  const handleRenewClick = (e) => {
+    e.stopPropagation();
+    setShowRenewModal(true);
+  };
+
   const handleConfirmDelete = async (reason) => {
     try {
       await onDelete(id, reason);
       setShowDeleteModal(false);
     } catch (error) {
       console.error('Error deleting ad:', error);
+    }
+  };
+
+  const handleConfirmRenew = async () => {
+    try {
+      setIsRenewing(true);
+      await onRenew(id);
+      setShowRenewModal(false);
+    } catch (error) {
+      console.error('Error renewing ad:', error);
+    } finally {
+      setIsRenewing(false);
     }
   };
 
@@ -267,7 +360,28 @@ function AdsItem({ item, onDelete }) {
   return (
     <>
       <div className="relative">
+        {/* Renewal Badge */}
+        {needsRenewal && (
+          <div className={`absolute top-2 ${isRTL ? 'right-2' : 'left-2'} z-10`}>
+            <div className="bg-orange-500 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-lg flex items-center gap-1">
+              <RefreshCw className="w-3 h-3" />
+              <span>{isRTL ? 'يحتاج تجديد' : 'Needs Renewal'}</span>
+            </div>
+          </div>
+        )}
+
+        {/* Action Buttons */}
         <div className={`absolute top-2 ${isRTL ? 'left-2' : 'right-2'} z-10 flex gap-2`}>
+          {needsRenewal && (
+            <button
+              onClick={handleRenewClick}
+              className="cursor-pointer rounded-full p-1.5 shadow-sm hover:scale-110 transition-all bg-main hover:bg-green-700 text-white"
+              title={isRTL ? 'تجديد الإعلان' : 'Renew Ad'}
+            >
+              <RefreshCw size={16} />
+            </button>
+          )}
+
           <button
             onClick={(e) => handleEditClick(e, id)}
             className="cursor-pointer rounded-full p-1.5 shadow-sm hover:scale-110 transition-all bg-white hover:bg-gray-50"
@@ -294,6 +408,14 @@ function AdsItem({ item, onDelete }) {
         onClose={() => setShowDeleteModal(false)}
         onConfirm={handleConfirmDelete}
         isRTL={isRTL}
+      />
+
+      <RenewConfirmModal
+        isOpen={showRenewModal}
+        onClose={() => setShowRenewModal(false)}
+        onConfirm={handleConfirmRenew}
+        isRTL={isRTL}
+        loading={isRenewing}
       />
     </>
   );
@@ -386,6 +508,44 @@ export default function Ads() {
       console.error('Error deleting product:', error);
       showToast(
         isRTL ? 'حدث خطأ أثناء حذف الإعلان' : 'Error deleting ad',
+        'error'
+      );
+    }
+  };
+
+  const handleRenew = async (productId) => {
+    try {
+      await userAPI.post(`/products/${productId}/renew`);
+
+      const updatedAds = adsItems.map(item => 
+        item.id === productId 
+          ? { ...item, renewed_at: new Date().toISOString() }
+          : item
+      );
+      
+      setAdsItems(updatedAds);
+      setFilteredAds(updatedAds.filter(item => {
+        let matches = true;
+        
+        if (filter.category_id && filter.category_id !== "all") {
+          matches = matches && item.category_id === parseInt(filter.category_id);
+        }
+        
+        if (filter.status && filter.status !== "all") {
+          matches = matches && item.status === filter.status;
+        }
+        
+        return matches;
+      }));
+
+      showToast(
+        isRTL ? 'تم تجديد الإعلان بنجاح' : 'Ad renewed successfully',
+        'success'
+      );
+    } catch (error) {
+      console.error('Error renewing product:', error);
+      showToast(
+        isRTL ? 'حدث خطأ أثناء تجديد الإعلان' : 'Error renewing ad',
         'error'
       );
     }
@@ -524,6 +684,7 @@ export default function Ads() {
                 key={item.id}
                 item={item}
                 onDelete={handleDelete}
+                onRenew={handleRenew}
               />
             ))
           )}

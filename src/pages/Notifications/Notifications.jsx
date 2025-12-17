@@ -241,7 +241,7 @@ const Notifications = () => {
                                 <button
                                     onClick={() => markAsRead(notification.id)}
                                     disabled={isMarking}
-                                    className={`text-xs text-main hover:underline ${isMarking ? 'opacity-50' : ''}`}
+                                    className={`text-xs cursor-pointer text-main hover:underline ${isMarking ? 'opacity-50' : ''}`}
                                 >
                                     {isMarking ? t("notifications.marking") || "جاري..." : t("notifications.markAsRead") || "تعيين كمقروء"}
                                 </button>
@@ -249,7 +249,7 @@ const Notifications = () => {
                             <button
                                 onClick={() => deleteNotification(notification.id)}
                                 disabled={isDeleting}
-                                className={`text-xs text-red-500 hover:underline ${isDeleting ? 'opacity-50' : ''}`}
+                                className={`text-xs cursor-pointer text-red-500 hover:underline ${isDeleting ? 'opacity-50' : ''}`}
                                 >
                                 {isDeleting ? t("notifications.deleting") || "جاري..." : t("notifications.delete") || "حذف"}
                             </button>
@@ -268,7 +268,7 @@ const Notifications = () => {
                 <button
                     onClick={() => handlePageChange(currentPage - 1)}
                     disabled={currentPage === 1 || loading}
-                    className="px-3 py-1 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-3 py-1 border cursor-pointer border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     <i className={`fas fa-chevron-${i18n.language === 'ar' ? 'right' : 'left'}`}></i>
                 </button>
@@ -280,7 +280,7 @@ const Notifications = () => {
                 <button
                     onClick={() => handlePageChange(currentPage + 1)}
                     disabled={currentPage === totalPages || loading}
-                    className="px-3 py-1 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-3 py-1 cursor-pointer border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     <i className={`fas fa-chevron-${i18n.language === 'ar' ? 'left' : 'right'}`}></i>
                 </button>
@@ -342,7 +342,7 @@ const Notifications = () => {
                                 <button
                                     onClick={markAllAsRead}
                                     disabled={unreadCount === 0 || loadingAction === "all"}
-                                    className="px-4 py-2 text-sm bg-main text-white rounded-lg hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="px-4 py-2 cursor-pointer text-sm bg-main text-white rounded-lg hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     {loadingAction === "all" 
                                         ? (t("notifications.marking") || "جاري...") 
@@ -352,7 +352,7 @@ const Notifications = () => {
                                 <button
                                     onClick={() => fetchNotifications(currentPage, filter)}
                                     disabled={loading}
-                                    className="px-4 py-2 text-sm border-2 border-main text-main rounded-lg hover:bg-green-50 transition disabled:opacity-50"
+                                    className="px-4 py-2 cursor-pointer text-sm border-2 border-main text-main rounded-lg hover:bg-green-50 transition disabled:opacity-50"
                                 >
                                     <i className={`fas fa-sync-alt ${loading ? 'animate-spin' : ''}`}></i>
                                     <span className="mr-2">{t("notifications.refresh") || "تحديث"}</span>
@@ -367,7 +367,7 @@ const Notifications = () => {
                             <button
                                 onClick={() => setFilter("all")}
                                 disabled={loading}
-                                className={`flex-1 py-3 px-4 text-sm font-semibold transition ${
+                                className={`flex-1 py-3 px-4 cursor-pointer text-sm font-semibold transition ${
                                     filter === "all"
                                         ? "text-main border-b-2 border-main bg-white"
                                         : "text-gray-600 hover:text-gray-900"
@@ -383,7 +383,7 @@ const Notifications = () => {
                             <button
                                 onClick={() => setFilter("unread")}
                                 disabled={loading}
-                                className={`flex-1 py-3 px-4 text-sm font-semibold transition ${
+                                className={`flex-1 py-3 cursor-pointer px-4 text-sm font-semibold transition ${
                                     filter === "unread"
                                         ? "text-main border-b-2 border-main bg-white"
                                         : "text-gray-600 hover:text-gray-900"
@@ -399,7 +399,7 @@ const Notifications = () => {
                             <button
                                 onClick={() => setFilter("read")}
                                 disabled={loading}
-                                className={`flex-1 py-3 px-4 text-sm font-semibold transition ${
+                                className={`flex-1 cursor-pointer py-3 px-4 text-sm font-semibold transition ${
                                     filter === "read"
                                         ? "text-main border-b-2 border-main bg-white"
                                         : "text-gray-600 hover:text-gray-900"

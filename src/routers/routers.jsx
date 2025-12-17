@@ -57,6 +57,7 @@ import TermsPage from "../pages/Terms/Terms";
 import Articles from "../pages/Articles/ArticlesPage";
 import ArticleDetailsPage from "../pages/Articles/ArticleDetails";
 import SellerDetails from "../components/Products/SellerDetails";
+import TopSellersPage from "../pages/HomePage/SellerReviews/TopSellersPage";
 // import AuctionsList from "../pages/Auctions/AuctionsList";
 // import Prices from "../pages/Prices/Prices";
 // import ContactUs from "../pages/Contact/ContactUs";
@@ -195,6 +196,14 @@ export const routers = createBrowserRouter([
             element: (
               <ProtectedRoute>
                 <ContactUs />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: "top-sellers",
+            element: (
+              <ProtectedRoute>
+                <TopSellersPage />
               </ProtectedRoute>
             ),
           },
