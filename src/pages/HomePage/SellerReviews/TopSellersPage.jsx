@@ -35,7 +35,7 @@ const StarRating = ({ rating }) => {
                 return (
                     <svg
                         key={star}
-                        className="w-5 h-5"
+                        className="w-5 h-5 sm:w-5 sm:h-5"
                         viewBox="0 0 24 24"
                         strokeWidth={1.5}
                     >
@@ -59,7 +59,7 @@ const StarRating = ({ rating }) => {
                     </svg>
                 );
             })}
-            <span className="text-sm font-semibold text-gray-700 mx-1">
+            <span className="text-xs sm:text-sm font-semibold text-gray-700 mx-0.5 sm:mx-1">
                 {(rating || 0).toFixed(1)}
             </span>
         </div>
@@ -70,11 +70,10 @@ const TopSellersPage = () => {
     const { t, i18n } = useTranslation();
     const isRTL = i18n.language === "ar";
     const navigate = useNavigate();
-
     const [sellers, setSellers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
-    const [displayCount, setDisplayCount] = useState(8); 
+    const [displayCount, setDisplayCount] = useState(8);
     const hasFetched = useRef(false);
 
     useEffect(() => {
@@ -113,7 +112,7 @@ const TopSellersPage = () => {
     };
 
     const handleShowLess = () => {
-        setDisplayCount(8); 
+        setDisplayCount(8);
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
@@ -126,335 +125,406 @@ const TopSellersPage = () => {
     const displayedSellers = restSellers.slice(0, displayCount - 3);
 
     return (
-        // <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 py-8" dir={isRTL ? "rtl" : "ltr"}>
-        //     <style>{`
-        //         @keyframes float {
-        //             0%, 100% { transform: translateY(0px); }
-        //             50% { transform: translateY(-20px); }
-        //         }
-        //         @keyframes pulse-glow {
-        //             0%, 100% { box-shadow: 0 0 30px rgba(255, 215, 0, 0.6), 0 0 60px rgba(255, 215, 0, 0.3); }
-        //             50% { box-shadow: 0 0 50px rgba(255, 215, 0, 0.9), 0 0 100px rgba(255, 215, 0, 0.5); }
-        //         }
-        //         @keyframes shine {
-        //             0% { background-position: -200% center; }
-        //             100% { background-position: 200% center; }
-        //         }
-        //         @keyframes rotate {
-        //             from { transform: rotate(0deg); }
-        //             to { transform: rotate(360deg); }
-        //         }
-        //         @keyframes bounce-in {
-        //             0% { transform: scale(0.3); opacity: 0; }
-        //             50% { transform: scale(1.05); }
-        //             70% { transform: scale(0.9); }
-        //             100% { transform: scale(1); opacity: 1; }
-        //         }
-        //         @keyframes sparkle {
-        //             0%, 100% { opacity: 0; transform: scale(0) rotate(0deg); }
-        //             50% { opacity: 1; transform: scale(1) rotate(180deg); }
-        //         }
-        //         @keyframes gradient-shift {
-        //             0%, 100% { background-position: 0% 50%; }
-        //             50% { background-position: 100% 50%; }
-        //         }
-        //         @keyframes slide-up {
-        //             from { opacity: 0; transform: translateY(30px); }
-        //             to { opacity: 1; transform: translateY(0); }
-        //         }
-        //         .animate-float {
-        //             animation: float 3s ease-in-out infinite;
-        //         }
-        //         .animate-pulse-glow {
-        //             animation: pulse-glow 2s ease-in-out infinite;
-        //         }
-        //         .animate-shine {
-        //             background: linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent);
-        //             background-size: 200% 100%;
-        //             animation: shine 2s infinite;
-        //         }
-        //         .animate-rotate {
-        //             animation: rotate 20s linear infinite;
-        //         }
-        //         .animate-bounce-in {
-        //             animation: bounce-in 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-        //         }
-        //         .animate-sparkle {
-        //             animation: sparkle 2s ease-in-out infinite;
-        //         }
-        //         .animate-gradient {
-        //             background-size: 200% 200%;
-        //             animation: gradient-shift 3s ease infinite;
-        //         }
-        //         .animate-slide-up {
-        //             animation: slide-up 0.5s ease-out forwards;
-        //         }
-        //         .glass-effect {
-        //             background: rgba(255, 255, 255, 0.9);
-        //             backdrop-filter: blur(10px);
-        //             border: 1px solid rgba(255, 255, 255, 0.3);
-        //         }
-        //     `}</style>
+        <div className="min-h-screen bg-gray-50" dir={isRTL ? "rtl" : "ltr"}>
+            <style>{`
+                @keyframes fadeIn {
+                    from { opacity: 0; transform: translateY(20px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+                @keyframes swing {
+                    0%, 100% { transform: rotate(-4deg); }
+                    50% { transform: rotate(4deg); }
+                }
+                @keyframes pulse-glow {
+                    0%, 100% { box-shadow: 0 0 20px rgba(251, 191, 36, 0.4); }
+                    50% { box-shadow: 0 0 30px rgba(251, 191, 36, 0.6); }
+                }
+                .animate-fade-in {
+                    animation: fadeIn 0.5s ease-out forwards;
+                }
+                .animate-pulse-glow {
+                    animation: pulse-glow 2s ease-in-out infinite;
+                }
+                @keyframes crownBounce {
+                    0%, 100% { 
+                        transform: translateY(0) scale(1) rotate(0deg);
+                    }
+                    25% { 
+                        transform: translateY(-15px) scale(1.15) rotate(-5deg);
+                    }
+                    50% { 
+                        transform: translateY(-8px) scale(1.1) rotate(0deg);
+                    }
+                    75% { 
+                        transform: translateY(-12px) scale(1.12) rotate(5deg);
+                    }
+                }
+                @keyframes crownSparkle {
+                    0%, 100% { 
+                        filter: drop-shadow(0 4px 12px rgba(0,0,0,0.3)) brightness(1);
+                    }
+                    50% { 
+                        filter: drop-shadow(0 6px 20px rgba(251, 191, 36, 0.8)) brightness(1.3);
+                    }
+                }
+                @keyframes crownGlow {
+                    0%, 100% { 
+                        text-shadow: 0 0 10px rgba(251, 191, 36, 0.5),
+                                    0 0 20px rgba(251, 191, 36, 0.3);
+                    }
+                    50% { 
+                        text-shadow: 0 0 20px rgba(251, 191, 36, 0.8),
+                                    0 0 30px rgba(251, 191, 36, 0.6),
+                                    0 0 40px rgba(251, 191, 36, 0.4);
+                    }
+                }
+                .animate-crown-bounce {
+                    animation: crownBounce 2s ease-in-out infinite;
+                }
+                .animate-crown-sparkle {
+                    animation: crownSparkle 2s ease-in-out infinite;
+                }
+                .animate-crown-glow {
+                    animation: crownGlow 2s ease-in-out infinite;
+                }
+            `}</style>
 
-        //     <div className="container mx-auto px-4">
-        //         {/* Header */}
-        //         <div className="text-center mb-12 relative">
-        //             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-32 bg-gradient-to-r from-yellow-300 via-pink-300 to-purple-300 rounded-full blur-3xl opacity-30 animate-pulse"></div>
-                    
-        //             <button
-        //                 onClick={() => navigate(-1)}
-        //                 className="mb-6 inline-flex items-center gap-2 text-main hover:text-main/80 transition-all duration-300 hover:scale-110 relative z-10"
-        //             >
-        //                 <svg className={`w-6 h-6 ${isRTL ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        //                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-        //                 </svg>
-        //                 <span className="font-semibold">{isRTL ? "رجوع" : "Back"}</span>
-        //             </button>
-                    
-        //             <div className="relative inline-block">
-        //                 <h1 className="text-5xl md:text-6xl font-black bg-gradient-to-r from-yellow-500 via-pink-500 to-purple-600 bg-clip-text text-transparent mb-3 animate-gradient relative z-10">
-        //                     {isRTL ? "🏆 افضل التجار" : "🏆 Top Sellers"}
-        //                 </h1>
-        //                 <div className="absolute -top-4 -right-4 text-4xl animate-sparkle">✨</div>
-        //                 <div className="absolute -bottom-2 -left-4 text-3xl animate-sparkle" style={{animationDelay: '1s'}}>⭐</div>
-        //             </div>
-                    
-        //             <p className="text-gray-700 text-lg font-medium relative z-10 mt-2">
-        //                 {isRTL ? "تعرف على أفضل التجار المميزين في المنصة" : "Meet our most trusted and top-rated sellers"}
-        //             </p>
-        //         </div>
+            <div className="container mx-auto px-4 py-12 max-w-7xl">
+                {/* Header */}
+                <div className="mb-12">
+                    <h1 className="text-4xl md:text-5xl font-bold text-main mb-3">
+                        {isRTL ? "أفضل التجار" : "Top Sellers"}
+                    </h1>
+                </div>
 
-        //         {sellers.length === 0 ? (
-        //             <div className="text-center py-20">
-        //                 <div className="text-gray-400 mb-4">
-        //                     <svg className="w-24 h-24 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        //                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-        //                     </svg>
-        //                 </div>
-        //                 <p className="text-2xl font-medium text-gray-600">
-        //                     {isRTL ? "لا يوجد تجار متاحين حالياً" : "No sellers available at the moment"}
-        //                 </p>
-        //             </div>
-        //         ) : (
-        //             <>
-        //                 {/* Top 3 Podium */}
-        //                 <div className="mb-16">
-        //                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
-        //                         {/* Second Place */}
-        //                         <div className="md:order-1 order-2 animate-bounce-in" style={{animationDelay: '0.2s'}}>
-        //                             {topThree[1] && (
-        //                                 <div
-        //                                     onClick={() => navigate(`/seller/${topThree[1].id}`)}
-        //                                     className="glass-effect border-4 border-gray-400 rounded-3xl p-6 cursor-pointer hover:scale-105 transition-all duration-300 shadow-2xl hover:shadow-3xl relative overflow-hidden h-72 group"
-        //                                 >
-        //                                     <div className="absolute inset-0 bg-gradient-to-br from-gray-200/50 via-gray-300/30 to-gray-400/20 group-hover:from-gray-300/60 group-hover:via-gray-400/40 group-hover:to-gray-500/30 transition-all duration-300"></div>
-        //                                     <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-white to-transparent animate-shine"></div>
+                {sellers.length === 0 ? (
+                    <div className="text-center py-20">
+                        <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
+                            <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                            </svg>
+                        </div>
+                        <p className="text-xl font-medium text-gray-900 mb-1">
+                            {isRTL ? "لا يوجد تجار" : "No sellers found"}
+                        </p>
+                        <p className="text-gray-500">
+                            {isRTL ? "تحقق مرة أخرى لاحقاً" : "Check back later"}
+                        </p>
+                    </div>
+                ) : (
+                    <>
+                        <div className="mb-16">
+                            <div className="grid grid-cols-3 gap-3 sm:gap-6 max-w-6xl mx-auto items-end">
+                                {/* Second Place */}
+                                <div className="animate-fade-in" style={{ animationDelay: '0.1s' }}>
+                                    {topThree[1] && (
+                                        <div
+                                            onClick={() => navigate(`/seller/${topThree[1].id}`)}
+                                            className="relative cursor-pointer group bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-md hover:shadow-xl transition-all duration-300 border-2 border-main"
+                                        >
+                                            <div
+                                                className="absolute flex-shrink-0 z-10 left-1/2 -translate-x-1/2"
+                                                style={{
+                                                    top: '-3px',
+                                                    animation: 'swing 2.5s ease-in-out infinite',
+                                                    animationDelay: '0.3s',
+                                                    transformOrigin: 'top center'
+                                                }}
+                                            >
+                                                <div className="text-3xl sm:text-5xl" style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.15))' }}>
+                                                    🥈
+                                                </div>
+                                            </div>
+
+                                            <div className="text-center pt-7 sm:pt-8">
+                                                <div className="w-16 h-16 sm:w-24 sm:h-24 mx-auto rounded-full bg-gradient-to-br from-main/20 to-main/10 flex items-center justify-center overflow-hidden mb-2 sm:mb-4 border-2 border-main/30">
+                                                    {topThree[1].image ? (
+                                                        <img src={topThree[1].image} alt={topThree[1].name} className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        <span className="text-main font-black text-xl sm:text-3xl">
+                                                            {topThree[1].name?.charAt(0).toUpperCase()}
+                                                        </span>
+                                                    )}
+                                                </div>
+
+                                                <h3 className="text-sm sm:text-lg font-bold text-gray-900 mb-1 sm:mb-2 truncate px-1">
+                                                    {topThree[1].name}
+                                                </h3>
+                                                <div className="scale-85 sm:scale-100">
+                                                    <StarRating rating={topThree[1].rating_avg || 0} />
+                                                </div>
+
+                                                <div className="mt-2 sm:mt-4 hidden sm:flex flex-wrap gap-1.5 justify-center">
+                                                    <span className="bg-main text-white rounded-full px-3 py-1 text-xs font-bold">
+                                                        {isRTL ? "الاكثر مبيعا" : "Top Seller"}
+                                                    </span>
+                                                    {topThree[1].rating_avg >= 4 && (
+                                                        <>
+                                                            <span className="bg-main text-white rounded-full px-3 py-1 text-xs font-bold">
+                                                                {isRTL ? "امين" : "Honest"}
+                                                            </span>
+                                                            <span className="bg-main text-white rounded-full px-3 py-1 text-xs font-bold">
+                                                                {isRTL ? "سهل التعامل" : "Easy to Deal"}
+                                                            </span>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* First Place */}
+                                <div className="animate-fade-in">
+                                    {topThree[0] && (
+                                        <div
+                                            onClick={() => navigate(`/seller/${topThree[0].id}`)}
+                                            className="relative cursor-pointer group bg-gradient-to-br from-yellow-50 via-white to-yellow-50 rounded-xl sm:rounded-2xl p-5 sm:p-8 shadow-xl hover:shadow-2xl transition-all duration-300 border-2 sm:border-4 border-yellow-400 animate-pulse-glow"
+                                            style={{
+                                                boxShadow: '0 10px 40px rgba(251, 191, 36, 0.3), 0 0 0 3px rgba(251, 191, 36, 0.1)',
+                                            }}
+                                        >
+                                            <div className="text-center">
+                                                <div className="text-3xl sm:text-5xl animate-crown-bounce animate-crown-sparkle animate-crown-glow"
+                                                    style={{ filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.3))' }}>
+                                                    👑
+                                                </div>
+                                                <div className="relative w-18 h-18 sm:w-32 sm:h-32 mx-auto rounded-full bg-gradient-to-br from-yellow-200 via-yellow-100 to-yellow-200 flex items-center justify-center overflow-hidden mb-2 sm:mb-5 border-2 sm:border-4 border-yellow-400 shadow-lg ring-2 sm:ring-4 ring-yellow-100"
+                                                    style={{
+                                                        boxShadow: '0 0 20px rgba(251, 191, 36, 0.4), inset 0 0 20px rgba(251, 191, 36, 0.1)'
+                                                    }}
+                                                >
+                                                    {topThree[0].image ? (
+                                                        <img src={topThree[0].image} alt={topThree[0].name} className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        <span className="text-yellow-600 font-black text-2xl sm:text-5xl">
+                                                            {topThree[0].name?.charAt(0).toUpperCase()}
+                                                        </span>
+                                                    )}
+                                                </div>
+
+                                                <h3 className="text-base sm:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-600 via-yellow-500 to-yellow-600 mb-1 sm:mb-3 truncate px-1 drop-shadow-sm">
+                                                    {topThree[0].name}
+                                                </h3>
+                                                <div className="scale-90 sm:scale-100">
+                                                    <StarRating rating={topThree[0].rating_avg || 0} />
+                                                </div>
+
+                                                <div className="mt-2 sm:mt-5 hidden sm:flex flex-wrap gap-1.5 justify-center">
+                                                    <span className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded-full px-3 py-1.5 text-xs font-bold shadow-md">
+                                                        {isRTL ? "الاكثر مبيعا" : "Top Seller"}
+                                                    </span>
+                                                    {topThree[0].rating_avg >= 4 && (
+                                                        <>
+                                                            <span className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded-full px-3 py-1.5 text-xs font-bold shadow-md">
+                                                                {isRTL ? "امين" : "Honest"}
+                                                            </span>
+                                                            <span className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded-full px-3 py-1.5 text-xs font-bold shadow-md">
+                                                                {isRTL ? "سهل التعامل" : "Easy to Deal"}
+                                                            </span>
+                                                            <span className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded-full px-3 py-1.5 text-xs font-bold shadow-md">
+                                                                {isRTL ? "بضاعة ممتازة" : "Great Product Quality"}
+                                                            </span>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Third Place */}
+                                <div className="animate-fade-in" style={{ animationDelay: '0.2s' }}>
+                                    {topThree[2] && (
+                                        <div
+                                            onClick={() => navigate(`/seller/${topThree[2].id}`)}
+                                            className="relative cursor-pointer group bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-md hover:shadow-xl transition-all duration-300 border-2 border-main"
+                                        >
                                             
-        //                                     <div className="text-7xl mb-4 text-center animate-float relative z-10" style={{animationDelay: '0.5s'}}>
-        //                                         🥈
-        //                                     </div>
+                                            <div
+                                                className="absolute flex-shrink-0 z-10 left-1/2 -translate-x-1/2"
+                                                style={{
+                                                    top: '-3px',
+                                                    animation: 'swing 2.5s ease-in-out infinite',
+                                                    animationDelay: '0.6s',
+                                                    transformOrigin: 'top center'
+                                                }}
+                                            >
+                                                <div className="text-3xl sm:text-5xl" style={{ filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.15))' }}>
+                                                    🥉
+                                                </div>
+                                            </div>
 
-        //                                     <div className="w-28 h-28 mx-auto rounded-full bg-gradient-to-br from-gray-300 to-gray-400 flex items-center justify-center border-4 border-white shadow-xl overflow-hidden mb-4 relative z-10 group-hover:scale-110 transition-transform duration-300">
-        //                                         {topThree[1].image ? (
-        //                                             <img src={topThree[1].image} alt={topThree[1].name} className="w-full h-full object-cover" />
-        //                                         ) : (
-        //                                             <span className="text-white font-bold text-4xl">
-        //                                                 {topThree[1].name?.charAt(0).toUpperCase()}
-        //                                             </span>
-        //                                         )}
-        //                                     </div>
+                                            <div className="text-center pt-6 sm:pt-8">
+                                                <div className="w-14 h-14 sm:w-24 sm:h-24 mx-auto rounded-full bg-gradient-to-br from-main/20 to-main/10 flex items-center justify-center overflow-hidden mb-2 sm:mb-4 border-2 border-main/30">
+                                                    {topThree[2].image ? (
+                                                        <img src={topThree[2].image} alt={topThree[2].name} className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        <span className="text-main font-black text-lg sm:text-3xl">
+                                                            {topThree[2].name?.charAt(0).toUpperCase()}
+                                                        </span>
+                                                    )}
+                                                </div>
 
-        //                                     <h3 className="text-xl font-bold text-gray-800 text-center mb-2 truncate relative z-10">
-        //                                         {topThree[1].name}
-        //                                     </h3>
-        //                                     <div className="relative z-10">
-        //                                         <StarRating rating={topThree[1].rating_avg || 0} />
-        //                                     </div>
-                                            
-        //                                     <div className="mt-3 flex justify-center relative z-10">
-        //                                         <div className="bg-gradient-to-r from-gray-600 to-gray-700 text-white rounded-full px-5 py-2 text-sm font-bold shadow-lg">
-        //                                             {isRTL ? "المركز الثاني" : "2nd Place"}
-        //                                         </div>
-        //                                     </div>
-        //                                 </div>
-        //                             )}
-        //                         </div>
+                                                <h3 className="text-xs sm:text-lg font-bold text-gray-900 mb-1 sm:mb-2 truncate px-1">
+                                                    {topThree[2].name}
+                                                </h3>
+                                                <div className="scale-75 sm:scale-100">
+                                                    <StarRating rating={topThree[2].rating_avg || 0} />
+                                                </div>
 
-        //                         {/* First Place - Larger and elevated */}
-        //                         <div className="md:order-2 order-1 animate-bounce-in">
-        //                             {topThree[0] && (
-        //                                 <div
-        //                                     onClick={() => navigate(`/seller/${topThree[0].id}`)}
-        //                                     className="glass-effect border-4 border-yellow-500 rounded-3xl p-8 cursor-pointer hover:scale-105 transition-all duration-300 shadow-2xl hover:shadow-3xl relative overflow-hidden transform md:scale-110 md:-mt-8 h-96 animate-pulse-glow group"
-        //                                 >
-        //                                     <div className="absolute inset-0 bg-gradient-to-br from-yellow-200/60 via-yellow-300/40 to-yellow-400/30 group-hover:from-yellow-300/70 group-hover:via-yellow-400/50 group-hover:to-yellow-500/40 transition-all duration-300"></div>
-        //                                     <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-yellow-400 to-transparent animate-shine"></div>
-        //                                     <div className="absolute inset-0 bg-gradient-to-br from-yellow-300/30 to-transparent animate-rotate opacity-40"></div>
-                                            
-        //                                     <div className="text-8xl mb-4 text-center animate-float relative z-10">
-        //                                         🥇
-        //                                     </div>
+                                                <div className="mt-2 sm:mt-4 hidden sm:flex flex-wrap gap-1.5 justify-center">
+                                                    <span className="bg-main text-white rounded-full px-3 py-1 text-xs font-bold">
+                                                        {isRTL ? "الاكثر مبيعا" : "Top Seller"}
+                                                    </span>
+                                                    {topThree[2].rating_avg >= 4 && (
+                                                        <>
+                                                            <span className="bg-main text-white rounded-full px-3 py-1 text-xs font-bold">
+                                                                {isRTL ? "امين" : "Honest"}
+                                                            </span>
+                                                            <span className="bg-main text-white rounded-full px-3 py-1 text-xs font-bold">
+                                                                {isRTL ? "سهل التعامل" : "Easy to Deal"}
+                                                            </span>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
 
-        //                                     <div className="w-36 h-36 mx-auto rounded-full bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center border-4 border-white shadow-2xl overflow-hidden mb-4 relative z-10 group-hover:scale-110 transition-transform duration-300">
-        //                                         {topThree[0].image ? (
-        //                                             <img src={topThree[0].image} alt={topThree[0].name} className="w-full h-full object-cover" />
-        //                                         ) : (
-        //                                             <span className="text-white font-bold text-5xl">
-        //                                                 {topThree[0].name?.charAt(0).toUpperCase()}
-        //                                             </span>
-        //                                         )}
-        //                                     </div>
+                        {/* Other Sellers */}
+                        {restSellers.length > 0 && (
+                            <div className="max-w-5xl mx-auto">
+                                <div className="mb-8">
+                                    <h2 className="text-2xl font-bold text-main">
+                                        {isRTL ? "تجار آخرون مميزون" : "Other Top Sellers"}
+                                    </h2>
+                                </div>
 
-        //                                     <h3 className="text-2xl font-bold text-yellow-900 text-center mb-3 truncate relative z-10">
-        //                                         {topThree[0].name}
-        //                                     </h3>
-        //                                     <div className="relative z-10">
-        //                                         <StarRating rating={topThree[0].rating_avg || 0} />
-        //                                     </div>
-                                            
-        //                                     <div className="mt-4 flex justify-center relative z-10">
-        //                                         <div className="bg-gradient-to-r from-yellow-600 to-yellow-700 text-white rounded-full px-6 py-2.5 text-base font-bold shadow-xl">
-        //                                             {isRTL ? "👑 المركز الأول" : "👑 1st Place"}
-        //                                         </div>
-        //                                     </div>
-        //                                 </div>
-        //                             )}
-        //                         </div>
+                                <div className="space-y-3 mb-8">
+                                    {displayedSellers.map((seller, index) => (
+                                        <div
+                                            key={seller.id}
+                                            onClick={() => navigate(`/seller/${seller.id}`)}
+                                            className="bg-white rounded-xl p-5 hover:shadow-lg transition-all duration-300 cursor-pointer border-2 border-main group animate-fade-in"
+                                            style={{ animationDelay: `${index * 0.05}s` }}
+                                        >
+                                            {/* Desktop Layout */}
+                                            <div className="hidden sm:flex items-center justify-between gap-4">
+                                                <div className="flex items-center gap-4 flex-1 min-w-0">
+                                                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-main/20 to-main/10 flex items-center justify-center overflow-hidden border-2 border-main/30 flex-shrink-0">
+                                                        {seller.image ? (
+                                                            <img src={seller.image} alt={seller.name} className="w-full h-full object-cover" />
+                                                        ) : (
+                                                            <span className="text-main font-black text-xl">
+                                                                {seller.name?.charAt(0).toUpperCase()}
+                                                            </span>
+                                                        )}
+                                                    </div>
 
-        //                         {/* Third Place */}
-        //                         <div className="md:order-3 order-3 animate-bounce-in" style={{animationDelay: '0.4s'}}>
-        //                             {topThree[2] && (
-        //                                 <div
-        //                                     onClick={() => navigate(`/seller/${topThree[2].id}`)}
-        //                                     className="glass-effect border-4 border-orange-400 rounded-3xl p-6 cursor-pointer hover:scale-105 transition-all duration-300 shadow-2xl hover:shadow-3xl relative overflow-hidden h-72 group"
-        //                                 >
-        //                                     <div className="absolute inset-0 bg-gradient-to-br from-orange-200/50 via-orange-300/30 to-orange-400/20 group-hover:from-orange-300/60 group-hover:via-orange-400/40 group-hover:to-orange-500/30 transition-all duration-300"></div>
-        //                                     <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-orange-300 to-transparent animate-shine"></div>
-                                            
-        //                                     <div className="text-7xl mb-4 text-center animate-float relative z-10" style={{animationDelay: '1s'}}>
-        //                                         🥉
-        //                                     </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <h3 className="text-lg font-bold text-gray-900 mb-1.5 truncate group-hover:text-main transition-colors">
+                                                            {seller.name}
+                                                        </h3>
+                                                        <StarRating rating={seller.rating_avg || 0} />
+                                                    </div>
+                                                </div>
 
-        //                                     <div className="w-28 h-28 mx-auto rounded-full bg-gradient-to-br from-orange-300 to-orange-500 flex items-center justify-center border-4 border-white shadow-xl overflow-hidden mb-4 relative z-10 group-hover:scale-110 transition-transform duration-300">
-        //                                         {topThree[2].image ? (
-        //                                             <img src={topThree[2].image} alt={topThree[2].name} className="w-full h-full object-cover" />
-        //                                         ) : (
-        //                                             <span className="text-white font-bold text-4xl">
-        //                                                 {topThree[2].name?.charAt(0).toUpperCase()}
-        //                                             </span>
-        //                                         )}
-        //                                     </div>
+                                                <div className="flex flex-wrap gap-2 justify-end flex-shrink-0">
+                                                    <span className="bg-main text-white rounded-full px-3 py-1.5 text-xs font-bold whitespace-nowrap">
+                                                        {isRTL ? "الاكثر مبيعا" : "Top Seller"}
+                                                    </span>
+                                                    {seller.rating_avg >= 4 && (
+                                                        <>
+                                                            <span className="bg-main text-white rounded-full px-3 py-1.5 text-xs font-bold whitespace-nowrap">
+                                                                {isRTL ? "امين" : "Honest"}
+                                                            </span>
+                                                            <span className="bg-main text-white rounded-full px-3 py-1.5 text-xs font-bold whitespace-nowrap">
+                                                                {isRTL ? "سهل التعامل" : "Easy to Deal"}
+                                                            </span>
+                                                            <span className="bg-main text-white rounded-full px-3 py-1.5 text-xs font-bold whitespace-nowrap">
+                                                                {isRTL ? "بضاعة ممتازة" : "Great Product Quality"}
+                                                            </span>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            </div>
 
-        //                                     <h3 className="text-xl font-bold text-orange-800 text-center mb-2 truncate relative z-10">
-        //                                         {topThree[2].name}
-        //                                     </h3>
-        //                                     <div className="relative z-10">
-        //                                         <StarRating rating={topThree[2].rating_avg || 0} />
-        //                                     </div>
-                                            
-        //                                     <div className="mt-3 flex justify-center relative z-10">
-        //                                         <div className="bg-gradient-to-r from-orange-600 to-orange-700 text-white rounded-full px-5 py-2 text-sm font-bold shadow-lg">
-        //                                             {isRTL ? "المركز الثالث" : "3rd Place"}
-        //                                         </div>
-        //                                     </div>
-        //                                 </div>
-        //                             )}
-        //                         </div>
-        //                     </div>
-        //                 </div>
+                                            {/* Mobile Layout */}
+                                            <div className="flex flex-col gap-3 sm:hidden">
+                                                <div className="flex items-center gap-2.5">
+                                                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-main/20 to-main/10 flex items-center justify-center border-2 border-main/30 overflow-hidden flex-shrink-0">
+                                                        {seller.image ? (
+                                                            <img src={seller.image} alt={seller.name} className="w-full h-full object-cover" />
+                                                        ) : (
+                                                            <span className="text-main font-bold text-xl">
+                                                                {seller.name?.charAt(0).toUpperCase()}
+                                                            </span>
+                                                        )}
+                                                    </div>
 
-        //                 {/* Rest of Sellers */}
-        //                 {restSellers.length > 0 && (
-        //                     <div className="max-w-5xl mx-auto">
-        //                         <div className="text-center mb-8 relative">
-        //                             <div className="inline-block relative">
-        //                                 <h2 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-        //                                     {isRTL ? "⭐ باقي التجار المميزين" : "⭐ Other Top Sellers"}
-        //                                 </h2>
-        //                                 <div className="absolute -bottom-2 left-0 right-0 h-1 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full"></div>
-        //                             </div>
-        //                         </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <h3 className="text-base font-bold text-gray-900 truncate">
+                                                            {seller.name}
+                                                        </h3>
+                                                    </div>
+                                                    <div className="flex items-center justify-center">
+                                                        <StarRating rating={seller.rating_avg || 0} />
+                                                    </div>
+                                                </div>
 
-        //                         <div className="space-y-4 mb-8">
-        //                             {displayedSellers.map((seller, index) => (
-        //                                 <div
-        //                                     key={seller.id}
-        //                                     onClick={() => navigate(`/seller/${seller.id}`)}
-        //                                     className="glass-effect border-2 border-main/30 rounded-2xl p-5 hover:shadow-2xl transition-all duration-300 cursor-pointer hover:scale-[1.02] hover:border-main group animate-slide-up"
-        //                                     style={{animationDelay: `${index * 0.1}s`}}
-        //                                 >
-        //                                     <div className="flex items-center gap-4">
-        //                                         <div className="flex-shrink-0 relative">
-        //                                             <div className="absolute inset-0 bg-gradient-to-r from-main/20 to-pink-500/20 rounded-full blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-        //                                             <div className="w-20 h-20 rounded-full bg-gradient-to-br from-main/20 to-main/10 flex items-center justify-center border-3 border-main/40 overflow-hidden shadow-lg relative z-10 group-hover:scale-110 group-hover:border-main transition-all duration-300">
-        //                                                 {seller.image ? (
-        //                                                     <img src={seller.image} alt={seller.name} className="w-full h-full object-cover" />
-        //                                                 ) : (
-        //                                                     <span className="text-main font-bold text-3xl">
-        //                                                         {seller.name?.charAt(0).toUpperCase()}
-        //                                                     </span>
-        //                                                 )}
-        //                                             </div>
-        //                                         </div>
+                                                <div className="flex flex-wrap gap-1.5 justify-center">
+                                                    <span className="bg-main text-white rounded-full px-2 py-1.5 text-[10px] font-bold whitespace-nowrap">
+                                                        {isRTL ? "الاكثر مبيعا" : "Top Seller"}
+                                                    </span>
+                                                    {seller.rating_avg >= 4 && (
+                                                        <>
+                                                            <span className="bg-main text-white rounded-full px-2 py-1.5 text-[10px] font-bold whitespace-nowrap">
+                                                                {isRTL ? "امين" : "Honest"}
+                                                            </span>
+                                                            <span className="bg-main text-white rounded-full px-2 py-1.5 text-[10px] font-bold whitespace-nowrap">
+                                                                {isRTL ? "سهل التعامل" : "Easy to Deal"}
+                                                            </span>
+                                                            <span className="bg-main text-white rounded-full px-2 py-1.5 text-[10px] font-bold whitespace-nowrap">
+                                                                {isRTL ? "بضاعة ممتازة" : "Great Product Quality"}
+                                                                </span>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
 
-        //                                         <div className="flex-1 min-w-0">
-        //                                             <h3 className="text-xl font-bold text-gray-900 truncate mb-2 group-hover:text-main transition-colors duration-300">
-        //                                                 {seller.name}
-        //                                             </h3>
-        //                                             <StarRating rating={seller.rating_avg || 0} />
-        //                                         </div>
+                                {/* Action Buttons */}
+                                <div className="flex justify-center gap-3">
+                                    {displayCount < sellers.length && (
+                                        <button
+                                            onClick={handleLoadMore}
+                                            className="px-6 py-3 bg-main text-white rounded-xl font-semibold hover:bg-main/90 transition-colors shadow-sm hover:shadow-md"
+                                        >
+                                            {isRTL ? "عرض المزيد" : "Load More"}
+                                        </button>
+                                    )}
 
-        //                                         <div className="flex flex-wrap gap-2 justify-end items-center">
-        //                                             <div className="flex items-center gap-1 bg-gradient-to-r from-main to-pink-500 text-white rounded-full px-4 py-2 text-xs font-bold whitespace-nowrap shadow-md group-hover:shadow-lg transition-shadow duration-300">
-        //                                                 <span>⭐</span>
-        //                                                 <span>{isRTL ? "تاجر مميز" : "Top Seller"}</span>
-        //                                             </div>
-        //                                             {seller.rating_avg >= 4 && (
-        //                                                 <div className="flex items-center gap-1 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-full px-4 py-2 text-xs font-bold whitespace-nowrap shadow-md">
-        //                                                     <span>✓</span>
-        //                                                     <span>{isRTL ? "امين" : "Trusted"}</span>
-        //                                                 </div>
-        //                                             )}
-        //                                         </div>
-        //                                     </div>
-        //                                 </div>
-        //                             ))}
-        //                         </div>
-
-        //                         {/* Load More / Show Less Buttons */}
-        //                         <div className="flex justify-center gap-4 mt-10">
-        //                             {displayCount < sellers.length && (
-        //                                 <button
-        //                                     onClick={handleLoadMore}
-        //                                     className="bg-gradient-to-r from-main to-pink-500 text-white px-10 py-4 rounded-2xl font-bold hover:from-main/90 hover:to-pink-500/90 transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:scale-105 flex items-center gap-2 group"
-        //                                 >
-        //                                     <span>{isRTL ? "عرض المزيد" : "Load More"}</span>
-        //                                     <svg className="w-5 h-5 group-hover:translate-y-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        //                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        //                                     </svg>
-        //                                 </button>
-        //                             )}
-                                    
-        //                             {displayCount > 8 && (
-        //                                 <button
-        //                                     onClick={handleShowLess}
-        //                                     className="bg-gradient-to-r from-gray-500 to-gray-600 text-white px-10 py-4 rounded-2xl font-bold hover:from-gray-600 hover:to-gray-700 transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:scale-105 flex items-center gap-2 group"
-        //                                 >
-        //                                     <span>{isRTL ? "عرض أقل" : "Show Less"}</span>
-        //                                     <svg className="w-5 h-5 group-hover:-translate-y-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        //                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-        //                                     </svg>
-        //                                 </button>
-        //                             )}
-        //                         </div>
-        //                     </div>
-        //                 )}
-        //             </>
-        //         )}
-        //     </div>
-        // </div>
-        <>
-        </>
+                                    {displayCount > 8 && (
+                                        <button
+                                            onClick={handleShowLess}
+                                            className="px-6 py-3 bg-white text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors shadow-sm hover:shadow-md border-2 border-gray-200"
+                                        >
+                                            {isRTL ? "عرض أقل" : "Show Less"}
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                    </>
+                )}
+            </div>
+        </div>
     );
 };
 

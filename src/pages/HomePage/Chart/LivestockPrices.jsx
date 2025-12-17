@@ -115,7 +115,7 @@ const LivestockPrices = () => {
 
             if (apiResponse && apiResponse.success && apiResponse.data && apiResponse.data.data) {
                 const dataArray = apiResponse.data.data;
-                
+
                 if (!Array.isArray(dataArray) || dataArray.length === 0) {
                     setPricesData([]);
                     setMeta(null);
@@ -133,8 +133,8 @@ const LivestockPrices = () => {
 
                         let displayLabel;
                         if (item.week) {
-                            displayLabel = isRTL 
-                                ? `الأسبوع ${item.week}` 
+                            displayLabel = isRTL
+                                ? `الأسبوع ${item.week}`
                                 : `Week ${item.week}`;
                         } else {
                             displayLabel = isRTL
@@ -184,9 +184,8 @@ const LivestockPrices = () => {
     const FilterButton = ({ name, label_ar, label_en, activeColor }) => (
         <button
             onClick={() => toggleFilter(name)}
-            className={`px-3 py-1.5 md:px-4 md:py-2 rounded-lg cursor-pointer text-white font-semibold text-xs md:text-sm transition-all duration-300 shadow-md hover:shadow-lg md:transform md:hover:scale-105 ${
-                activeFilters[name] ? `${activeColor}` : "bg-gray-400 opacity-60"
-            }`}
+            className={`px-3 py-1.5 md:px-4 md:py-2 rounded-lg cursor-pointer text-white font-semibold text-xs md:text-sm transition-all duration-300 shadow-md hover:shadow-lg md:transform md:hover:scale-105 ${activeFilters[name] ? `${activeColor}` : "bg-gray-400 opacity-60"
+                }`}
         >
             {activeFilters[name] ? "✓" : "○"} {isRTL ? label_ar : label_en}
         </button>
@@ -236,8 +235,8 @@ const LivestockPrices = () => {
 
     const getTimeLabel = () => {
         if (selectedMonth !== null) {
-            const monthName = isRTL 
-                ? monthsArabic[selectedMonth] 
+            const monthName = isRTL
+                ? monthsArabic[selectedMonth]
                 : monthOptions.find(m => m.value === selectedMonth)?.[isRTL ? "label_ar" : "label_en"];
             return `${monthName} ${selectedYear}`;
         }
@@ -296,7 +295,7 @@ const LivestockPrices = () => {
                     </h1>
                 </div>
 
-                <div className="grid grid-cols-3 gap-2 mb-3 md:mb-4 md:gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mb-3 md:mb-4 md:gap-4">
                     <div className="bg-white rounded-lg md:rounded-xl shadow-md p-2 md:p-4 border border-gray-100 md:shadow-lg">
                         <div className="flex items-center gap-1 md:gap-2 mb-1.5 md:mb-3">
                             <Package className="w-3 h-3 md:w-4 md:h-4 text-green-600 flex-shrink-0" />
@@ -327,27 +326,27 @@ const LivestockPrices = () => {
                         />
                     </div>
 
-                    <div className="bg-white rounded-lg md:rounded-xl shadow-md p-2 md:p-4 border border-gray-100 md:shadow-lg">
+                    <div className="bg-white rounded-lg md:rounded-xl shadow-md p-2 md:p-4 border border-gray-100 md:shadow-lg col-span-2 md:col-span-1">
                         <div className="flex items-center gap-1 md:gap-2 mb-1.5 md:mb-3">
                             <Calendar className="w-3 h-3 md:w-4 md:h-4 text-green-600 flex-shrink-0" />
                             <label className="text-[10px] md:text-sm font-bold text-gray-700 leading-tight">
                                 {isRTL ? "الفترة" : "Period"}
                             </label>
                         </div>
-                        <div className="flex flex-col gap-1.5 md:flex-row md:gap-2">
+                        <div className="flex gap-1.5 md:gap-2">
                             <CustomSelect
                                 options={monthSelectOptions}
                                 value={selectedMonth === null ? "" : selectedMonth}
                                 onChange={(val) => setSelectedMonth(val === "" ? null : Number(val))}
                                 isRTL={isRTL}
-                                className="w-full md:flex-1"
+                                className="flex-1"
                             />
                             <CustomSelect
                                 options={yearSelectOptions}
                                 value={selectedYear}
                                 onChange={(val) => setSelectedYear(Number(val))}
                                 isRTL={isRTL}
-                                className="w-full md:flex-1"
+                                className="flex-1"
                             />
                         </div>
                     </div>
@@ -450,8 +449,8 @@ const LivestockPrices = () => {
                                 {isRTL ? "لا توجد بيانات متاحة" : "No data available"}
                             </h3>
                             <p className="text-xs md:text-sm text-gray-500 max-w-sm mx-auto">
-                                {isRTL 
-                                    ? "لم يتم تسجيل أي أسعار في هذه الفترة. جرب اختيار فترة زمنية أخرى أو محافظة مختلفة." 
+                                {isRTL
+                                    ? "لم يتم تسجيل أي أسعار في هذه الفترة. جرب اختيار فترة زمنية أخرى أو محافظة مختلفة."
                                     : "No prices were recorded for this period. Try selecting a different time period or governorate."}
                             </p>
                         </div>
@@ -477,9 +476,9 @@ const LivestockPrices = () => {
                                     />
                                     <Tooltip content={<CustomTooltip />} />
                                     <Legend
-                                        wrapperStyle={{ 
-                                            paddingTop: "10px", 
-                                            fontSize: "10px",  
+                                        wrapperStyle={{
+                                            paddingTop: "10px",
+                                            fontSize: "10px",
                                             display: "flex",
                                             justifyContent: "center"
                                         }}
@@ -570,8 +569,8 @@ const LivestockPrices = () => {
                                 {isRTL ? "لا توجد بيانات متاحة" : "No data available"}
                             </h3>
                             <p className="text-sm md:text-base text-gray-500 max-w-md mx-auto">
-                                {isRTL 
-                                    ? "لم يتم تسجيل أي أسعار في هذه الفترة. جرب اختيار فترة زمنية أخرى أو محافظة مختلفة." 
+                                {isRTL
+                                    ? "لم يتم تسجيل أي أسعار في هذه الفترة. جرب اختيار فترة زمنية أخرى أو محافظة مختلفة."
                                     : "No prices were recorded for this period. Try selecting a different time period or governorate."}
                             </p>
                         </div>
