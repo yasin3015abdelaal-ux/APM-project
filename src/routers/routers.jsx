@@ -10,7 +10,7 @@ import ProductsPage from "../components/Products/ProductsPage";
 import ProductDetails from "../components/Products/ProductDetails";
 import DashboardHome from "../pages/Dashboard/Home";
 import SettingsPage from "../pages/Dashboard/SettingsPage";
-import { ProtectedRoute, PublicRoute } from "../RouteGuards/RouteGuards";
+import { ProtectedRoute, PublicRoute, VerifiedRoute } from "../RouteGuards/RouteGuards";
 import { ProtectedAdminRoute } from "../contexts/AdminContext";
 import Additions from "../components/Dashboard/Additions/Additions";
 import Category from "../components/Dashboard/Additions/Category";
@@ -128,7 +128,7 @@ export const routers = createBrowserRouter([
           {
             path: "seller/:sellerId",
             element: (
-              <ProtectedRoute allowGuest={true}>
+              <ProtectedRoute>
                 <SellerDetails />
               </ProtectedRoute>
             ),
@@ -202,7 +202,7 @@ export const routers = createBrowserRouter([
           {
             path: "top-sellers",
             element: (
-              <ProtectedRoute>
+              <ProtectedRoute allowGuest={true}>
                 <TopSellersPage />
               </ProtectedRoute>
             ),
@@ -210,9 +210,9 @@ export const routers = createBrowserRouter([
           {
             path: "prices",
             element: (
-              <ProtectedRoute>
+              <VerifiedRoute>
                 <Prices />
-              </ProtectedRoute>
+              </VerifiedRoute>
             ),
           },
           {

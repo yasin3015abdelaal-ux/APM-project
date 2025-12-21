@@ -11,7 +11,7 @@ const AddAds = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
-    
+
     const currentLang = localStorage.getItem('i18nextLng') || 'ar';
     const isRTL = currentLang === 'ar';
 
@@ -121,11 +121,11 @@ const AddAds = () => {
 
     const handleImageChange = (e) => {
         const files = Array.from(e.target.files);
-        
+
         if (files.length > 0) {
             const newImages = [...formData.images, ...files];
             setFormData((prev) => ({ ...prev, images: newImages }));
-            
+
             files.forEach(file => {
                 if (file && file.type.startsWith('image/')) {
                     const reader = new FileReader();
@@ -136,7 +136,7 @@ const AddAds = () => {
                 }
             });
         }
-        
+
         e.target.value = '';
     };
 
@@ -273,7 +273,7 @@ const AddAds = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
+
         if (formData.images.length === 0) {
             showToast(
                 isRTL ? 'يجب إضافة صورة واحدة على الأقل' : 'Please add at least one image',
@@ -281,7 +281,7 @@ const AddAds = () => {
             );
             return;
         }
-        
+
         setLoading(true);
 
         try {
@@ -297,34 +297,39 @@ const AddAds = () => {
             });
 
             formData.images.forEach((image, index) => {
-                dataToSend.append(`images[${index}]`, image);
+                if (image instanceof File) {
+                    dataToSend.append('images[]', image);
+                } else {
+                    setToast.error(`Image ${index} is not a File object:`, image);
+                }
             });
 
-            await userAPI.post("/products", dataToSend, {
-                headers: {
-                    "Content-Type": "multipart/form-data",
-                },
-            });
+            const response = await userAPI.post("/products", dataToSend);
 
-            showToast(isRTL ? 'تم نشر الإعلان بنجاح!' : 'Ad published successfully!', 'success');
+            console.log("✅ Success Response:", response.data);
+
+            showToast(
+                isRTL ? 'سيتم مراجعة إعلانك ونشره!' : 'Your advertisement will be reviewed and published!',
+                'success'
+            );
+
             setTimeout(() => {
                 navigate("/ads");
             }, 1500);
+
         } catch (error) {
-            console.error("Error creating product:", error);
-            console.error("Error response:", error.response?.data);
-            
             const validationErrors = error.response?.data?.errors;
             let errorMessage = '';
-            
+
             if (validationErrors) {
                 const firstErrorKey = Object.keys(validationErrors)[0];
                 const firstError = validationErrors[firstErrorKey];
                 errorMessage = Array.isArray(firstError) ? firstError[0] : firstError;
             } else {
-                errorMessage = isRTL ? 'حدث خطأ أثناء نشر الإعلان' : 'Error publishing ad';
+                errorMessage = error.response?.data?.message ||
+                    (isRTL ? 'حدث خطأ أثناء نشر الإعلان' : 'Error publishing ad');
             }
-            
+
             showToast(errorMessage, 'error');
         } finally {
             setLoading(false);
@@ -349,7 +354,7 @@ const AddAds = () => {
                             setError(null);
                             loadInitialData(formData.category_id);
                         }}
-                        className="w-full bg-main text-white py-3 px-4 rounded-lg hover:bg-green-700 text-sm font-semibold transition"
+                        className="w-full cursor-pointer bg-main text-white py-3 px-4 rounded-lg hover:bg-green-700 text-sm font-semibold transition"
                     >
                         {isRTL ? "إعادة المحاولة" : "Retry"}
                     </button>
@@ -401,7 +406,7 @@ const AddAds = () => {
                     <h2 className="text-lg font-bold text-gray-800 mb-4">
                         {isRTL ? 'صور الإعلان' : 'Ad Images'}
                     </h2>
-                    
+
                     <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 bg-white hover:border-main transition-colors">
                         <input
                             type="file"
@@ -430,9 +435,9 @@ const AddAds = () => {
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                             {imagePreviews.map((preview, index) => (
                                 <div key={index} className="relative group">
-                                    <img 
-                                        src={preview} 
-                                        alt={`Preview ${index + 1}`} 
+                                    <img
+                                        src={preview}
+                                        alt={`Preview ${index + 1}`}
                                         className="w-full h-32 sm:h-36 object-cover rounded-xl border-2 border-gray-200 shadow-sm group-hover:shadow-md transition-shadow"
                                     />
                                     <button
@@ -457,7 +462,7 @@ const AddAds = () => {
                     <h2 className="text-lg font-bold text-gray-800 mb-6">
                         {isRTL ? 'بيانات الإعلان' : 'Ad Details'}
                     </h2>
-                    
+
                     <div className={`grid grid-cols-1 lg:grid-cols-2 gap-6 ${isRTL ? 'rtl' : 'ltr'}`}>
                         {isRTL ? (
                             <>
@@ -479,7 +484,7 @@ const AddAds = () => {
                             </>
                         )}
                     </div>
-                    
+
                     {descriptionAttrs.length > 0 && (
                         <div className="mt-6 space-y-6">
                             {descriptionAttrs.map(attr => renderAttributeInput(attr))}
@@ -490,7 +495,7 @@ const AddAds = () => {
                 <button
                     type="submit"
                     disabled={loading}
-                    className="w-full bg-main hover:bg-green-700 text-white font-bold py-4 rounded-xl transition-all disabled:bg-gray-400 disabled:cursor-not-allowed text-base sm:text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                    className="w-full bg-main cursor-pointer hover:bg-green-700 text-white font-bold py-4 rounded-xl transition-all disabled:bg-gray-400 disabled:cursor-not-allowed text-base sm:text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                 >
                     {loading ? (
                         <span className="flex items-center justify-center gap-3">

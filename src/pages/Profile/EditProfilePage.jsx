@@ -183,6 +183,11 @@ const EditProfilePage = () => {
         setSaving(true);
         try {
             const formDataToSend = new FormData();
+            
+            // ✅ CRITICAL: Add _method for Laravel PUT request
+            formDataToSend.append("_method", "put");
+            
+            // Add required fields
             formDataToSend.append("name", formData.name);
 
             if (formData.governorate_id) {
@@ -194,15 +199,19 @@ const EditProfilePage = () => {
                 formDataToSend.append("password_confirmation", formData.password_confirmation);
             }
 
+            // ✅ Add image if selected
             if (imageFile) {
                 formDataToSend.append("image", imageFile);
             }
 
-            await userAPI.put("/profile", formDataToSend, {
-                headers: {
-                    "Content-Type": "multipart/form-data",
-                },
-            });
+            // Debug: Log FormData contents
+            console.log("=== FormData Contents ===");
+            for (let pair of formDataToSend.entries()) {
+                console.log(pair[0] + ':', pair[1]);
+            }
+
+            // ✅ Use POST instead of PUT (Laravel requirement for FormData)
+            await userAPI.post("/profile", formDataToSend);
 
             showToast(
                 isRTL ? "تم حفظ التعديلات بنجاح" : "Changes saved successfully"
@@ -213,6 +222,7 @@ const EditProfilePage = () => {
             }, 1500);
         } catch (err) {
             console.error("Error updating profile:", err);
+            console.error("Error response:", err.response?.data);
             const errorMessage = err.response?.data?.message || 
                 (isRTL ? "حدث خطأ أثناء حفظ التعديلات" : "An error occurred while saving changes");
             showToast(errorMessage, "error");

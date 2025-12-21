@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import logo from "../../assets/images/logo.jpg";
+import logo from "../../assets/images/logo.png";
 import { useNavigate, useLocation } from "react-router-dom";
 import ProfileHover from "./ProfileHover";
 import { useState } from "react";
@@ -72,17 +72,15 @@ const Navbar = ({
     <div className="w-full px-3 sm:px-4 md:px-6 lg:px-8 py-2 md:py-2.5 border-2 border-main rounded-lg bg-white">
       <div className="w-full">
         <div className="flex items-center justify-between gap-1.5 sm:gap-2 md:gap-3">
-          {/* Logo */}
           <div className="flex-shrink-0">
             <img
               src={logo}
               alt="logo"
-              className="w-9 h-9 sm:w-10 sm:h-10 md:w-12 md:h-12 lg:w-14 lg:h-14 cursor-pointer object-cover"
+              className="w-15 h-15 cursor-pointer object-cover"
               onClick={() => navigate("/")}
             />
           </div>
 
-          {/* Desktop Search Bar */}
           {isAuthenticated && (
             <form
               onSubmit={handleSearch}
@@ -109,7 +107,6 @@ const Navbar = ({
             </form>
           )}
 
-          {/* Desktop Menu Items */}
           {isAuthenticated && (
             <div className="hidden lg:flex items-center gap-2 flex-shrink-0">
               <button
@@ -127,9 +124,7 @@ const Navbar = ({
             </div>
           )}
 
-          {/* Icons Container */}
           <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2">
-            {/* Mobile Search Icon */}
             {isAuthenticated && (
               <button
                 onClick={onSearchClick}
@@ -140,7 +135,6 @@ const Navbar = ({
               </button>
             )}
 
-            {/* Cart Icon */}
             {isAuthenticated && (
               <button
                 onClick={handleCartClick}
@@ -156,7 +150,6 @@ const Navbar = ({
               </button>
             )}
 
-            {/* Favorites Icon */}
             {isAuthenticated && (
               <button
                 onClick={handleFavClick}
@@ -171,7 +164,6 @@ const Navbar = ({
               </button>
             )}
 
-            {/* Messages Icon */}
             {isAuthenticated && (
               <button
                 onClick={handleMessagesClick}
@@ -187,7 +179,6 @@ const Navbar = ({
               </button>
             )}
 
-            {/* Notifications Icon */}
             {isAuthenticated && (
               <button
                 onClick={handleNotificationsClick}
@@ -213,7 +204,6 @@ const Navbar = ({
               </button>
             )}
 
-            {/* Language Toggle */}
             <button
               onClick={toggleLanguage}
               className="px-2 py-1 sm:px-2.5 sm:py-1.5 bg-main text-white cursor-pointer rounded-lg hover:bg-green-700 transition font-semibold text-xs sm:text-sm flex-shrink-0"
@@ -221,7 +211,6 @@ const Navbar = ({
               {i18n.language === "ar" ? "EN" : "ع"}
             </button>
 
-            {/* Profile Icon - Desktop */}
             <div 
               className="hidden lg:block relative flex-shrink-0"
               onMouseEnter={() => setShowProfileHover(true)}
@@ -264,7 +253,6 @@ const Navbar = ({
             </div>
           </div>
 
-          {/* Mobile Menu Button */}
           <button
             onClick={onMenuClick}
             className="lg:hidden cursor-pointer p-1.5 sm:p-2 hover:bg-gray-100 rounded-lg transition flex-shrink-0"

@@ -9,12 +9,10 @@ export const ProtectedRoute = ({ children, allowGuest = false }) => {
         return <Loader />;
     }
 
-    // If route allows guest access, render content
     if (allowGuest) {
         return children ? children : <Outlet />;
     }
 
-    // If user not authenticated and route doesn't allow guest, redirect to login
     if (!isAuthenticated) {
         return <Navigate to="/login" replace />;
     }
@@ -30,6 +28,26 @@ export const PublicRoute = ({ children, restricted = false }) => {
     }
 
     if (restricted && isAuthenticated) {
+        return <Navigate to="/" replace />;
+    }
+
+    return children ? children : <Outlet />;
+};
+
+export const VerifiedRoute = ({ children }) => {
+    const { isAuthenticated, loading, user } = useAuth();
+
+    if (loading) {
+        return <Loader />;
+    }
+
+    if (!isAuthenticated) {
+        return <Navigate to="/login" replace />;
+    }
+
+    const isVerified = user?.verified_account === 1 || user?.verified_account === "1";
+
+    if (!isVerified) {
         return <Navigate to="/" replace />;
     }
 

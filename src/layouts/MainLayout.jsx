@@ -18,7 +18,7 @@ const MainLayout = () => {
     const [announcement, setAnnouncement] = useState(null); 
     const [showAnnouncement, setShowAnnouncement] = useState(false); 
     const location = useLocation();
-    const { isAuthenticated, loading } = useAuth();
+    const { loading } = useAuth();
 
     useEffect(() => {
         if ('scrollRestoration' in window.history) {
@@ -32,7 +32,8 @@ const MainLayout = () => {
 
     useEffect(() => {
         const fetchAnnouncement = async () => {
-            if (!isAuthenticated || loading) {
+            // Wait until auth context is loaded
+            if (loading) {
                 return;
             }
 
@@ -53,7 +54,7 @@ const MainLayout = () => {
         };
 
         fetchAnnouncement();
-    }, [isAuthenticated, loading]);
+    }, [loading]);
 
     const handleCloseAnnouncement = () => {
         setShowAnnouncement(false);
@@ -80,19 +81,17 @@ const MainLayout = () => {
 
                 <Footer />
 
-                {/* Mobile Sidebar */}
                 <Sidebar 
                     isOpen={sidebarOpen} 
                     onClose={() => setSidebarOpen(false)} 
                 />
 
-                {/* Search Page */}
                 <SearchPage 
                     isOpen={searchOpen} 
                     onClose={() => setSearchOpen(false)} 
                 />
 
-                {showAnnouncement && isAuthenticated && (
+                {showAnnouncement && (
                     <AnnouncementPopup
                         announcement={announcement}
                         onClose={handleCloseAnnouncement}

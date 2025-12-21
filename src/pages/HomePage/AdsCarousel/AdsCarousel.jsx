@@ -1,12 +1,11 @@
 import { useRef, useEffect, useState } from "react";
 import { HiOutlineLocationMarker } from 'react-icons/hi';
-import { Heart } from 'lucide-react';
+import { Heart, ChevronRight, ChevronLeft } from 'lucide-react';
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { getCachedProducts, userAPI } from "../../../api";
 import PlaceholderSVG from "../../../assets/PlaceholderSVG";
 
-// Skeleton Component
 const AdsCarouselSkeleton = ({ isRTL }) => (
   <div className="mx-auto p-2 select-none" dir={isRTL ? "rtl" : "ltr"}>
     <div className="mb-3">
@@ -89,17 +88,15 @@ function AdsCarousel() {
     fetchProducts();
   }, [t]);
 
-  // Auto-scroll effect
   useEffect(() => {
     if (products.length === 0) return;
 
     const interval = setInterval(() => {
       if (scrollRef.current && !isDragging.current) {
         const container = scrollRef.current;
-        const cardWidth = 220;
+        const cardWidth = 220; 
         const gap = 16;
-        const cardsToScroll = 4;
-        const scrollAmount = (cardWidth + gap) * cardsToScroll;
+        const scrollAmount = cardWidth + gap; 
 
         if (dir === "rtl") {
           const currentScroll = Math.abs(container.scrollLeft);
@@ -122,7 +119,7 @@ function AdsCarousel() {
           }
         }
       }
-    }, 5000);
+    }, 3000); 
 
     return () => clearInterval(interval);
   }, [dir, products]);
@@ -161,7 +158,6 @@ function AdsCarousel() {
         await userAPI.post(`/favorites/${productId}`);
       }
 
-      // Update local state
       setProducts(prev => prev.map(p =>
         p.id === productId ? { ...p, is_favorited: !p.is_favorited } : p
       ));
@@ -172,6 +168,10 @@ function AdsCarousel() {
 
   const navigateToProduct = (productId) => {
     navigate(`/product-details/${productId}`);
+  };
+
+  const navigateToAllProducts = () => {
+    navigate('/products');
   };
 
   const formatDate = (dateString) => {
@@ -232,9 +232,20 @@ function AdsCarousel() {
 
   return (
     <div dir={dir} className="mx-auto p-2 select-none">
-      <h2 className="text-2xl font-bold text-main">
-        {t("home.adsSection.adsTitle")}
-      </h2>
+      <div className="flex items-center justify-between mb-3 px-2">
+        <h2 className="text-2xl font-bold text-main">
+          {t("home.adsSection.adsTitle")}
+        </h2>
+        <button
+          onClick={navigateToAllProducts}
+          className="text-main hover:text-main/80 cursor-pointer font-medium text-xs sm:text-sm flex items-center gap-1 transition-colors"
+        >
+          {isRTL ? "عرض المزيد" : "View More"}
+          <svg className={`w-3 h-3 sm:w-4 sm:h-4 ${isRTL ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
 
       <div className="py-3">
         <div
@@ -260,12 +271,11 @@ function AdsCarousel() {
                 className="relative lg:w-1/4 xl:w-1/5 min-w-[180px] snap-start border border-gray-200 rounded-2xl shadow-sm bg-white shrink-0 hover:shadow-md transition-transform hover:scale-[1.02] select-none cursor-pointer"
                 onClick={() => navigateToProduct(product.id)}
               >
-                {/* Favorite Button */}
                 <button
                   onClick={(e) => toggleFavorite(product.id, e)}
                   className={`absolute top-2 ${isRTL ? 'left-2' : 'right-2'} cursor-pointer rounded-full p-1.5 shadow-sm hover:scale-110 transition-all z-10 ${product.is_favorited
-                      ? 'bg-red-500 hover:bg-red-600'
-                      : 'bg-white hover:bg-gray-50'
+                    ? 'bg-red-500 hover:bg-red-600'
+                    : 'bg-white hover:bg-gray-50'
                     }`}
                 >
                   <Heart
@@ -274,13 +284,12 @@ function AdsCarousel() {
                   />
                 </button>
 
-                {/* Product Image */}
-                <div className="flex justify-center border-b border-main h-40 bg-gray-100 rounded-t-2xl">
+                <div className="flex justify-center border-b border-main h-40 bg-gray-100 rounded-t-2xl overflow-hidden">
                   {imageUrl ? (
                     <img
                       src={imageUrl}
                       alt={isRTL ? product.name_ar : product.name_en}
-                      className="w-[70%] h-full object-contain rounded-2xl"
+                      className="w-full h-full object-cover rounded-t-2xl"
                       onError={(e) => {
                         e.target.style.display = 'none';
                         e.target.nextElementSibling.style.display = 'flex';
@@ -288,14 +297,13 @@ function AdsCarousel() {
                     />
                   ) : null}
                   <div
-                    className={`${imageUrl ? 'hidden' : 'flex'} w-[70%] h-full rounded-2xl items-center justify-center`}
+                    className={`${imageUrl ? 'hidden' : 'flex'} w-full h-full object-contain items-center justify-center`}
                     style={{ display: imageUrl ? 'none' : 'flex' }}
                   >
                     <PlaceholderSVG />
                   </div>
                 </div>
 
-                {/* Product Info */}
                 <div className="p-2.5 text-right">
                   <h3 className="font-bold text-sm mb-1 truncate">
                     {isRTL ? product.name_ar : product.name_en}
@@ -314,7 +322,6 @@ function AdsCarousel() {
                     {formatDate(product.created_at)}
                   </p>
 
-                  {/* Views and Interested Count */}
                   <div className="flex items-center gap-3 mb-2 text-xs text-gray-600">
                     <div className="flex items-center gap-1">
                       <svg className="w-3.5 h-3.5 text-main" fill="none" stroke="currentColor" viewBox="0 0 24 24">

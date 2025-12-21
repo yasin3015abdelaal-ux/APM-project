@@ -5,15 +5,17 @@ const CustomSelect = ({
     options = [], 
     value, 
     onChange, 
-    placeholder = "اختر من القائمة",
+    placeholder = "",
     isRTL = false,
-    className = ""
+    className = "",
+    error = ""
 }) => {
     const [isOpen, setIsOpen] = useState(false);
     const selectRef = useRef(null);
 
     const selectedOption = options.find(opt => opt.value === value);
     const displayText = selectedOption ? selectedOption.label : placeholder;
+    const displayIcon = selectedOption?.icon;
 
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -41,15 +43,20 @@ const CustomSelect = ({
             <button
                 type="button"
                 onClick={toggleDropdown}
-                className={`w-full appearance-none bg-white border-2 border-gray-200 
-                    hover:border-main/60 focus:border-main focus:shadow-md 
-                    text-gray-700 rounded-xl px-4 py-3 text-sm cursor-pointer 
+                className={`w-full appearance-none bg-white border-2 
+                    ${error ? 'border-red-500' : 'border-gray-200 hover:border-main/60 focus:border-main'} 
+                    focus:shadow-md text-gray-700 rounded-xl px-4 py-3 text-sm cursor-pointer 
                     transition-all duration-200 focus:outline-none
                     flex items-center justify-between gap-3`}
                 dir={isRTL ? "rtl" : "ltr"}
             >
-                <span className={`truncate flex-1 ${isRTL ? 'text-right' : 'text-left'}`}>
-                    {displayText}
+                <span className={`truncate flex-1 ${isRTL ? 'text-right' : 'text-left'} flex items-center gap-2`}>
+                    {displayIcon && (
+                        <span className="flex-shrink-0">
+                            {displayIcon}
+                        </span>
+                    )}
+                    <span className="truncate">{displayText}</span>
                 </span>
                 <ChevronDown 
                     size={18} 
@@ -59,11 +66,16 @@ const CustomSelect = ({
                 />
             </button>
 
+            {/* Error Message */}
+            {error && (
+                <p className="text-red-500 text-xs mt-1">{error}</p>
+            )}
+
             {/* Dropdown Menu */}
             {isOpen && (
                 <div 
                     className="absolute left-0 right-0 mt-2 w-full bg-white 
-                        border-2 border-gray-200 rounded-xl shadow-lg z-1000 overflow-hidden"
+                        border-2 border-gray-200 rounded-xl shadow-lg z-[1000] overflow-hidden"
                     dir={isRTL ? "rtl" : "ltr"}
                 >
                     <div className="max-h-60 overflow-y-auto custom-scrollbar">
@@ -73,7 +85,7 @@ const CustomSelect = ({
                                     key={option.value}
                                     type="button"
                                     onClick={() => handleSelect(option.value)}
-                                    className={`w-full px-4 py-2.5 text-sm flex items-center justify-between gap-3
+                                    className={`w-full px-4 py-2.5 text-sm flex items-center gap-3
                                         transition-colors duration-150 cursor-pointer
                                         ${value === option.value 
                                             ? 'bg-main/10 text-main font-medium' 
@@ -81,9 +93,19 @@ const CustomSelect = ({
                                         }
                                     `}
                                 >
+                                    {/* Icon */}
+                                    {option.icon && (
+                                        <span className="flex-shrink-0">
+                                            {option.icon}
+                                        </span>
+                                    )}
+                                    
+                                    {/* Label */}
                                     <span className={`truncate flex-1 ${isRTL ? 'text-right' : 'text-left'}`}>
                                         {option.label}
                                     </span>
+                                    
+                                    {/* Check Icon */}
                                     {value === option.value && (
                                         <Check 
                                             size={16} 

@@ -1,11 +1,12 @@
 import { useTranslation } from "react-i18next";
 import { FaFacebook, FaWhatsapp } from "react-icons/fa";
-import logo from "../../assets/images/logo.jpg";
+import logo from "../../assets/images/logo.png";
 import { Link } from "react-router-dom";
 import { FaXTwitter } from "react-icons/fa6";
 
 export default function Footer() {
   const { t, i18n } = useTranslation();
+  const isRTL = i18n.language === "ar";
 
   const socials = [
     { link: "#", icon: <FaFacebook />, label: "facebook" },
@@ -23,7 +24,7 @@ export default function Footer() {
   const countries = t("footer.countries.country", { returnObjects: true }) || [];
 
   return (
-    <footer className="bg-gradient-to-br from-main via-main to-main/90 text-white" dir={i18n.language === "ar" ? "rtl" : "ltr"}>
+    <footer className="bg-gradient-to-br from-main via-main to-main/90 text-white" dir={isRTL ? "rtl" : "ltr"}>
       <div className="container mx-auto px-4 py-8 md:px-6">
 
         <div className="flex flex-col items-center md:items-start space-y-4 mb-6 md:hidden">
@@ -34,7 +35,7 @@ export default function Footer() {
           />
           <div className="text-center">
             <h3 className="text-sm font-bold mb-3">
-              {i18n.language === "ar" ? "تابعنا" : "Follow Us"}
+              {isRTL ? "تابعنا" : "Follow Us"}
             </h3>
             <div className="flex gap-3 justify-center">
               {socials.map((social, index) => (
@@ -52,10 +53,12 @@ export default function Footer() {
         </div>
 
         <div className="flex gap-4 mb-6 md:hidden">
-          {/* Quick Links */}
-          <div className="flex flex-col items-start flex-shrink-0 flex-1 ">
-            <h3 className="text-sm font-bold mb-3 relative pb-2 after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-20 after:h-0.5 after:bg-white/50 after:rounded">
-              {i18n.language === "ar" ? "روابط سريعة" : "Quick Links"}
+          <div className="flex flex-col items-start flex-shrink-0 basis-1/3 grow">
+            <h3 className={`text-sm font-bold mb-3 relative pb-2 ${isRTL
+                ? "after:content-[''] after:absolute after:bottom-0 after:right-0 after:w-20 after:h-0.5 after:bg-white/50 after:rounded"
+                : "after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-20 after:h-0.5 after:bg-white/50 after:rounded"
+              }`}>
+              {isRTL ? "روابط سريعة" : "Quick Links"}
             </h3>
             <nav className="flex flex-col gap-2 text-start">
               {footerLinks.map((link, index) => (
@@ -70,7 +73,6 @@ export default function Footer() {
             </nav>
           </div>
 
-          {/* Countries */}
           <div className="flex flex-col items-center min-w-0">
             <h3 className="text-sm font-bold mb-3 relative pb-2 after:content-[''] after:absolute after:bottom-0 after:left-1/2 after:-translate-x-1/2 after:w-9 after:h-0.5 after:bg-white/50 after:rounded text-center">
               {t("footer.countries.title")}
@@ -90,7 +92,6 @@ export default function Footer() {
         </div>
 
         <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-12 gap-6 md:gap-8 mb-6">
-          {/* Logo & Social Section */}
           <div className="flex flex-col items-start space-y-4 lg:col-span-3">
             <img
               src={logo}
@@ -99,7 +100,7 @@ export default function Footer() {
             />
             <div>
               <h3 className="text-base font-bold mb-3">
-                {i18n.language === "ar" ? "تابعنا" : "Follow Us"}
+                {isRTL ? "تابعنا" : "Follow Us"}
               </h3>
               <div className="flex gap-3">
                 {socials.map((social, index) => (
@@ -116,17 +117,20 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Quick Links Section */}
-          <div className="flex flex-col items-start lg:col-span-2">
-            <h3 className="text-base font-bold mb-3 relative pb-2 after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-16 after:h-0.5 after:bg-white/50 after:rounded">
-              {i18n.language === "ar" ? "روابط سريعة" : "Quick Links"}
+          <div className="flex flex-col items-start lg:col-span-3">
+            <h3 className={`text-base font-bold mb-3 relative pb-2 ${isRTL
+                ? "after:content-[''] after:absolute after:bottom-0 after:right-0 after:w-16 after:h-0.5 after:bg-white/50 after:rounded"
+                : "after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-16 after:h-0.5 after:bg-white/50 after:rounded"
+              }`}>
+              {isRTL ? "روابط سريعة" : "Quick Links"}
             </h3>
             <nav className="flex flex-col gap-2">
               {footerLinks.map((link, index) => (
                 <Link
                   key={index}
                   to={link.path}
-                  className="text-white/90 hover:text-white hover:translate-x-1 transition-all duration-300 text-sm group flex items-center gap-2"
+                  className={`text-white/90 hover:text-white transition-all duration-300 text-sm group flex items-center gap-2 ${isRTL ? "hover:-translate-x-1" : "hover:translate-x-1"
+                    }`}
                 >
                   <span className="w-0 group-hover:w-2 h-0.5 bg-white transition-all duration-300"></span>
                   {t(link.label)}
@@ -135,8 +139,7 @@ export default function Footer() {
             </nav>
           </div>
 
-          {/* Countries Section */}
-          <div className="flex flex-col items-center lg:col-span-7">
+          <div className="flex flex-col items-center lg:col-span-6">
             <h3 className="text-base font-bold mb-3 relative pb-2 after:content-[''] after:absolute after:bottom-0 after:left-1/2 after:-translate-x-1/2 after:w-16 after:h-0.5 after:bg-white/50 after:rounded text-center">
               {t("footer.countries.title")}
             </h3>
@@ -154,14 +157,13 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Bottom Bar */}
         <div className="pt-4 border-t border-white/20">
           <div className="flex flex-col md:flex-row items-center justify-between gap-2">
             <p className="text-xs text-white/70 text-center md:text-start">
               {t("footer.copyRight")}
             </p>
             <p className="text-xs text-white/70 text-center md:text-end flex items-center gap-1.5">
-              {i18n.language === "ar" ? "تم التطوير بواسطة" : "Developed by"}
+              {isRTL ? "تم التطوير بواسطة" : "Developed by"}
               <a
                 href="https://www.linkedin.com/company/soft-forte/"
                 target="_blank"
