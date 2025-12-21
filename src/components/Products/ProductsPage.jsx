@@ -655,7 +655,7 @@ const fetchGovernorates = async () => {
 
                 {isFilterOpen && (
                     <div
-                        className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity duration-300"
+                        className="lg:hidden fixed inset-0 bg-black/70 z-40 transition-opacity duration-300"
                         onClick={() => setIsFilterOpen(false)}
                     />
                 )}

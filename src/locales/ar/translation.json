@@ -610,47 +610,61 @@
       },
       "empty": "لا يوجد بيانات في هذا القسم حالياً."
     },
-    "advertisements": {
-      "pageTitle": "إدارة الاعلانات",
-      "subtitle": "قم بإضافة أو حذف الاعلانات الافتتاحية والمتحركة.",
-      "heroTitle": "اضافة دعاية افتتاحية",
-      "sliderTitle": "اضافة اعلانات متحركة",
-      "emptyHeroSection": "لا توجد إعلانات افتتاحية بعد.",
-      "emptySliderSection": "لا توجد إعلانات متحركة بعد.",
-      "actions": {
-        "addHero": "اضافة اعلان عام",
-        "addSlider": "اضافة اعلان متحرك",
-        "confirmDelete": "هل أنت متأكد من حذف هذا الإعلان؟ سيتم ازالته نهائياً."
+      "advertisements": {
+        "pageTitle": "إدارة الإعلانات",
+        "subtitle": "إدارة الإعلانات والإعلانات الافتتاحية",
+        "imageCount": "صورة",
+        "imagesCount": "صور",
+        
+        "announcementTitle": "الإعلان الافتتاحي",
+        "sliderTitle": "الإعلانات المتحركة",
+        
+        "emptyAnnouncementSection": "لا يوجد إعلان افتتاحي حتى الآن",
+        "emptySliderSection": "لا توجد صور للسلايدر حتى الآن",
+        
+        "actions": {
+          "addAnnouncement": "إضافة إعلان افتتاحي",
+          "updateAnnouncement": "تحديث الإعلان الافتتاحي",
+          "addSlider": "إضافة صور السلايدر"
+        },
+        
+        "modal": {
+          "announcementTitle": "رفع الإعلان الافتتاحي",
+          "sliderTitle": "رفع صور السلايدر",
+          "imageLabel": "اختر صورة",
+          "singleImageLabel": "اختر صورة (سيتم استبدال الصورة الحالية)",
+          "multipleImageLabel": "اختر الصور (متعدد)",
+          "uploadSingleText": "اضغط لرفع صورة",
+          "uploadMultipleText": "اضغط لرفع صور",
+          "orderLabel": "ترتيب العرض",
+          "replaceWarning": "سيتم استبدال الإعلان الافتتاحي الحالي",
+          "cancel": "إلغاء",
+          "save": "رفع",
+          "saving": "جاري الرفع..."
+        },
+        
+        "deleteModal": {
+          "title": "حذف",
+          "message": "هل أنت متأكد من حذف هذا؟ لا يمكن التراجع عن هذا الإجراء.",
+          "cancel": "إلغاء",
+          "confirm": "حذف"
+        },
+        
+        "errors": {
+          "fetch": "فشل تحميل الإعلانات",
+          "upload": "فشل الرفع",
+          "delete": "فشل الحذف",
+          "fileRequired": "يرجى اختيار صورة",
+          "maxImages": "الحد الأقصى 3 صور"
+        },
+        
+        "messages": {
+          "created": "تم إضافة الإعلان بنجاح",
+          "announcementCreated": "تم تحديث الإعلان الافتتاحي بنجاح",
+          "deleted": "تم حذف الإعلان بنجاح",
+          "announcementDeleted": "تم حذف الإعلان الافتتاحي بنجاح"
+        }
       },
-      "modal": {
-        "title": "اضافة اعلان جديد",
-        "imageLabel": "صورة الاعلان",
-        "orderLabel": "ترتيب العرض",
-        "cancel": "الغاء",
-        "save": "حفظ",
-        "delete": "حذف",
-        "uploadText": "اضغط لرفع الصورة",
-        "saving": "جاري الحفظ..."
-      },
-      "deleteModal": {
-        "title": "حذف الإعلان",
-        "message": "هل أنت متأكد من حذف هذا الإعلان؟ لا يمكن التراجع عن هذا الإجراء.",
-        "cancel": "إلغاء",
-        "confirm": "حذف"
-      },
-      "errors": {
-        "fetch": "فشل تحميل الإعلانات",
-        "fileRequired": "الرجاء اختيار صورة",
-        "upload": "فشل رفع الإعلان",
-        "delete": "فشل حذف الإعلان",
-        "maxImages": "الحد الأقصى 3 صور لكل قسم"
-      },
-      "messages": {
-        "created": "تم إنشاء الإعلان بنجاح",
-        "deleted": "تم حذف الإعلان بنجاح"
-      },
-      "imagesCount": "عدد الصور"
-    },
     "additions": {
       "title": "الإضافات",
       "addProduct": "إضافة منتج",

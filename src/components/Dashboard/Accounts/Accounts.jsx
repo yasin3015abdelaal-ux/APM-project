@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { adminAPI } from '../../../api';
 import Loader from '../../Ui/Loader/Loader';
 import * as XLSX from 'xlsx';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 const Accounts = () => {
     const { t, i18n } = useTranslation();
@@ -22,6 +23,16 @@ const Accounts = () => {
         dateTo: ''
     });
     const [toast, setToast] = useState(null);
+    
+    // Backend pagination states
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 20;
+    const [pagination, setPagination] = useState({
+        current_page: 1,
+        last_page: 1,
+        per_page: 20,
+        total: 0
+    });
 
     const showToast = (message, type = "success") => {
         setToast({ message, type });
@@ -29,10 +40,10 @@ const Accounts = () => {
     };
 
     useEffect(() => {
-        fetchUsers();
+        fetchUsers(1);
 
         const handleUserUpdate = () => {
-            fetchUsers();
+            fetchUsers(currentPage);
         };
 
         window.addEventListener('userDataUpdated', handleUserUpdate);
@@ -42,27 +53,233 @@ const Accounts = () => {
         };
     }, []);
 
+    // Fetch users when page changes
+    useEffect(() => {
+        if (currentPage > 0 && currentPage !== pagination.current_page) {
+            fetchUsers(currentPage);
+        }
+    }, [currentPage]);
+
     useEffect(() => {
         applyFilters();
     }, [users, filters]);
 
-    const fetchUsers = async () => {
+    // Reset to page 1 when filters change and refetch
+    useEffect(() => {
+        const hasFilters = filters.accountType || filters.verification || filters.dateFrom || filters.dateTo;
+        if (hasFilters && currentPage !== 1) {
+            setCurrentPage(1);
+        } else if (hasFilters) {
+            fetchUsers(1);
+        }
+    }, [filters.accountType, filters.verification, filters.dateFrom, filters.dateTo]);
+
+    // For backend pagination, we use users directly (already paginated from API)
+    // filteredUsers is used for client-side filtering if needed
+    const displayUsers = filteredUsers;
+
+    const goToPage = (page) => {
+        if (page >= 1 && page <= pagination.last_page) {
+            setCurrentPage(page);
+            // Scroll to top of table
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    };
+
+    const renderPagination = () => {
+        if (pagination.last_page <= 1) return null;
+        
+        const totalPages = pagination.last_page;
+
+        const pages = [];
+        const showEllipsisStart = pagination.current_page > 3;
+        const showEllipsisEnd = pagination.current_page < totalPages - 2;
+
+        // First page
+        pages.push(
+            <button
+                key={1}
+                onClick={() => goToPage(1)}
+                className={`min-w-[35px] px-3 py-1.5 rounded-lg text-sm font-medium transition ${
+                    pagination.current_page === 1
+                        ? "bg-main text-white"
+                        : "border border-gray-200 text-gray-700 hover:border-main hover:text-main"
+                }`}
+            >
+                1
+            </button>
+        );
+
+        if (showEllipsisStart) {
+            pages.push(
+                <span key="ellipsis-start" className="px-2 text-gray-500">
+                    ...
+                </span>
+            );
+        }
+
+        const startPage = Math.max(2, pagination.current_page - 1);
+        const endPage = Math.min(totalPages - 1, pagination.current_page + 1);
+
+        for (let i = startPage; i <= endPage; i++) {
+            pages.push(
+                <button
+                    key={i}
+                    onClick={() => goToPage(i)}
+                    className={`min-w-[35px] px-3 py-1.5 rounded-lg text-sm font-medium transition ${
+                        pagination.current_page === i
+                            ? "bg-main text-white"
+                            : "border border-gray-200 text-gray-700 hover:border-main hover:text-main"
+                    }`}
+                >
+                    {i}
+                </button>
+            );
+        }
+
+        if (showEllipsisEnd) {
+            pages.push(
+                <span key="ellipsis-end" className="px-2 text-gray-500">
+                    ...
+                </span>
+            );
+        }
+
+        if (totalPages > 1) {
+            pages.push(
+                <button
+                    key={totalPages}
+                    onClick={() => goToPage(totalPages)}
+                    className={`min-w-[35px] px-3 py-1.5 rounded-lg text-sm font-medium transition ${
+                        pagination.current_page === totalPages
+                            ? "bg-main text-white"
+                            : "border border-gray-200 text-gray-700 hover:border-main hover:text-main"
+                    }`}
+                >
+                    {totalPages}
+                </button>
+            );
+        }
+
+        const startIndex = (pagination.current_page - 1) * pagination.per_page;
+        const endIndex = Math.min(startIndex + pagination.per_page, pagination.total);
+
+        return (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 border-t border-gray-200 bg-white">
+                <div className="text-sm text-gray-600 order-2 sm:order-1">
+                    {isRTL ? (
+                        <>
+                            عرض {startIndex + 1} - {endIndex} من {pagination.total}
+                        </>
+                    ) : (
+                        <>
+                            Showing {startIndex + 1} - {endIndex} of {pagination.total}
+                        </>
+                    )}
+                </div>
+                <div className="flex items-center gap-2 order-1 sm:order-2">
+                    <button
+                        onClick={() => goToPage(pagination.current_page - 1)}
+                        disabled={pagination.current_page === 1}
+                        className={`p-2 rounded-lg border transition ${
+                            pagination.current_page === 1
+                                ? "border-gray-200 text-gray-400 cursor-not-allowed"
+                                : "border-main text-main hover:bg-green-50"
+                        }`}
+                        aria-label={isRTL ? "الصفحة السابقة" : "Previous page"}
+                    >
+                        {isRTL ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+                    </button>
+
+                    <div className="flex gap-1">{pages}</div>
+
+                    <button
+                        onClick={() => goToPage(pagination.current_page + 1)}
+                        disabled={pagination.current_page === totalPages}
+                        className={`p-2 rounded-lg border transition ${
+                            pagination.current_page === totalPages
+                                ? "border-gray-200 text-gray-400 cursor-not-allowed"
+                                : "border-main text-main hover:bg-green-50"
+                        }`}
+                        aria-label={isRTL ? "الصفحة التالية" : "Next page"}
+                    >
+                        {isRTL ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}
+                    </button>
+                </div>
+            </div>
+        );
+    };
+
+    const fetchUsers = async (page = currentPage) => {
         try {
             setLoading(true);
             setError(null);
 
-            const response = await adminAPI.get('/users');
+            // Build query parameters
+            const params = {
+                page: page,
+                per_page: itemsPerPage
+            };
+
+            // Add filters to params if they exist
+            if (filters.accountType) {
+                params.account_type = filters.accountType;
+            }
+            if (filters.verification) {
+                params.verification = filters.verification;
+            }
+            if (filters.dateFrom) {
+                params.date_from = filters.dateFrom;
+            }
+            if (filters.dateTo) {
+                params.date_to = filters.dateTo;
+            }
+
+            const response = await adminAPI.get('/users', { params });
 
             let data = [];
-            if (Array.isArray(response.data)) {
+            let paginationData = null;
+
+            // Handle different response structures
+            if (response.data?.data) {
+                if (Array.isArray(response.data.data)) {
+                    data = response.data.data;
+                } else if (response.data.data?.data && Array.isArray(response.data.data.data)) {
+                    data = response.data.data.data;
+                    paginationData = response.data.data;
+                }
+                
+                // Check for pagination in response
+                if (response.data.pagination) {
+                    paginationData = response.data.pagination;
+                } else if (response.data.meta) {
+                    paginationData = response.data.meta;
+                } else if (response.data.data?.meta) {
+                    paginationData = response.data.data.meta;
+                }
+            } else if (Array.isArray(response.data)) {
                 data = response.data;
-            } else if (response.data?.data && Array.isArray(response.data.data)) {
-                data = response.data.data;
-            } else if (response.data) {
-                data = [response.data];
             }
 
             setUsers(data);
+            
+            // Update pagination state
+            if (paginationData) {
+                setPagination({
+                    current_page: paginationData.current_page || paginationData.page || page,
+                    last_page: paginationData.last_page || paginationData.total_pages || 1,
+                    per_page: paginationData.per_page || paginationData.items_per_page || itemsPerPage,
+                    total: paginationData.total || data.length
+                });
+            } else {
+                // Fallback pagination
+                setPagination({
+                    current_page: page,
+                    last_page: 1,
+                    per_page: itemsPerPage,
+                    total: data.length
+                });
+            }
         } catch (err) {
             console.error('Error fetching users:', err);
             // setError(err.response?.data?.message || err.message || t('dashboard.accounts.fetchError'));
@@ -263,21 +480,12 @@ const Accounts = () => {
                                 <path d="M37.5 15C37.5008 13.4484 37.0204 11.9347 36.1249 10.6675C35.2294 9.40041 33.9629 8.44221 32.5 7.925L32.5 1.5299e-06L27.5 1.31134e-06L27.5 7.925C26.0362 8.44151 24.7686 9.39935 23.872 10.6665C22.9754 11.9337 22.4939 13.4477 22.4939 15C22.4939 16.5523 22.9754 18.0664 23.872 19.3335C24.7686 20.6007 26.0362 21.5585 27.5 22.075L27.5 40L32.5 40L32.5 22.075C33.9629 21.5578 35.2294 20.5996 36.1249 19.3325C37.0204 18.0653 37.5008 16.5516 37.5 15ZM30 12.5C30.663 12.5 31.2989 12.7634 31.7678 13.2322C32.2366 13.7011 32.5 14.337 32.5 15C32.5 15.663 32.2366 16.2989 31.7678 16.7678C31.2989 17.2366 30.663 17.5 30 17.5C29.337 17.5 28.7011 17.2366 28.2322 16.7678C27.7634 16.2989 27.5 15.663 27.5 15C27.5 14.337 27.7634 13.7011 28.2322 13.2322C28.7011 12.7634 29.337 12.5 30 12.5ZM17.5 25C17.5008 23.4484 17.0204 21.9347 16.1249 20.6675C15.2294 19.4004 13.9629 18.4422 12.5 17.925L12.5 6.55672e-07L7.5 4.37115e-07L7.5 17.925C6.03617 18.4415 4.76858 19.3993 3.87197 20.6665C2.97536 21.9337 2.49387 23.4477 2.49387 25C2.49387 26.5523 2.97536 28.0663 3.87197 29.3335C4.76858 30.6007 6.03617 31.5585 7.5 32.075L7.5 40L12.5 40L12.5 32.075C13.9629 31.5578 15.2294 30.5996 16.1249 29.3325C17.0204 28.0653 17.5008 26.5516 17.5 25ZM10 22.5C10.663 22.5 11.2989 22.7634 11.7678 23.2322C12.2366 23.7011 12.5 24.337 12.5 25C12.5 25.663 12.2366 26.2989 11.7678 26.7678C11.2989 27.2366 10.663 27.5 10 27.5C9.33696 27.5 8.70108 27.2366 8.23223 26.7678C7.76339 26.2989 7.5 25.663 7.5 25C7.5 24.337 7.76339 23.7011 8.23223 23.2322C8.70108 22.7634 9.33696 22.5 10 22.5Z" fill="#4CAF50" />
                             </svg>
                         </button>
-                        <button className="bg-white cursor-pointer text-main px-3 py-1.5 text-sm rounded hover:bg-gray-100 transition-colors">
-                            <svg width="25" height="25" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M50 5H10C7.25 5 5.025 7.25 5.025 10L5 55L15 45H50C52.75 45 55 42.75 55 40V10C55 7.25 52.75 5 50 5ZM42.5 35H17.5C16.125 35 15 33.875 15 32.5C15 31.125 16.125 30 17.5 30H42.5C43.875 30 45 31.125 45 32.5C45 33.875 43.875 35 42.5 35ZM42.5 27.5H17.5C16.125 27.5 15 26.375 15 25C15 23.625 16.125 22.5 17.5 22.5H42.5C43.875 22.5 45 23.625 45 25C45 26.375 43.875 27.5 42.5 27.5ZM42.5 20H17.5C16.125 20 15 18.875 15 17.5C15 16.125 16.125 15 17.5 15H42.5C43.875 15 45 16.125 45 17.5C45 18.875 43.875 20 42.5 20Z" fill="#4CAF50" />
-                            </svg>
-                        </button>
+                       
                     </div>
                 </div>
 
                 <div className="text-main font-bold mb-4">
-                    {t('dashboard.accounts.totalAccounts')}: <span>{filteredUsers.length}</span>
-                    {filteredUsers.length !== users.length && (
-                        <span className="text-sm text-gray-600 mr-2">
-                            ({isRTL ? 'من أصل' : 'out of'} {users.length})
-                        </span>
-                    )}
+                    {t('dashboard.accounts.totalAccounts')}: <span>{pagination.total}</span>
                 </div>
 
                 {/* Table */}
@@ -322,7 +530,7 @@ const Accounts = () => {
                                     </td>
                                 </tr>
                             ) : (
-                                filteredUsers.map((user) => (
+                                displayUsers.map((user) => (
                                     <tr
                                         key={user.id}
                                         onClick={() => handleRowClick(user)}
@@ -365,11 +573,14 @@ const Accounts = () => {
                         </tbody>
                     </table>
                 </div>
+
+                {/* Pagination */}
+                {renderPagination()}
             </div>
 
             {/* Filter Modal */}
             {showFilterModal && (
-                <div className="fixed inset-0 bg-[#00000062]  flex items-center justify-center z-50">
+                <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
                     <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
                         <h3 className="text-lg font-bold text-main mb-4">
                             {isRTL ? 'تصفية الحسابات' : 'Filter Accounts'}

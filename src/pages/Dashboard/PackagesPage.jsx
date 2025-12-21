@@ -383,7 +383,7 @@ const PackagesPage = () => {
       </div>
 
       {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
           <div className="w-full max-w-2xl space-y-4 rounded-2xl border border-emerald-200 bg-white p-6 shadow-xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between sticky top-0 bg-white pb-3 border-b border-emerald-100 z-10">
               <h2 className="text-xl font-semibold text-emerald-700">
@@ -563,7 +563,7 @@ const PackagesPage = () => {
       )}
 
       {viewDetailsModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
           <div className="w-full max-w-2xl rounded-2xl border border-emerald-200 bg-white p-6 shadow-xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4 pb-3 border-b border-emerald-100">
               <h2 className="text-2xl font-bold text-emerald-700">
@@ -642,7 +642,7 @@ const PackagesPage = () => {
       )}
 
       {deleteTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
           <div className="w-full max-w-md rounded-2xl border border-rose-200 bg-white p-6 shadow-xl">
             <h3 className="mb-3 text-center text-lg font-semibold text-slate-800">
               {t("dashboard.packages.delete.confirmTitle")}

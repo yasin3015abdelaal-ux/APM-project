@@ -257,7 +257,7 @@ const Sidebar = () => {
             {/* Overlay */}
             {isOpen && (
                 <div
-                    className="lg:hidden fixed inset-0 bg-[#00000062] z-30"
+                    className="lg:hidden fixed inset-0 bg-black/70 z-30"
                     onClick={() => setIsOpen(false)}
                 />
             )}
@@ -335,7 +335,7 @@ const Sidebar = () => {
                     </div>
 
                     {/* Logo */}
-                    <div className="flex justify-center py-4">
+                    <div className="flex justify-center py-4 cursor-pointer" onClick={() => navigate("/dashboard")}>
                         <img src={logo} alt="Logo" className="w-16 h-16 object-contain" />
                     </div>
 

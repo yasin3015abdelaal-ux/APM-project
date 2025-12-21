@@ -340,7 +340,7 @@ const VerificationDetails = () => {
 
       {/* Reject Modal */}
       {showRejectModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
           <div className="w-full max-w-md rounded-2xl border border-emerald-200 bg-white p-6 shadow-xl">
             <h2 className="mb-4 text-center text-lg font-semibold text-emerald-700">
               {t("dashboard.verifications.rejectModal.title") || (isRTL ? "سبب الرفض" : "Rejection Reason")}
@@ -375,7 +375,7 @@ const VerificationDetails = () => {
 
       {/* Image Modal */}
       {showImageModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 px-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
           <div className="relative w-full max-w-4xl">
             <button
               onClick={() => setShowImageModal(false)}

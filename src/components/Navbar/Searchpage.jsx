@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
+
 const SearchPage = ({ isOpen, onClose }) => {
   const { t, i18n } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");

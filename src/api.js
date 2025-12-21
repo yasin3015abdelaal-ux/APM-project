@@ -87,7 +87,7 @@ userAPI.interceptors.request.use((config) => {
     
     // Add country_id to headers
     const countryId = getCurrentCountryId();
-    config.headers['X-Country-Id'] = countryId;
+    config.headers['X-country_id'] = countryId;
     
     return config;
 });
@@ -119,9 +119,9 @@ adminAPI.interceptors.request.use((config) => {
     // Add country ID to headers if available
     const countryId = localStorage.getItem("adminSelectedCountryId");
     if (countryId) {
-        config.headers["Country-Id"] = countryId;
-        // Also add as X-Country-Id if backend expects that format
-        config.headers["X-Country-Id"] = countryId;
+        config.headers["country_id"] = countryId;
+        // Also add as X-country_id if backend expects that format
+        config.headers["X-country_id"] = countryId;
     }
     
     if (config.data instanceof FormData) {
@@ -154,8 +154,8 @@ adminChatAPI.interceptors.request.use((config) => {
     // Add country ID to headers if available
     const countryId = localStorage.getItem("adminSelectedCountryId");
     if (countryId) {
-        config.headers["Country-Id"] = countryId;
-        config.headers["X-Country-Id"] = countryId;
+        config.headers["country_id"] = countryId;
+        config.headers["X-country_id"] = countryId;
     }
     
     if (config.data instanceof FormData) {
@@ -193,8 +193,8 @@ adminChatMessagesAPI.interceptors.request.use((config) => {
     // Add country ID to headers if available
     const countryId = localStorage.getItem("adminSelectedCountryId");
     if (countryId) {
-        config.headers["Country-Id"] = countryId;
-        config.headers["X-Country-Id"] = countryId;
+        config.headers["country_id"] = countryId;
+        config.headers["X-country_id"] = countryId;
     }
     
     if (config.data instanceof FormData) {

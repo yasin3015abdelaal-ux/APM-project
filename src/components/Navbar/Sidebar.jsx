@@ -142,7 +142,7 @@ const Sidebar = ({ isOpen, onClose }) => {
         <>
             {/* Overlay */}
             <div
-                className={`fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity duration-300 lg:hidden ${isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+                className={`fixed inset-0 bg-black/70 z-40 transition-opacity duration-300 lg:hidden ${isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
                     }`}
                 onClick={onClose}
             />

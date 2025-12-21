@@ -465,7 +465,7 @@ const ReportsPage = () => {
 
       {/* Modal */}
       {showModal && selectedReport && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={closeModal}>
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4" onClick={closeModal}>
           <div 
             className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
@@ -594,13 +594,13 @@ const ReportsPage = () => {
             <div className="flex justify-end gap-3 p-4 sm:p-6 border-t border-gray-200 bg-gray-50 sticky bottom-0">
               <button
                 onClick={() => {
-                  if (selectedReport?.user_id) {
-                    navigate(`/dashboard/messages?user_id=${selectedReport.user_id}`);
+                  if (selectedReport?.user.id) {
+                    navigate(`/dashboard/messages?user_id=${selectedReport.user.id}`);
                     closeModal();
                   }
                 }}
                 className="px-4 sm:px-6 py-2 bg-main text-white rounded-lg hover:bg-green-700 transition-colors font-medium text-sm sm:text-base flex items-center gap-2"
-                disabled={!selectedReport?.user_id}
+                disabled={!selectedReport?.user.id}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />

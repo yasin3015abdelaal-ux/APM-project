@@ -344,7 +344,7 @@ const Invoices = () => {
 
             {/* Filter Modal */}
             {showFilterModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
                     <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
                         <h3 className="text-lg font-bold text-main mb-4">
                             {t('dashboard.invoices.filterTitle')}

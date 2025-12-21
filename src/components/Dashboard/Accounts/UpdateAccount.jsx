@@ -13,6 +13,9 @@ const UpdateAccount = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [userData, setUserData] = useState(null);
+    const [products, setProducts] = useState([]);
+    const [reviews, setReviews] = useState([]);
+    const [reports, setReports] = useState([]);
     const [showVerifyModal, setShowVerifyModal] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [toast, setToast] = useState(null);
@@ -43,6 +46,9 @@ const UpdateAccount = () => {
             };
 
             setUserData(combinedData);
+            setProducts(apiData.products || []);
+            setReviews(apiData.reviews || []);
+            setReports(apiData.reports || []);
         } catch (err) {
             console.error('Error fetching user:', err);
             setError(err.response?.data?.message || err.message || t('dashboard.accounts.accountDetails.errorFetching'));
@@ -150,14 +156,23 @@ const UpdateAccount = () => {
                     <h1 className="text-2xl font-bold text-main">
                         {t('dashboard.accounts.accountDetails.title')}
                     </h1>
-                    <button
-                        onClick={() => navigate('/dashboard/accounts')}
-                        className="bg-white text-main px-3 py-1.5 text-sm rounded hover:bg-gray-100 transition-colors"
-                    >
-                        <svg width="30" height="30" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M50 5H10C7.25 5 5.025 7.25 5.025 10L5 55L15 45H50C52.75 45 55 42.75 55 40V10C55 7.25 52.75 5 50 5ZM42.5 35H17.5C16.125 35 15 33.875 15 32.5C15 31.125 16.125 30 17.5 30H42.5C43.875 30 45 31.125 45 32.5C45 33.875 43.875 35 42.5 35ZM42.5 27.5H17.5C16.125 27.5 15 26.375 15 25C15 23.625 16.125 22.5 17.5 22.5H42.5C43.875 22.5 45 23.625 45 25C45 26.375 43.875 27.5 42.5 27.5ZM42.5 20H17.5C16.125 20 15 18.875 15 17.5C15 16.125 16.125 15 17.5 15H42.5C43.875 15 45 16.125 45 17.5C45 18.875 43.875 20 42.5 20Z" fill="#4CAF50" />
-                        </svg>
-                    </button>
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={() => navigate(`/dashboard/messages?user_id=${userId}`)}
+                            className="bg-main text-white px-4 py-2 text-sm rounded-lg hover:bg-green-600 transition-colors flex items-center gap-2"
+                            title={isRTL ? 'بدء محادثة' : 'Start Chat'}
+                        >
+                            <i className="fas fa-comments"></i>
+                            <span className="hidden sm:inline">{isRTL ? 'محادثة' : 'Chat'}</span>
+                        </button>
+                        <button
+                            onClick={() => navigate('/dashboard/accounts')}
+                            className="bg-white text-main px-3 py-1.5 text-sm rounded hover:bg-gray-100 transition-colors"
+                        >
+                            <i className="fas fa-arrow-left"></i>
+                            <span className="hidden sm:inline">{isRTL ? 'الحسابات' : 'Accounts'}</span>
+                        </button>
+                    </div>
                 </div>
 
                 {/* Profile Image */}
@@ -409,6 +424,46 @@ const UpdateAccount = () => {
                     </div>
                 </div>
 
+                {/* View Buttons */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-6">
+                    <button
+                        onClick={() => navigate(`/dashboard/accounts/${userId}/products`, { state: { products } })}
+                        className="bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg font-medium transition-colors text-sm flex items-center justify-center gap-2"
+                    >
+                        <i className="fas fa-box"></i>
+                        <span>{isRTL ? 'عرض المنتجات' : 'View Products'}</span>
+                        {products.length > 0 && (
+                            <span className="bg-white text-blue-500 px-2 py-0.5 rounded-full text-xs font-bold">
+                                {products.length}
+                            </span>
+                        )}
+                    </button>
+                    <button
+                        onClick={() => navigate(`/dashboard/accounts/${userId}/reviews`, { state: { reviews } })}
+                        className="bg-yellow-500 hover:bg-yellow-600 text-white py-3 rounded-lg font-medium transition-colors text-sm flex items-center justify-center gap-2"
+                    >
+                        <i className="fas fa-star"></i>
+                        <span>{isRTL ? 'عرض المراجعات' : 'View Reviews'}</span>
+                        {reviews.length > 0 && (
+                            <span className="bg-white text-yellow-500 px-2 py-0.5 rounded-full text-xs font-bold">
+                                {reviews.length}
+                            </span>
+                        )}
+                    </button>
+                    <button
+                        onClick={() => navigate(`/dashboard/accounts/${userId}/reports`, { state: { reports } })}
+                        className="bg-red-500 hover:bg-red-600 text-white py-3 rounded-lg font-medium transition-colors text-sm flex items-center justify-center gap-2"
+                    >
+                        <i className="fas fa-flag"></i>
+                        <span>{isRTL ? 'عرض البلاغات' : 'View Reports'}</span>
+                        {reports.length > 0 && (
+                            <span className="bg-white text-red-500 px-2 py-0.5 rounded-full text-xs font-bold">
+                                {reports.length}
+                            </span>
+                        )}
+                    </button>
+                </div>
+
                 {/* Action Buttons */}
                 <div className="flex gap-3 mt-6">
                     <button
@@ -433,7 +488,7 @@ const UpdateAccount = () => {
 
                 {/* Verify/Unverify Confirmation Modal */}
                 {showVerifyModal && (
-                    <div className="fixed inset-0 bg-[#00000062] flex items-center justify-center z-50">
+                    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
                         <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4">
                             <p className="text-center text-gray-800 mb-6">
                                 {userData.verified_account === 1
@@ -461,7 +516,7 @@ const UpdateAccount = () => {
 
                 {/* Delete Confirmation Modal */}
                 {showDeleteModal && (
-                    <div className="fixed inset-0 bg-[#00000062] flex items-center justify-center z-50">
+                    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
                         <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4">
                             <p className="text-center text-gray-800 mb-6">
                                 {isRTL ? 'هل أنت متأكد من حذف هذا الحساب نهائياً؟' : 'Are you sure you want to permanently delete this account?'}

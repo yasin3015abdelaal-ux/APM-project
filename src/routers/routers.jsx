@@ -16,6 +16,9 @@ import Additions from "../components/Dashboard/Additions/Additions";
 import Category from "../components/Dashboard/Additions/Category";
 import Accounts from "../components/Dashboard/Accounts/Accounts";
 import UpdateAccount from "../components/Dashboard/Accounts/UpdateAccount";
+import UserProductsPage from "../pages/Dashboard/UserProductsPage";
+import UserReviewsPage from "../pages/Dashboard/UserReviewsPage";
+import UserReportsPage from "../pages/Dashboard/UserReportsPage";
 import DashboardInvoices from "../components/Dashboard/Invoices/Invoices";
 import SubscriptionsPage from "../pages/Dashboard/SubscriptionsPage";
 import InvoicesPage from "../pages/Dashboard/InvoicesPage";
@@ -359,6 +362,9 @@ export const routers = createBrowserRouter([
           { path: "additions/category/:categoryId", element: <Category /> },
           { path: "accounts", element: <Accounts /> },
           { path: "accounts/update-account/:userId", element: <UpdateAccount /> },
+          { path: "accounts/:userId/products", element: <UserProductsPage /> },
+          { path: "accounts/:userId/reviews", element: <UserReviewsPage /> },
+          { path: "accounts/:userId/reports", element: <UserReportsPage /> },
           { path: "auctions/:id", element: <AuctionDetails /> },
           { path: "ads", element: <AdvertisementsPage /> },
           { path: "packages", element: <PackagesPage /> },

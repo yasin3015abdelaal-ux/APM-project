@@ -191,7 +191,7 @@ const Category = () => {
 
             {/* Add SubCategory Modal */}
             {showAddModal && (
-                <div className="fixed inset-0 bg-[#00000062] flex items-center justify-center z-50 p-4">
+                <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-xl">
                         <div className="flex justify-between items-center mb-4">
                             <h2 className="text-xl font-bold text-main">
@@ -250,7 +250,7 @@ const Category = () => {
 
             {/* Confirm Stop Modal - Temporarily disabled */}
             {/* {showConfirmModal && (
-                <div className="fixed inset-0 bg-[#00000062] flex items-center justify-center z-50 p-4">
+                <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-xl p-6 w-full max-w-sm shadow-xl">
                         <h2 className="text-lg font-bold text-main mb-4 text-center">
                             {t('dashboard.additions.confirmStop')}

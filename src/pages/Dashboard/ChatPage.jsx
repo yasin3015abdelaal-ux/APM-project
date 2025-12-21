@@ -72,6 +72,7 @@ const MessageCard = React.memo(({ conversation, isSelected, onSelect }) => {
             className={`text-sm truncate ${
               conversation.unread > 0 ? "font-semibold text-gray-900" : "text-gray-500"
             }`}
+            title={preview || (conversation.isNewUser ? "Start conversation" : "No messages yet")}
           >
             {conversation.isNewUser ? "Start conversation" : (preview || "No messages yet")}
           </p>
@@ -106,6 +107,7 @@ const ChatPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [unreadCount, setUnreadCount] = useState(0);
   const initiatingRef = useRef(false);
+  const userIdParamProcessedRef = useRef(null);
 
   const showToast = (message, type = "success") => {
     console.log(`${type}: ${message}`);
@@ -181,6 +183,18 @@ const ChatPage = () => {
   );
 
   const initiateConversationWithUser = useCallback(async (userId) => {
+    // Prevent duplicate calls
+    if (initiatingRef.current) {
+      return null;
+    }
+
+    // Check if conversation already exists
+    const existingConv = conversations.find((c) => c.user?.id === userId);
+    if (existingConv) {
+      setSelectedConversation(existingConv);
+      return existingConv;
+    }
+
     try {
       initiatingRef.current = true;
       const response = await adminChatAPI.post("/conversations/initiate", {
@@ -209,13 +223,21 @@ const ChatPage = () => {
         unread: 0,
       };
       
-      setConversations((prev) => [newConv, ...prev]);
+      // Check again before adding to prevent duplicates
+      setConversations((prev) => {
+        const exists = prev.find(c => c.id === newConv.id || c.user?.id === userId);
+        if (exists) {
+          return prev;
+        }
+        return [newConv, ...prev];
+      });
       setSelectedConversation(newConv);
       
       if (newConv.id) {
         await fetchMessages(newConv.id);
       }
       
+      initiatingRef.current = false;
       return newConv;
     } catch (err) {
       console.error("Error initiating conversation:", err);
@@ -223,11 +245,39 @@ const ChatPage = () => {
       initiatingRef.current = false;
       throw err;
     }
-  }, [t, fetchMessages, allUsers]);
+  }, [t, fetchMessages, allUsers, conversations]);
 
-  const fetchConversations = useCallback(async (skipAutoSelect = false) => {
+  const processConversationsData = useCallback((conversationsData) => {
+    const conversationsArray = Array.isArray(conversationsData) ? conversationsData : [];
+    
+    return conversationsArray.map((conv) => {
+      // Check both user_one and user_two to find the non-admin user
+      let userData = conv.user_one;
+      
+      // If user_one is admin/super_admin, use user_two instead
+      if (userData?.role === 'admin' || userData?.role === 'super_admin' || 
+          userData?.name?.toLowerCase().includes('admin') ||
+          userData?.username?.toLowerCase().includes('admin')) {
+        userData = conv.user_two || conv.user_one;
+      }
+      
+      // Fallback to other possible fields
+      userData = userData || conv.user || conv.client || conv.participant || {};
+      
+      return {
+        id: conv.id,
+        user: userData,
+        last_message: conv.last_message || conv.lastMessage || null,
+        unread: conv.unread_count || conv.unread || 0,
+      };
+    });
+  }, []);
+
+  const fetchConversations = useCallback(async (skipAutoSelect = false, silent = false) => {
     try {
-      setConversationsLoading(true);
+      if (!silent) {
+        setConversationsLoading(true);
+      }
       setConversationsError(null);
       
       const response = await adminChatAPI.get("/conversations", {
@@ -243,37 +293,19 @@ const ChatPage = () => {
       }
       
       const conversationsData = response.data?.data || response.data;
-      const conversationsArray = Array.isArray(conversationsData) ? conversationsData : [];
-      
-      const list = conversationsArray.map((conv) => {
-        // Check both user_one and user_two to find the non-admin user
-        let userData = conv.user_one;
-        
-        // If user_one is admin/super_admin, use user_two instead
-        if (userData?.role === 'admin' || userData?.role === 'super_admin' || 
-            userData?.name?.toLowerCase().includes('admin') ||
-            userData?.username?.toLowerCase().includes('admin')) {
-          userData = conv.user_two || conv.user_one;
-        }
-        
-        // Fallback to other possible fields
-        userData = userData || conv.user || conv.client || conv.participant || {};
-        
-        return {
-          id: conv.id,
-          user: userData,
-          last_message: conv.last_message || conv.lastMessage || null,
-          unread: conv.unread_count || conv.unread || 0,
-        };
-      });
+      const list = processConversationsData(conversationsData);
       setConversations(list);
     } catch (err) {
       console.error("Error fetching conversations:", err);
-      setConversationsError(t("dashboard.chat.errors.fetchConversations"));
+      if (!silent) {
+        setConversationsError(t("dashboard.chat.errors.fetchConversations"));
+      }
     } finally {
-      setConversationsLoading(false);
+      if (!silent) {
+        setConversationsLoading(false);
+      }
     }
-  }, [t]);
+  }, [t, processConversationsData]);
 
   useEffect(() => {
     fetchConversations();
@@ -296,18 +328,40 @@ const ChatPage = () => {
 
   useEffect(() => {
     const userIdParam = searchParams.get("user_id");
-    if (userIdParam && allUsers.length > 0 && !selectedConversation) {
-      const targetUser = allUsers.find((u) => u.id === parseInt(userIdParam));
-      if (targetUser) {
-        const existingConv = conversations.find((c) => c.user?.id === parseInt(userIdParam));
-        if (existingConv) {
-          setSelectedConversation(existingConv);
-        } else {
-          initiateConversationWithUser(parseInt(userIdParam));
+    const currentUserId = userIdParam ? parseInt(userIdParam) : null;
+    
+    // Reset ref when user_id param is removed
+    if (!userIdParam) {
+      userIdParamProcessedRef.current = null;
+      return;
+    }
+    
+    // If we have a user_id and users are loaded, process it
+    if (currentUserId && allUsers.length > 0) {
+      // Check if this is a different user_id than what we processed before
+      const lastProcessedUserId = userIdParamProcessedRef.current;
+      
+      if (lastProcessedUserId !== currentUserId) {
+        userIdParamProcessedRef.current = currentUserId;
+        const targetUser = allUsers.find((u) => u.id === currentUserId);
+        
+        if (targetUser) {
+          // Check for existing conversation
+          const existingConv = conversations.find((c) => c.user?.id === currentUserId);
+          
+          if (existingConv) {
+            // Select existing conversation
+            setSelectedConversation(existingConv);
+          } else {
+            // Initiate new conversation
+            initiateConversationWithUser(currentUserId).catch((err) => {
+              console.error("Failed to initiate conversation:", err);
+            });
+          }
         }
       }
     }
-  }, [searchParams, allUsers, conversations, selectedConversation, initiateConversationWithUser]);
+  }, [searchParams, allUsers, conversations, initiateConversationWithUser]);
 
   const allUsersWithConversations = useMemo(() => {
     const convMap = new Map();
@@ -374,21 +428,41 @@ const ChatPage = () => {
       setMessages((prev) => [...prev, optimisticMessage]);
       setNewMessage("");
       
+      // Optimistically update the last message in conversations list (silently, no loading state)
+      setConversations((prev) =>
+        prev.map((conv) =>
+          conv.id === selectedConversation.id
+            ? {
+                ...conv,
+                last_message: {
+                  body: messageText,
+                  created_at: optimisticMessage.created_at,
+                  sender_type: "admin",
+                },
+              }
+            : conv
+        )
+      );
+      
       await adminChatAPI.post(`/conversations/${selectedConversation.id}/messages`, {
         message: messageText,
       });
 
-      await fetchMessages(selectedConversation.id);
-      fetchConversations();
+      // Silently refresh messages and conversations in background without showing loading
+      fetchMessages(selectedConversation.id).catch(console.error);
+      // Silently update conversations list without showing loading spinner
+      fetchConversations(false, true).catch(console.error);
     } catch (err) {
       console.error("Error sending message:", err);
       showToast(t("dashboard.chat.errors.sendFailed"), "error");
       setMessages((prev) => prev.filter((msg) => msg.id !== optimisticMessage.id));
       setNewMessage(messageText);
+      // Revert optimistic update on error - silently refresh
+      fetchConversations(false, true).catch(console.error);
     } finally {
       setSendingMessage(false);
     }
-  }, [newMessage, selectedConversation, sendingMessage, t, fetchMessages, fetchConversations]);
+  }, [newMessage, selectedConversation, sendingMessage, t, fetchMessages]);
 
   const renderedMessages = useMemo(() => {
     return messages.map((message) => {

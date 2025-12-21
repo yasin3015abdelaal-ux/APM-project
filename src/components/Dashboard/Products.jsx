@@ -5,6 +5,100 @@ import Loader from '../../components/Ui/Loader/Loader';
 import { useTranslation } from 'react-i18next';
 import PlaceholderSVG from '../../assets/PlaceholderSVG';
 
+// Product Image Slider Component
+const ProductImageSlider = ({ images, productName, isRTL }) => {
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  // Handle both single image and array of images
+  const imageArray = Array.isArray(images) ? images : images ? [images] : [];
+
+  if (imageArray.length === 0) {
+    return (
+      <div className="relative w-full h-64 sm:h-80 bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center">
+        <PlaceholderSVG />
+      </div>
+    );
+  }
+
+  const nextImage = () => {
+    setCurrentImageIndex((prev) => (prev + 1) % imageArray.length);
+  };
+
+  const prevImage = () => {
+    setCurrentImageIndex((prev) => (prev - 1 + imageArray.length) % imageArray.length);
+  };
+
+  const goToImage = (index) => {
+    setCurrentImageIndex(index);
+  };
+
+  return (
+    <div className="relative w-full">
+      {/* Main Image */}
+      <div className="relative w-full h-64 sm:h-80 bg-gray-100 rounded-lg overflow-hidden">
+        <img
+          src={imageArray[currentImageIndex]}
+          alt={`${productName} - ${currentImageIndex + 1}`}
+          className="w-full h-full object-contain"
+          onError={(e) => {
+            e.target.style.display = 'none';
+            e.target.nextElementSibling?.classList.remove('hidden');
+          }}
+        />
+        <div className="hidden">
+          <PlaceholderSVG />
+        </div>
+
+        {/* Navigation Arrows - Only show if more than 1 image */}
+        {imageArray.length > 1 && (
+          <>
+            <button
+              onClick={prevImage}
+              className={`absolute top-1/2 -translate-y-1/2 ${isRTL ? 'right-2' : 'left-2'} bg-white/90 hover:bg-white text-gray-800 p-2 rounded-full shadow-lg transition z-10`}
+            >
+              {isRTL ? <ChevronRight size={24} /> : <ChevronLeft size={24} />}
+            </button>
+            <button
+              onClick={nextImage}
+              className={`absolute top-1/2 -translate-y-1/2 ${isRTL ? 'left-2' : 'right-2'} bg-white/90 hover:bg-white text-gray-800 p-2 rounded-full shadow-lg transition z-10`}
+            >
+              {isRTL ? <ChevronLeft size={24} /> : <ChevronRight size={24} />}
+            </button>
+
+            {/* Image Counter */}
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/70 text-white px-3 py-1 rounded-full text-sm font-medium">
+              {currentImageIndex + 1} / {imageArray.length}
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Thumbnail Navigation - Only show if more than 1 image */}
+      {imageArray.length > 1 && (
+        <div className="mt-4 flex gap-2 overflow-x-auto pb-2">
+          {imageArray.map((img, index) => (
+            <button
+              key={index}
+              onClick={() => goToImage(index)}
+              className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition ${
+                currentImageIndex === index
+                  ? 'border-main ring-2 ring-main ring-offset-2'
+                  : 'border-gray-200 hover:border-main'
+              }`}
+            >
+              <img
+                src={img}
+                alt={`Thumbnail ${index + 1}`}
+                className="w-full h-full object-cover"
+              />
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 const ProductsReview = () => {
     const { t, i18n } = useTranslation();
     const isRTL = i18n.language === 'ar';
@@ -406,7 +500,7 @@ const ProductsReview = () => {
                 {/* Product Details Modal */}
                 {showModal && selectedProduct && (
                     <div 
-                        className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto"
+                        className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 overflow-y-auto"
                         onClick={closeModal}
                     >
                         <div 
@@ -429,19 +523,13 @@ const ProductsReview = () => {
 
                             {/* Modal Body */}
                             <div className="p-6">
-                                {/* Product Image */}
+                                {/* Product Image Slider */}
                                 <div className="mb-6">
-                                    <div className="relative w-full h-64 sm:h-80 bg-gray-100 rounded-lg overflow-hidden">
-                                        {selectedProduct.image ? (
-                                            <img
-                                                src={selectedProduct.image}
-                                                alt={isRTL ? selectedProduct.name_ar : selectedProduct.name_en}
-                                                className="w-full h-full object-contain"
-                                            />
-                                        ) : (
-                                            <PlaceholderSVG />
-                                        )}
-                                    </div>
+                                    <ProductImageSlider 
+                                        images={selectedProduct.images || selectedProduct.image}
+                                        productName={isRTL ? selectedProduct.name_ar : selectedProduct.name_en}
+                                        isRTL={isRTL}
+                                    />
                                 </div>
 
                                 {/* Product Info */}

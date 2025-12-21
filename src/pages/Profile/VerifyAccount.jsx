@@ -486,7 +486,7 @@ const VerifyAccountPage = () => {
 
             {/* Success Modal */}
             {showSuccessModal && (
-                <div className="fixed inset-0 bg-[#00000062] bg-opacity-50 flex items-center justify-center z-50">
+                <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
                     <div
                         dir={dir}
                         className="bg-white rounded-lg p-8 max-w-md w-full mx-4 text-center"
