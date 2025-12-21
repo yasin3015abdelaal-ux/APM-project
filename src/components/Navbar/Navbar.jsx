@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import logo from "../../assets/images/logo.jpg";
+import logo from "../../assets/images/logo.png";
 import { useNavigate, useLocation } from "react-router-dom";
 import ProfileHover from "./ProfileHover";
 import { useState } from "react";
@@ -15,6 +15,7 @@ const Navbar = ({
   onSearchClick,
   showProfileHover,
   setShowProfileHover,
+  isSidebarOpen,
 }) => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
@@ -60,7 +61,7 @@ const Navbar = ({
 
   const NotificationBadge = ({ count }) => {
     if (!count || count === 0) return null;
-    
+
     return (
       <span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[10px] sm:text-xs w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center font-bold">
         {count > 9 ? "9+" : count}
@@ -72,17 +73,15 @@ const Navbar = ({
     <div className="w-full px-3 sm:px-4 md:px-6 lg:px-8 py-2 md:py-2.5 border-2 border-main rounded-lg bg-white">
       <div className="w-full">
         <div className="flex items-center justify-between gap-1.5 sm:gap-2 md:gap-3">
-          {/* Logo */}
           <div className="flex-shrink-0">
             <img
               src={logo}
               alt="logo"
-              className="w-9 h-9 sm:w-10 sm:h-10 md:w-12 md:h-12 lg:w-14 lg:h-14 cursor-pointer object-cover"
+              className="w-15 h-15 cursor-pointer object-cover"
               onClick={() => navigate("/")}
             />
           </div>
 
-          {/* Desktop Search Bar */}
           {isAuthenticated && (
             <form
               onSubmit={handleSearch}
@@ -109,7 +108,6 @@ const Navbar = ({
             </form>
           )}
 
-          {/* Desktop Menu Items */}
           {isAuthenticated && (
             <div className="hidden lg:flex items-center gap-2 flex-shrink-0">
               <button
@@ -127,9 +125,7 @@ const Navbar = ({
             </div>
           )}
 
-          {/* Icons Container */}
           <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2">
-            {/* Mobile Search Icon */}
             {isAuthenticated && (
               <button
                 onClick={onSearchClick}
@@ -140,7 +136,6 @@ const Navbar = ({
               </button>
             )}
 
-            {/* Cart Icon */}
             {isAuthenticated && (
               <button
                 onClick={handleCartClick}
@@ -156,7 +151,6 @@ const Navbar = ({
               </button>
             )}
 
-            {/* Favorites Icon */}
             {isAuthenticated && (
               <button
                 onClick={handleFavClick}
@@ -171,7 +165,6 @@ const Navbar = ({
               </button>
             )}
 
-            {/* Messages Icon */}
             {isAuthenticated && (
               <button
                 onClick={handleMessagesClick}
@@ -187,7 +180,6 @@ const Navbar = ({
               </button>
             )}
 
-            {/* Notifications Icon */}
             {isAuthenticated && (
               <button
                 onClick={handleNotificationsClick}
@@ -213,7 +205,6 @@ const Navbar = ({
               </button>
             )}
 
-            {/* Language Toggle */}
             <button
               onClick={toggleLanguage}
               className="px-2 py-1 sm:px-2.5 sm:py-1.5 bg-main text-white cursor-pointer rounded-lg hover:bg-green-700 transition font-semibold text-xs sm:text-sm flex-shrink-0"
@@ -221,8 +212,7 @@ const Navbar = ({
               {i18n.language === "ar" ? "EN" : "ع"}
             </button>
 
-            {/* Profile Icon - Desktop */}
-            <div 
+            <div
               className="hidden lg:block relative flex-shrink-0"
               onMouseEnter={() => setShowProfileHover(true)}
               onMouseLeave={() => setShowProfileHover(false)}
@@ -264,16 +254,31 @@ const Navbar = ({
             </div>
           </div>
 
-          {/* Mobile Menu Button */}
-          <button
-            onClick={onMenuClick}
-            className="lg:hidden cursor-pointer p-1.5 sm:p-2 hover:bg-gray-100 rounded-lg transition flex-shrink-0"
-            aria-label="Menu"
-          >
-            <span className="material-symbols-outlined text-main text-lg sm:text-xl md:text-2xl">
-              menu
-            </span>
-          </button>
+<button
+  onClick={onMenuClick}
+  className="lg:hidden group relative w-7 h-6 flex flex-col justify-between cursor-pointer p-1"
+  aria-label="Menu"
+>
+  <span
+    className={`block h-[3px] bg-main rounded-full transition-all duration-300 ${
+      isSidebarOpen ? "opacity-0" : "w-full group-hover:w-full"
+    }`}
+  />
+  <span
+    className={`block h-[3px] bg-main rounded-full transition-all duration-300 origin-center ${
+      isSidebarOpen
+        ? "rotate-45 w-full"
+        : "w-4/5 group-hover:w-full"
+    }`}
+  />
+  <span
+    className={`block h-[3px] bg-main rounded-full transition-all duration-300 origin-center ${
+      isSidebarOpen
+        ? "-rotate-45 -translate-y-[6.5px] w-full"
+        : "w-1/2 group-hover:w-full"
+    }`}
+  />
+</button>
         </div>
       </div>
     </div>

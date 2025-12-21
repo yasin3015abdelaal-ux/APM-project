@@ -17,6 +17,7 @@ const ProfileHover = ({ onClose }) => {
   const [isLoadingCountries, setIsLoadingCountries] = useState(false);
 
   const userCountryId = user?.country?.id;
+  const isVerified = user?.verified_account === 1 || user?.verified_account === "1";
 
   const userCountry = countriesFlags.find((c) => c.id === userCountryId);
   let flagImage;
@@ -31,7 +32,6 @@ const ProfileHover = ({ onClose }) => {
       ? user?.country?.name_ar
       : user?.country?.name_en;
 
-  // Fetch countries on mount
   useEffect(() => {
     const fetchCountries = async () => {
       try {
@@ -92,6 +92,16 @@ const ProfileHover = ({ onClose }) => {
     }
   };
 
+  const getCountryFlag = (country) => {
+    const flagData = countriesFlags.find(f => 
+      f.name_ar === country.name_ar || 
+      f.name_en === country.name_en ||
+      f.code?.toLowerCase() === country.code?.toLowerCase() ||
+      f.id === country.id
+    );
+    return flagData?.flag;
+  };
+
   const menuItems = [
     { key: "favorite ads", icon: "favorite", route: "/favorites" },
     { key: "subscriptions", icon: "article", route: "/packages" },
@@ -104,7 +114,7 @@ const ProfileHover = ({ onClose }) => {
       icon: "receipt",
       route: "/invoices",
     },
-    { key: "today's meat price", icon: "payments", route: "/prices" },
+    { key: "today's meat price", icon: "payments", route: "/prices", verifiedOnly: true },
     { key: "about us", icon: "info", route: "/about-us" },
     {
       key: "privacy, terms, and conditions",
@@ -125,19 +135,31 @@ const ProfileHover = ({ onClose }) => {
     if (onClose) onClose();
   };
 
-  // Prepare language options
   const languageOptions = [
     { value: "en", label: "English" },
     { value: "ar", label: "عربي" }
   ];
 
-  // Prepare country options
-  const countryOptions = countries.map(country => ({
-    value: country.id.toString(),
-    label: i18n.language === "ar" ? country.name_ar : country.name_en
-  }));
+  const countryOptions = countries.map(country => {
+    const flagImg = getCountryFlag(country);
+    return {
+      value: country.id.toString(),
+      label: i18n.language === "ar" ? country.name_ar : country.name_en,
+      icon: flagImg ? (
+        <img src={flagImg} alt={country.name_en} className="w-6 h-6 object-cover rounded" />
+      ) : (
+        <span className="text-xl">🌍</span>
+      )
+    };
+  });
 
-  // Guest Mode View
+  const filteredMenuItems = menuItems.filter(item => {
+    if (item.verifiedOnly && !isVerified) {
+      return false;
+    }
+    return true;
+  });
+
   if (!isAuthenticated) {
     return (
       <div
@@ -146,7 +168,6 @@ const ProfileHover = ({ onClose }) => {
         }`}
         dir={i18n.language === "ar" ? "rtl" : "ltr"}
       >
-        {/* Guest Profile Icon */}
         <div className="flex flex-col items-center gap-4 pb-5 border-b border-gray-100">
           <div className="w-24 h-24 rounded-full bg-gradient-to-br from-green-50 to-green-100 flex items-center justify-center shadow-md">
             <svg
@@ -164,7 +185,6 @@ const ProfileHover = ({ onClose }) => {
             </svg>
           </div>
 
-          {/* Login Button */}
           <button
             onClick={() => handleNavigation("/login")}
             className="w-full cursor-pointer bg-gradient-to-r from-main to-green-700 text-white py-2.5 px-4 rounded-xl hover:shadow-lg transform hover:scale-[1.02] transition-all duration-200 text-sm font-semibold"
@@ -172,7 +192,6 @@ const ProfileHover = ({ onClose }) => {
             {t("log in")}
           </button>
 
-          {/* Create Account Button */}
           <button
             onClick={() => handleNavigation("/register")}
             className="w-full cursor-pointer border-2 border-main text-main py-2.5 px-4 rounded-xl hover:bg-green-50 hover:shadow-md transform hover:scale-[1.02] transition-all duration-200 text-sm font-medium"
@@ -181,7 +200,6 @@ const ProfileHover = ({ onClose }) => {
           </button>
         </div>
 
-        {/* Menu Items for Guests */}
         <div className="flex flex-col mt-4 gap-1">
           {menuItems
             .filter(item => ["about us", "privacy, terms, and conditions"].includes(item.key))
@@ -209,7 +227,6 @@ const ProfileHover = ({ onClose }) => {
     );
   }
 
-  // Authenticated User View
   return (
     <div
       className={`max-h-[520px] w-[300px] sm:w-[340px] cursor-default flex flex-col overflow-y-auto overflow-x-hidden rounded-xl shadow-2xl px-5 pt-5 pb-4 bg-white z-100 border border-gray-100 absolute top-12 ${
@@ -217,7 +234,6 @@ const ProfileHover = ({ onClose }) => {
       }`}
       dir={i18n.language === "ar" ? "rtl" : "ltr"}
     >
-      {/* Account Info */}
       <div className="flex flex-col justify-center items-center">
         <div className="relative">
           <div
@@ -264,7 +280,7 @@ const ProfileHover = ({ onClose }) => {
           <div className="text-base sm:text-lg font-bold text-gray-800">
             {user?.name}
           </div>
-          {user?.verified_account === 1 && (
+          {isVerified && (
             <BadgeCheck className="w-5 h-5 text-green-600 flex-shrink-0" />
           )}
         </div>
@@ -276,13 +292,12 @@ const ProfileHover = ({ onClose }) => {
           {t("viewProfile")}
         </button>
 
-        {/* Country Select */}
         <div
           dir={i18n.language === "en" ? "ltr" : "rtl"}
           className="w-full text-sm sm:text-base border border-gray-200 bg-gray-50 rounded-xl flex justify-between items-center p-3 mt-4 hover:border-main transition-colors"
         >
           <span className="font-medium text-gray-700">{t("country")}</span>
-          <div className="w-32 sm:w-40">
+          <div className="w-50">
             <CustomSelect
               options={countryOptions}
               value={userCountryId?.toString()}
@@ -295,12 +310,10 @@ const ProfileHover = ({ onClose }) => {
         </div>
       </div>
 
-      {/* Divider */}
       <div className="w-full h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent my-4"></div>
 
-      {/* Menu Items */}
       <div className="flex flex-col gap-1">
-        {menuItems.map((item) => (
+        {filteredMenuItems.map((item) => (
           <div
             key={item.key}
             onClick={() => handleMenuClick(item)}
@@ -320,7 +333,6 @@ const ProfileHover = ({ onClose }) => {
           </div>
         ))}
 
-        {/* Logout Button */}
         <button
           onClick={handleLogout}
           disabled={isLoggingOut}

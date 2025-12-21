@@ -8,6 +8,37 @@ import { getCachedCategories, getCachedMyProducts, userAPI } from "../../api";
 import ProductCard from "../../components/ProductCard/ProductCard";
 import CustomSelect from "../../components/Ui/CustomSelect/CustomSelect";
 
+const getProductImages = (product) => {
+  if (product.images && Array.isArray(product.images) && product.images.length > 0) {
+    return product.images.map(img => {
+      if (typeof img === 'string') {
+        return img;
+      }
+      if (typeof img === 'object' && img !== null) {
+        return img.image_url || img.url || img.path || '';
+      }
+      return '';
+    }).filter(Boolean);
+  }
+  
+  if (product.image) {
+    if (typeof product.image === 'string') {
+      return [product.image];
+    }
+    if (typeof product.image === 'object' && product.image !== null) {
+      const imageUrl = product.image.image_url || product.image.url || product.image.path;
+      return imageUrl ? [imageUrl] : [];
+    }
+  }
+  
+  return [];
+};
+
+const getMainImage = (product) => {
+  const images = getProductImages(product);
+  return images.length > 0 ? images[0] : null;
+};
+
 function RenewConfirmModal({ isOpen, onClose, onConfirm, isRTL = false, loading = false }) {
   if (!isOpen) return null;
 
@@ -21,7 +52,6 @@ function RenewConfirmModal({ isOpen, onClose, onConfirm, isRTL = false, loading 
         onClick={(e) => e.stopPropagation()}
         dir={isRTL ? 'rtl' : 'ltr'}
       >
-        {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-xl font-bold text-gray-900">
             {isRTL ? 'تجديد الإعلان' : 'Renew Ad'}
@@ -34,21 +64,18 @@ function RenewConfirmModal({ isOpen, onClose, onConfirm, isRTL = false, loading 
           </button>
         </div>
 
-        {/* Icon */}
         <div className="flex justify-center mb-4">
           <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
             <RefreshCw className="w-8 h-8 text-main" />
           </div>
         </div>
 
-        {/* Description */}
         <p className="text-gray-600 text-center mb-6">
           {isRTL
             ? 'هل تريد تجديد هذا الإعلان؟ سيظهر الإعلان مرة أخرى لمدة 3 أشهر'
             : 'Do you want to renew this ad? The ad will appear again for 3 months'}
         </p>
 
-        {/* Buttons */}
         <div className="flex gap-3">
           <button
             onClick={onConfirm}
@@ -285,7 +312,7 @@ function DeleteConfirmModal({ isOpen, onClose, onConfirm, isRTL = false }) {
 }
 
 function AdsItem({ item, onDelete, onRenew }) {
-  const { id, images, image, name, name_ar, name_en, governorate, price, created_at, renewed_at } = item;
+  const { id, name, name_ar, name_en, governorate, price, created_at, renewed_at, status } = item;
   const { i18n } = useTranslation();
   const isRTL = i18n.language === 'ar';
   const navigate = useNavigate();
@@ -293,17 +320,41 @@ function AdsItem({ item, onDelete, onRenew }) {
   const [showRenewModal, setShowRenewModal] = useState(false);
   const [isRenewing, setIsRenewing] = useState(false);
 
-  const allImages = images && images.length > 0 ? images : (image ? [image] : []);
+  const allImages = getProductImages(item);
+  const mainImage = getMainImage(item);
 
   const checkNeedsRenewal = () => {
     const lastUpdateDate = renewed_at ? new Date(renewed_at) : new Date(created_at);
     const currentDate = new Date();
     const diffTime = Math.abs(currentDate - lastUpdateDate);
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays >= 90; 
+    return diffDays >= 90;
   };
 
   const needsRenewal = checkNeedsRenewal();
+
+  const getStatusBadge = (status) => {
+    const badges = {
+      active: {
+        bg: 'bg-green-500',
+        text: isRTL ? 'مقبول' : 'Accepted',
+        icon: '✓'
+      },
+      rejected: {
+        bg: 'bg-red-500',
+        text: isRTL ? 'مرفوض' : 'Rejected',
+        icon: '✕'
+      },
+      pending: {
+        bg: 'bg-yellow-500',
+        text: isRTL ? 'تحت المراجعة' : 'Pending',
+        icon: '⏳'
+      }
+    };
+    return badges[status] || badges.pending;
+  };
+
+  const statusBadge = getStatusBadge(status);
 
   const handleProductClick = (productId) => {
     navigate(`/product-details/${productId}`);
@@ -351,8 +402,8 @@ function AdsItem({ item, onDelete, onRenew }) {
     name_ar: name_ar,
     name_en: name_en || name,
     price: price,
+    image: mainImage,
     images: allImages,
-    image: allImages[0],
     governorate: governorate,
     created_at: created_at
   };
@@ -360,17 +411,20 @@ function AdsItem({ item, onDelete, onRenew }) {
   return (
     <>
       <div className="relative">
-        {/* Renewal Badge */}
-        {needsRenewal && (
-          <div className={`absolute top-2 ${isRTL ? 'right-2' : 'left-2'} z-10`}>
+        <div className={`absolute top-2 ${isRTL ? 'right-2' : 'left-2'} z-10 flex flex-col gap-1`}>
+          <div className={`${statusBadge.bg} text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-lg flex items-center gap-1`}>
+            <span>{statusBadge.icon}</span>
+            <span>{statusBadge.text}</span>
+          </div>
+          
+          {needsRenewal && (
             <div className="bg-orange-500 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-lg flex items-center gap-1">
               <RefreshCw className="w-3 h-3" />
               <span>{isRTL ? 'يحتاج تجديد' : 'Needs Renewal'}</span>
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
-        {/* Action Buttons */}
         <div className={`absolute top-2 ${isRTL ? 'left-2' : 'right-2'} z-10 flex gap-2`}>
           {needsRenewal && (
             <button
@@ -441,8 +495,7 @@ export default function Ads() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const { data, fromCache } = await getCachedCategories();
-        console.log(fromCache ? '📦 Categories من الكاش' : '🌐 Categories من API');
+        const { data } = await getCachedCategories();
         setCategories(data);
       } catch (err) {
         console.error('Error fetching categories:', err);
@@ -457,8 +510,7 @@ export default function Ads() {
       try {
         setLoading(true);
         setError(null);
-        const { data, fromCache } = await getCachedMyProducts();
-        console.log(fromCache ? '📦 My Products من الكاش' : '🌐 My Products من API');
+        const { data } = await getCachedMyProducts();
         setAdsItems(data);
         setFilteredAds(data);
       } catch (err) {
@@ -517,24 +569,24 @@ export default function Ads() {
     try {
       await userAPI.post(`/products/${productId}/renew`);
 
-      const updatedAds = adsItems.map(item => 
-        item.id === productId 
+      const updatedAds = adsItems.map(item =>
+        item.id === productId
           ? { ...item, renewed_at: new Date().toISOString() }
           : item
       );
-      
+
       setAdsItems(updatedAds);
       setFilteredAds(updatedAds.filter(item => {
         let matches = true;
-        
+
         if (filter.category_id && filter.category_id !== "all") {
           matches = matches && item.category_id === parseInt(filter.category_id);
         }
-        
+
         if (filter.status && filter.status !== "all") {
           matches = matches && item.status === filter.status;
         }
-        
+
         return matches;
       }));
 
@@ -578,7 +630,7 @@ export default function Ads() {
 
   const statusOptions = [
     { value: "all", label: isRTL ? "كل الحالات" : "All Status" },
-    { value: "accepted", label: isRTL ? "مقبول" : "Accepted" },
+    { value: "active", label: isRTL ? "مقبول" : "Accepted" },
     { value: "rejected", label: isRTL ? "مرفوض" : "Rejected" },
     { value: "pending", label: isRTL ? "تحت المراجعة" : "Pending" },
   ];
@@ -605,7 +657,6 @@ export default function Ads() {
 
         <h3 className="text-2xl text-center font-bold text-main mb-6">{t("ads.title")}</h3>
 
-        {/* Create Ad Button */}
         <div className="block sm:hidden mb-4">
           <button
             onClick={() => navigate("/ads/create")}
@@ -618,9 +669,7 @@ export default function Ads() {
           </button>
         </div>
 
-        {/* Filters Section */}
         <div className="flex flex-col sm:flex-row items-stretch justify-between sm:items-center gap-4 mb-6 bg-gradient-to-r from-gray-50 to-gray-100/50 p-5 rounded-2xl shadow-md border border-gray-200/60 backdrop-blur-sm relative z-20">
-          {/* Desktop Button */}
           <div className={`hidden sm:block ${isRTL ? 'sm:order-2' : 'sm:order-1'}`}>
             <button
               onClick={() => navigate("/ads/create")}
@@ -630,7 +679,6 @@ export default function Ads() {
             </button>
           </div>
 
-          {/* Desktop Filters */}
           <div className={`hidden sm:flex gap-3 ${isRTL ? 'sm:order-1' : 'sm:order-2'}`}>
             <CustomSelect
               options={categoryOptions}
@@ -651,7 +699,6 @@ export default function Ads() {
             />
           </div>
 
-          {/* Mobile Filters Only */}
           <div className="w-full block sm:hidden">
             <div className="grid grid-cols-2 gap-3">
               <CustomSelect

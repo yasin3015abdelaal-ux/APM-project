@@ -707,55 +707,59 @@ const handleContactSeller = useCallback(async (product) => {
                     <Loader />
                 ) : !isParticipating ? (
                     <>
-                        {timeRemaining.registrationOpen ? (
-                            <>
-                                <p className="text-center text-main mb-3 text-sm">
-                                    {isRTL ? "يمكنك التسجيل المسبق للمزاد القادم والاستفادة من تخفيضات الاسعار" : "You can pre-register for the upcoming auction and benefit from price reductions"}
-                                </p>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                    <button
-                                        onClick={() => {
-                                            if (!canRegisterAsBuyer) {
-                                                showToast(isRTL ? "تم الوصول للحد الأقصى من المشترين" : "Maximum buyers reached", "error");
-                                                return;
-                                            }
-                                            setParticipateRole("buyer");
-                                            setShowParticipateModal(true);
-                                        }}
-                                        disabled={!canRegisterAsBuyer}
-                                        className={`${canRegisterAsBuyer ? "bg-main hover:bg-green-700 cursor-pointer" : "bg-gray-400 cursor-not-allowed"} text-white px-4 py-3 rounded-xl font-bold transition text-base`}
-                                    >
-                                        {isRTL ? "احجز كمشتري" : "Register as Buyer"}
-                                    </button>
-                                    <button
-                                        onClick={() => {
-                                            if (!canRegisterAsSeller) {
-                                                showToast(isRTL ? "تم الوصول للحد الأقصى من التجار" : "Maximum sellers reached", "error");
-                                                return;
-                                            }
-                                            setParticipateRole("seller");
-                                            setShowParticipateModal(true);
-                                        }}
-                                        disabled={!canRegisterAsSeller}
-                                        className={`${canRegisterAsSeller ? "bg-main hover:bg-green-700 cursor-pointer" : "bg-gray-400 cursor-not-allowed"} text-white px-4 py-3 rounded-xl font-bold transition text-base`}
-                                    >
-                                        {isRTL ? "احجز كتاجر" : "Register as Seller"}
-                                    </button>
-                                </div>
-                            </>
-                        ) : (
-                            <div className="text-center py-6 bg-gray-50 rounded-xl">
-                                <svg className="w-12 h-12 mx-auto text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                                </svg>
-                                <h3 className="text-lg font-bold text-gray-800 mb-1">
-                                    {isRTL ? "التسجيل مغلق حاليًا" : "Registration is currently closed"}
-                                </h3>
-                                <p className="text-gray-600 text-sm">
-                                    {isRTL ? "سيتم فتح الحجز بعد المزاد لتتمكن من التسجيل في المزاد القادم" : "Registration will open after the auction to register for the next auction"}
-                                </p>
-                            </div>
-                        )}
+{timeRemaining.registrationOpen ? (
+            <>
+                <p className="text-center text-main mb-3 text-xl mt-8 font-bold">
+                    {isRTL ? "يمكنك التسجيل المسبق للمزاد القادم والاستفادة من تخفيضات الاسعار" : "You can pre-register for the upcoming auction and benefit from price reductions"}
+                </p>
+                <div className="absolute bottom-0 left-0 right-0 py-3 z-40">
+                    <div className="max-w-6xl mx-auto px-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <button
+                                onClick={() => {
+                                    if (!canRegisterAsBuyer) {
+                                        showToast(isRTL ? "تم الوصول للحد الأقصى من المشترين" : "Maximum buyers reached", "error");
+                                        return;
+                                    }
+                                    setParticipateRole("buyer");
+                                    setShowParticipateModal(true);
+                                }}
+                                disabled={!canRegisterAsBuyer}
+                                className={`w-full ${canRegisterAsBuyer ? "bg-main hover:bg-green-700 cursor-pointer" : "bg-gray-400 cursor-not-allowed"} text-white px-6 py-3 rounded-xl font-bold transition text-base`}
+                            >
+                                {isRTL ? "احجز كمشتري" : "Register as Buyer"}
+                            </button>
+                            <button
+                                onClick={() => {
+                                    if (!canRegisterAsSeller) {
+                                        showToast(isRTL ? "تم الوصول للحد الأقصى من التجار" : "Maximum sellers reached", "error");
+                                        return;
+                                    }
+                                    setParticipateRole("seller");
+                                    setShowParticipateModal(true);
+                                }}
+                                disabled={!canRegisterAsSeller}
+                                className={`w-full ${canRegisterAsSeller ? "bg-main hover:bg-green-700 cursor-pointer" : "bg-gray-400 cursor-not-allowed"} text-white px-6 py-3 rounded-xl font-bold transition text-base`}
+                            >
+                                {isRTL ? "احجز كتاجر" : "Register as Seller"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </>
+        ) : (
+            <div className="text-center py-6 bg-gray-50 rounded-xl">
+                <svg className="w-12 h-12 mx-auto text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+                <h3 className="text-lg font-bold text-gray-800 mb-1">
+                    {isRTL ? "التسجيل مغلق حاليًا" : "Registration is currently closed"}
+                </h3>
+                <p className="text-gray-600 text-sm">
+                    {isRTL ? "سيتم فتح الحجز بعد المزاد لتتمكن من التسجيل في المزاد القادم" : "Registration will open after the auction to register for the next auction"}
+                </p>
+            </div>
+        )}
                     </>
                 ) : (
                     <div className="mb-4">

@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react';
 import { Upload, X, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getCachedSubCategories, userAPI } from '../../api';
+import { clearCache, getCachedSubCategories, userAPI } from '../../api';
 import Loader from '../../components/Ui/Loader/Loader';
 import CustomSelect from '../../components/Ui/CustomSelect/CustomSelect';
+import PlaceholderSVG from '../../assets/PlaceholderSVG';
 
 function DeleteConfirmModal({ isOpen, onClose, onConfirm, isRTL = false }) {
     const [selectedReason, setSelectedReason] = useState("");
@@ -270,7 +271,7 @@ const EditAds = () => {
             let productRes;
             try {
                 productRes = await userAPI.get(`/products/${id}`);
-                console.log('Product Response:', productRes.data);
+                console.log('Product Full Response:', productRes.data);
             } catch (err) {
                 console.error('Error loading product:', err);
                 console.error('Error response:', err.response?.data);
@@ -309,10 +310,14 @@ const EditAds = () => {
 
                 const extractedAttributes = {};
                 Object.keys(productData).forEach(key => {
-                    if (!['id', 'category', 'category_id', 'sub_category', 'sub_category_id', 'images', 'image', 'created_at', 'updated_at', 'user', 'user_id'].includes(key)) {
+                    if (!['id', 'category', 'category_id', 'sub_category', 'sub_category_id',
+                        'images', 'image', 'created_at', 'updated_at', 'user', 'user_id',
+                        'status', 'watchers_count', 'interested_count', 'renewed_at'].includes(key)) {
                         extractedAttributes[key] = productData[key];
                     }
                 });
+
+                console.log('Extracted Attributes:', extractedAttributes);
 
                 setFormData({
                     category_id: categoryId || '',
@@ -321,10 +326,18 @@ const EditAds = () => {
                     attributes: extractedAttributes
                 });
 
-                if (productData.images && Array.isArray(productData.images)) {
+                console.log('Raw Product Images:', productData.images);
+                console.log('Raw Product Image:', productData.image);
+
+                if (productData.images && Array.isArray(productData.images) && productData.images.length > 0) {
+                    console.log('Setting existing images from array');
                     setExistingImages(productData.images);
                 } else if (productData.image) {
+                    console.log('Setting existing images from single image');
                     setExistingImages([productData.image]);
+                } else {
+                    console.log('No images found');
+                    setExistingImages([]);
                 }
             }
         } catch (error) {
@@ -542,34 +555,61 @@ const EditAds = () => {
         try {
             const dataToSend = new FormData();
 
-            dataToSend.append("category_id", formData.category_id);
-            dataToSend.append("sub_category_id", formData.sub_category_id);
+            dataToSend.append('_method', 'PUT');
+
+            if (formData.category_id) {
+                dataToSend.append("category_id", formData.category_id);
+            }
+
+            if (formData.sub_category_id) {
+                dataToSend.append("sub_category_id", formData.sub_category_id);
+            }
 
             Object.keys(formData.attributes).forEach(key => {
-                if (formData.attributes[key]) {
-                    dataToSend.append(key, formData.attributes[key]);
+                const value = formData.attributes[key];
+                if (value !== null && value !== undefined && value !== '') {
+                    dataToSend.append(key, value);
                 }
             });
 
-            formData.images.forEach((image, index) => {
-                dataToSend.append(`images[${index}]`, image);
+            formData.images.forEach((image) => {
+                dataToSend.append('images[]', image);
             });
 
             if (existingImages.length > 0) {
-                existingImages.forEach((image, index) => {
-                    dataToSend.append(`existing_images[${index}]`, typeof image === 'string' ? image : image.id || image.url);
+                existingImages.forEach((image) => {
+                    let imageValue;
+
+                    if (typeof image === 'object' && image !== null) {
+                        imageValue = image.id || image.image_id || image.url || image.image_url;
+                    } else if (typeof image === 'string') {
+                        imageValue = image;
+                    }
+
+                    if (imageValue) {
+                        dataToSend.append('keep_images[]', imageValue);
+                    }
                 });
             }
 
-            dataToSend.append('_method', 'PUT');
+            console.log("=== FormData Contents ===");
+            for (let pair of dataToSend.entries()) {
+                console.log(pair[0] + ':', pair[1]);
+            }
 
-            await userAPI.post(`/products/${id}`, dataToSend, {
+            const response = await userAPI.post(`/products/${id}`, dataToSend, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 }
             });
 
-            showToast(isRTL ? 'تم تعديل الإعلان بنجاح!' : 'Ad updated successfully!', 'success');
+            console.log('Update Response:', response.data);
+
+            showToast(
+                isRTL ? 'تم تعديل الإعلان بنجاح!' : 'Ad updated successfully!',
+                'success'
+            );
+
             setTimeout(() => {
                 navigate('/ads');
             }, 1500);
@@ -585,7 +625,8 @@ const EditAds = () => {
                 const firstError = validationErrors[firstErrorKey];
                 errorMessage = Array.isArray(firstError) ? firstError[0] : firstError;
             } else {
-                errorMessage = isRTL ? 'حدث خطأ أثناء تعديل الإعلان' : 'Error updating ad';
+                errorMessage = error.response?.data?.message ||
+                    (isRTL ? 'حدث خطأ أثناء تعديل الإعلان' : 'Error updating ad');
             }
 
             showToast(errorMessage, 'error');
@@ -694,7 +735,7 @@ const EditAds = () => {
                     <h2 className="text-lg font-bold text-gray-800 mb-4">
                         {isRTL ? 'صور الإعلان' : 'Ad Images'}
                     </h2>
-                    
+
                     <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 bg-white hover:border-main transition-colors">
                         <input
                             type="file"
@@ -721,25 +762,38 @@ const EditAds = () => {
 
                     {(existingImages.length > 0 || imagePreviews.length > 0) && (
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                            {existingImages.map((img, index) => (
-                                <div key={`existing-${index}`} className="relative group">
-                                    <img
-                                        src={typeof img === 'string' ? img : img.url}
-                                        alt={`Existing ${index + 1}`}
-                                        className="w-full h-32 sm:h-36 object-cover rounded-xl border-2 border-blue-300 shadow-sm group-hover:shadow-md transition-shadow"
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => removeExistingImage(index)}
-                                        className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center cursor-pointer transition shadow-lg"
-                                    >
-                                        <X className="w-4 h-4" />
-                                    </button>
-                                    <div className="absolute bottom-2 left-2 bg-blue-500 text-white text-xs px-2.5 py-1 rounded-md font-semibold shadow">
-                                        {isRTL ? 'موجودة' : 'Existing'}
+                            {existingImages.map((img, index) => {
+                                let imageUrl;
+                                if (typeof img === 'string') {
+                                    imageUrl = img;
+                                } else if (typeof img === 'object' && img !== null) {
+                                    imageUrl = img.image_url || img.url || img.path || '';
+                                }
+
+                                return (
+                                    <div key={`existing-${index}`} className="relative group">
+                                        <img
+                                            src={imageUrl}
+                                            alt={`Existing ${index + 1}`}
+                                            className="w-full h-32 sm:h-36 object-cover rounded-xl border-2 border-blue-300 shadow-sm group-hover:shadow-md transition-shadow"
+                                            onError={(e) => {
+                                                console.error('Error loading image:', imageUrl);
+                                                e.target.src = <PlaceholderSVG />;
+                                            }}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => removeExistingImage(index)}
+                                            className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center cursor-pointer transition shadow-lg"
+                                        >
+                                            <X className="w-4 h-4" />
+                                        </button>
+                                        <div className="absolute bottom-2 left-2 bg-blue-500 text-white text-xs px-2.5 py-1 rounded-md font-semibold shadow">
+                                            {isRTL ? 'موجودة' : 'Existing'}
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
+                                );
+                            })}
 
                             {imagePreviews.map((preview, index) => (
                                 <div key={`new-${index}`} className="relative group">
@@ -755,7 +809,7 @@ const EditAds = () => {
                                     >
                                         <X className="w-4 h-4" />
                                     </button>
-                                    <div className="absolute bottom-2 left-2 bg-green-500 text-white text-xs px-2.5 py-1 rounded-md font-semibold shadow">
+                                    <div className="absolute cursor-pointer bottom-2 left-2 bg-green-500 text-white text-xs px-2.5 py-1 rounded-md font-semibold shadow">
                                         {isRTL ? 'جديدة' : 'New'}
                                     </div>
                                 </div>
@@ -768,7 +822,7 @@ const EditAds = () => {
                     <h2 className="text-lg font-bold text-gray-800 mb-6">
                         {isRTL ? 'بيانات الإعلان' : 'Ad Details'}
                     </h2>
-                    
+
                     <div className={`grid grid-cols-1 lg:grid-cols-2 gap-6 ${isRTL ? 'rtl' : 'ltr'}`}>
                         {isRTL ? (
                             <>
@@ -790,7 +844,7 @@ const EditAds = () => {
                             </>
                         )}
                     </div>
-                    
+
                     {descriptionAttrs.length > 0 && (
                         <div className="mt-6 space-y-6">
                             {descriptionAttrs.map(attr => renderAttributeInput(attr))}
@@ -802,7 +856,7 @@ const EditAds = () => {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full bg-main hover:bg-green-700 text-white font-bold py-4 rounded-xl transition-all disabled:bg-gray-400 disabled:cursor-not-allowed text-base sm:text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                        className="w-full cursor-pointer bg-main hover:bg-green-700 text-white font-bold py-4 rounded-xl transition-all disabled:bg-gray-400 disabled:cursor-not-allowed text-base sm:text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                     >
                         {loading ? (
                             <span className="flex items-center justify-center gap-3">
@@ -820,7 +874,7 @@ const EditAds = () => {
                     <button
                         type="button"
                         onClick={() => setShowDeleteConfirm(true)}
-                        className="w-full bg-white hover:bg-red-50 text-red-600 font-bold py-4 rounded-xl border-2 border-red-600 transition-all text-base sm:text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center gap-2"
+                        className="w-full cursor-pointer bg-white hover:bg-red-50 text-red-600 font-bold py-4 rounded-xl border-2 border-red-600 transition-all text-base sm:text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center gap-2"
                     >
                         <Trash2 className="w-5 h-5" />
                         {t('ads.delete')}

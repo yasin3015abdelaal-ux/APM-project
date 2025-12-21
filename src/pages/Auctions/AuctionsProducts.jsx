@@ -6,7 +6,6 @@ import {
   getCachedCategories,
   getCachedMyProducts,
   getCachedMyAuctionProducts,
-  getCachedMyPrevProducts,
   clearCache,
   auctionAPI,
 } from "../../api";
@@ -436,7 +435,7 @@ export default function AuctionProducts() {
       let auctionProductsData = [];
       if (isPastAuction) {
         const userId = JSON.parse(localStorage.getItem("userData"))?.id;
-        const { data, fromCache } = await getCachedMyPrevProducts(currentAuctionId, userId);
+        const { data, fromCache } = await getCachedMyAuctionProducts(currentAuctionId, userId);
         console.log(fromCache ? "📦 Previous Products من الكاش" : "🌐 Previous Products من API");
         auctionProductsData = data;
       } else {

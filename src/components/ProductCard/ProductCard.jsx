@@ -1,9 +1,24 @@
 import { Heart, MapPin, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { chatAPI } from '../../api';
 import { useNavigate } from 'react-router-dom';
 import PlaceholderSVG from '../../assets/PlaceholderSVG';
+
+const extractImageUrls = (images) => {
+    if (!images) return [];
+    
+    if (Array.isArray(images)) {
+        return images.map(img => {
+            if (typeof img === 'object' && img !== null) {
+                return img.image_url || img.url || img.path || '';
+            }
+            return img;
+        }).filter(Boolean);
+    }
+    
+    return [];
+};
 
 const ProductCard = ({ 
     product, 
@@ -18,29 +33,44 @@ const ProductCard = ({
     const [isContacting, setIsContacting] = useState(false);
     const [toast, setToast] = useState(null);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
+    const autoSlideTimerRef = useRef(null);
+    const [isPaused, setIsPaused] = useState(false);
 
     const showToast = (message, type = "success") => {
         setToast({ message, type });
         setTimeout(() => setToast(null), 4000);
     };
 
-    // Get all images
-    const allImages = product.images && product.images.length > 0 
-        ? product.images 
-        : (product.image ? [product.image] : []);
+    const imageUrls = extractImageUrls(product.images);
+    const singleImage = typeof product.image === 'object' && product.image?.image_url 
+        ? product.image.image_url 
+        : product.image;
+    
+    const allImages = imageUrls.length > 0 
+        ? imageUrls 
+        : (singleImage ? [singleImage] : []);
     
     const hasMultipleImages = allImages.length > 1;
 
-    // Auto-slide effect
-    useEffect(() => {
-        if (!hasMultipleImages) return;
+    const clearAutoSlide = () => {
+        if (autoSlideTimerRef.current) {
+            clearInterval(autoSlideTimerRef.current);
+        }
+    };
 
-        const interval = setInterval(() => {
+    const startAutoSlide = () => {
+        if (!hasMultipleImages || isPaused) return;
+        
+        clearAutoSlide();
+        autoSlideTimerRef.current = setInterval(() => {
             setCurrentImageIndex((prev) => (prev + 1) % allImages.length);
-        }, 3000); // Change image every 3 seconds
+        }, 3000);
+    };
 
-        return () => clearInterval(interval);
-    }, [hasMultipleImages, allImages.length]);
+    useEffect(() => {
+        startAutoSlide();
+        return () => clearAutoSlide();
+    }, [isPaused, hasMultipleImages, allImages.length]);
 
     const nextImage = (e) => {
         e.stopPropagation();
@@ -55,6 +85,15 @@ const ProductCard = ({
     const goToImage = (e, index) => {
         e.stopPropagation();
         setCurrentImageIndex(index);
+    };
+
+    const handleMouseEnter = () => {
+        setIsPaused(true);
+        clearAutoSlide();
+    };
+
+    const handleMouseLeave = () => {
+        setIsPaused(false);
     };
 
     const formatDate = (dateString) => {
@@ -169,58 +208,74 @@ const ProductCard = ({
             )}
             
             <div
-                className="relative h-40 bg-gray-100 cursor-pointer group"
+                className="relative h-40 bg-gray-100 cursor-pointer group overflow-hidden"
                 onClick={() => onProductClick(product.id)}
+                onMouseEnter={handleMouseEnter}
+                onMouseLeave={handleMouseLeave}
             >
                 {allImages.length > 0 ? (
-                    <>
-                        <img
-                            src={allImages[currentImageIndex]}
-                            alt={isRTL ? product.name_ar : product.name_en}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                            onError={(e) => {
-                                e.target.style.display = 'none';
-                                e.target.nextElementSibling.style.display = 'block';
-                            }}
-                        />
-                        <div 
-                            className="hidden w-full h-full"
-                            style={{ display: 'none' }}
-                        >
-                            <PlaceholderSVG />
-                        </div>
-                    </>
+                    <div className="relative w-full h-full">
+                        {allImages.map((img, index) => (
+                            <div
+                                key={index}
+                                className="absolute inset-0 w-full h-full transition-all duration-700 ease-in-out"
+                                style={{
+                                    opacity: currentImageIndex === index ? 1 : 0,
+                                    transform: currentImageIndex === index 
+                                        ? 'translateX(0%) scale(1)' 
+                                        : currentImageIndex > index 
+                                            ? `translateX(${isRTL ? '100%' : '-100%'}) scale(0.95)` 
+                                            : `translateX(${isRTL ? '-100%' : '100%'}) scale(0.95)`,
+                                    zIndex: currentImageIndex === index ? 2 : 1
+                                }}
+                            >
+                                <img
+                                    src={img}
+                                    alt={`${isRTL ? product.name_ar : product.name_en} - ${index + 1}`}
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                        e.target.style.display = 'none';
+                                        e.target.nextElementSibling?.style && (e.target.nextElementSibling.style.display = 'block');
+                                    }}
+                                />
+                                <div 
+                                    className="hidden w-full h-full"
+                                    style={{ display: 'none' }}
+                                >
+                                    <PlaceholderSVG />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 ) : (
                     <div className="w-full h-full">
                         <PlaceholderSVG />
                     </div>
                 )}
 
-                {/* Image Navigation Arrows */}
                 {hasMultipleImages && (
                     <>
                         <button
                             onClick={prevImage}
-                            className={`absolute top-1/2 -translate-y-1/2 ${isRTL ? 'right-1' : 'left-1'} bg-black/50 hover:bg-black/70 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity z-10`}
+                            className={`absolute cursor-pointer top-1/2 -translate-y-1/2 ${isRTL ? 'right-2' : 'left-2'} bg-black/60 hover:bg-black/80 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-all duration-300 z-10 backdrop-blur-sm`}
                         >
-                            {isRTL ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+                            {isRTL ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
                         </button>
                         <button
                             onClick={nextImage}
-                            className={`absolute top-1/2 -translate-y-1/2 ${isRTL ? 'left-1' : 'right-1'} bg-black/50 hover:bg-black/70 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity z-10`}
+                            className={`absolute cursor-pointer top-1/2 -translate-y-1/2 ${isRTL ? 'left-2' : 'right-2'} bg-black/60 hover:bg-black/80 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-all duration-300 z-10 backdrop-blur-sm`}
                         >
-                            {isRTL ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
+                            {isRTL ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}
                         </button>
 
-                        {/* Image Indicators (Dots) */}
-                        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 z-10 bg-black/30 px-2 py-1 rounded-full backdrop-blur-sm">
+                        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 z-10 bg-black/40 px-2.5 py-1.5 rounded-full backdrop-blur-sm">
                             {allImages.map((_, index) => (
                                 <button
                                     key={index}
                                     onClick={(e) => goToImage(e, index)}
-                                    className={`transition-all rounded-full cursor-pointer ${
+                                    className={`transition-all duration-300 rounded-full cursor-pointer ${
                                         index === currentImageIndex 
-                                            ? 'bg-white w-4 h-2' 
+                                            ? 'bg-white w-5 h-2' 
                                             : 'bg-white/50 hover:bg-white/75 w-2 h-2'
                                     }`}
                                     aria-label={`Go to image ${index + 1}`}

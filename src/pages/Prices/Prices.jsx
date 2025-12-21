@@ -2,15 +2,15 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { userAPI } from "../../api";
 import Loader from "../../components/Ui/Loader/Loader";
-import CustomSelect from "../../components/Ui/CustomSelect/CustomSelect";
 
 const Prices = () => {
     const { t, i18n } = useTranslation();
     const isRTL = i18n.language === "ar";
     const [loading, setLoading] = useState(false);
-    const [governorates, setGovernorates] = useState([]);
     const [toast, setToast] = useState(null);
     const [agreedToTerms, setAgreedToTerms] = useState(false);
+    const [showWarningPopup, setShowWarningPopup] = useState(true);
+    const [userGovernorate, setUserGovernorate] = useState("");
     
     const showToast = (message, type = "success") => {
         setToast({ message, type });
@@ -28,33 +28,23 @@ const Prices = () => {
     });
 
     useEffect(() => {
-        const fetchGov = async () => {
-            try {
-                const userData = JSON.parse(localStorage.getItem("userData"));
-                const country_id = userData?.country?.id;
-                const res = await userAPI.get(`/governorates?country_id=${country_id}`);
-                setGovernorates(res.data?.data?.governorates || []);
-            } catch (err) {
-                console.log(err);
-                showToast(isRTL ? "فشل في تحميل المحافظات" : "Failed to load governorates", "error");
-            }
-        };
-        fetchGov();
-    }, []);
+        const userData = JSON.parse(localStorage.getItem("userData"));
+        if (userData?.governorate) {
+            const govName = isRTL ? userData.governorate.name_ar : userData.governorate.name_en;
+            setUserGovernorate(govName);
+            setForm(prev => ({ ...prev, governorate_id: userData.governorate.id }));
+        }
+    }, [isRTL]);
 
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value });
-    };
-
-    const handleGovernorateChange = (value) => {
-        setForm({ ...form, governorate_id: value });
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
         if (!form.governorate_id) {
-            showToast(isRTL ? "يرجى اختيار المحافظة" : "Please select governorate", "error");
+            showToast(isRTL ? "المحافظة غير محددة" : "Governorate not specified", "error");
             return;
         }
 
@@ -83,7 +73,7 @@ const Prices = () => {
 
             showToast(isRTL ? "تم إرسال الأسعار بنجاح!" : "Prices submitted successfully!", "success");
             setForm({
-                governorate_id: "",
+                ...form,
                 cow_net: "",
                 cow_standing: "",
                 sheep_net: "",
@@ -102,16 +92,39 @@ const Prices = () => {
         return <Loader />;
     }
 
-    const governorateOptions = [
-        { value: "", label: t("prices.selectGovernorate") },
-        ...governorates.map(gov => ({
-            value: gov.id.toString(),
-            label: isRTL ? gov.name_ar : gov.name_en
-        }))
-    ];
-
     return (
         <div className={`w-full max-w-5xl mx-auto bg-white ${isRTL ? "rtl" : "ltr"}`} dir={isRTL ? "rtl" : "ltr"}>
+            {showWarningPopup && (
+                <div className="fixed inset-0 bg-[#000000c5] bg-opacity-50 flex items-center justify-center z-[100] p-4">
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 sm:p-8 animate-scale-in">
+                        <div className="flex flex-col items-center text-center">
+                            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-red-100 rounded-full flex items-center justify-center mb-4">
+                                <svg className="w-10 h-10 sm:w-12 sm:h-12 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                            </div>
+                            
+                            <h2 className="text-2xl sm:text-3xl font-bold text-red-600 mb-4">
+                                {isRTL ? "تحذير هام" : "Important Warning"}
+                            </h2>
+                            
+                            <p className="text-gray-700 text-base sm:text-lg mb-6 leading-relaxed font-semibold">
+                                {isRTL 
+                                    ? "في حالة إدخال سعر غير صحيح، سيتم حظر حسابك نهائياً"
+                                    : "If you enter an incorrect price, your account will be permanently banned"}
+                            </p>
+                            
+                            <button
+                                onClick={() => setShowWarningPopup(false)}
+                                className="w-full cursor-pointer bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-lg transition-colors text-lg"
+                            >
+                                {isRTL ? "حسناً، فهمت" : "OK, I Understand"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {toast && (
                 <div className={`fixed top-4 sm:top-5 ${isRTL ? "left-4 sm:left-5" : "right-4 sm:right-5"} z-50 animate-slide-in max-w-[90%] sm:max-w-md`}>
                     <div className={`px-4 py-3 sm:px-6 sm:py-4 rounded-lg sm:rounded-xl shadow-lg flex items-center gap-2 sm:gap-3 ${toast.type === "success" ? "bg-main text-white" : "bg-red-500 text-white"}`}>
@@ -133,23 +146,16 @@ const Prices = () => {
                 <h1 className="text-3xl font-bold">{t("prices.submitPrices")}</h1>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-8 space-y-6">
-                {/* Governorate Selection with CustomSelect */}
+            <div className="p-8 space-y-6">
                 <div>
                     <label className="block text-gray-700 font-medium mb-2">
                         {t("prices.governorate")}
                     </label>
-                    <CustomSelect
-                        options={governorateOptions}
-                        value={form.governorate_id}
-                        onChange={handleGovernorateChange}
-                        placeholder={t("prices.selectGovernorate")}
-                        isRTL={isRTL}
-                        className="w-full"
-                    />
+                    <div className="w-full px-4 py-3 bg-gray-100 border-2 border-gray-300 rounded-lg text-gray-700 font-semibold">
+                        {userGovernorate || (isRTL ? "غير محدد" : "Not specified")}
+                    </div>
                 </div>
 
-                {/* Cow Prices */}
                 <fieldset className="p-6 rounded-lg border-2 border-gray-300">
                     <legend className="px-3 text-main font-semibold text-lg bg-white">
                         {t("prices.cowPrices")}
@@ -188,7 +194,6 @@ const Prices = () => {
                     </div>
                 </fieldset>
 
-                {/* Sheep Prices */}
                 <fieldset className="p-6 rounded-lg border-2 border-gray-300">
                     <legend className="px-3 text-main font-semibold text-lg bg-white">
                         {t("prices.sheepPrices")}
@@ -227,7 +232,6 @@ const Prices = () => {
                     </div>
                 </fieldset>
 
-                {/* Camel Prices */}
                 <fieldset className="p-6 rounded-lg border-2 border-gray-300">
                     <legend className="px-3 text-main font-semibold text-lg bg-white">
                         {t("prices.camelPrices")}
@@ -266,7 +270,6 @@ const Prices = () => {
                     </div>
                 </fieldset>
 
-                {/* Terms Checkbox */}
                 <div className="bg-red-50 border-2 border-red-200 rounded-lg p-6">
                     <label className="flex items-start gap-3 cursor-pointer">
                         <input
@@ -285,14 +288,46 @@ const Prices = () => {
 
                 <div className="pt-6">
                     <button
-                        type="submit"
+                        onClick={handleSubmit}
                         disabled={loading || !agreedToTerms}
                         className="w-full cursor-pointer bg-main hover:bg-green-700 text-white font-bold py-4 px-6 rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed text-lg"
                     >
                         {loading ? (isRTL ? "جاري الإرسال..." : "Submitting...") : t("prices.submit")}
                     </button>
                 </div>
-            </form>
+            </div>
+
+            <style>{`
+                @keyframes scale-in {
+                    from {
+                        opacity: 0;
+                        transform: scale(0.9);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: scale(1);
+                    }
+                }
+                
+                .animate-scale-in {
+                    animation: scale-in 0.3s ease-out;
+                }
+                
+                @keyframes slide-in {
+                    from {
+                        transform: translateX(100%);
+                        opacity: 0;
+                    }
+                    to {
+                        transform: translateX(0);
+                        opacity: 1;
+                    }
+                }
+                
+                .animate-slide-in {
+                    animation: slide-in 0.3s ease-out;
+                }
+            `}</style>
         </div>
     );
 };

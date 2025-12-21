@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { FaChevronDown, FaBars, FaTimes } from "react-icons/fa";
 import { IoLogOutOutline } from "react-icons/io5";
 import { dataAPI } from "../../api";
-import logo from "../../assets/images/logo.jpg";
+import logo from "../../assets/images/logo.png";
 import { useAdminAuth } from "../../contexts/AdminContext";
 import { adminAuthAPI } from "../../api";
 import { countriesFlags } from "../../data/flags";

@@ -10,7 +10,7 @@ const ADMIN_CHAT_BASE = `${BASE_URL}/admin`;
 
 export const userAPI = axios.create({
     baseURL: USER_BASE,
-    headers: { 
+    headers: {
         "Content-Type": "application/json",
         "Accept": "application/json"
     },
@@ -18,7 +18,7 @@ export const userAPI = axios.create({
 
 export const adminAPI = axios.create({
     baseURL: ADMIN_BASE,
-    headers: { 
+    headers: {
         "Content-Type": "application/json",
         "Accept": "application/json"
     },
@@ -26,7 +26,7 @@ export const adminAPI = axios.create({
 
 export const adminChatAPI = axios.create({
     baseURL: ADMIN_CHAT_BASE,
-    headers: { 
+    headers: {
         "Content-Type": "application/json",
         "Accept": "application/json"
     },
@@ -41,7 +41,7 @@ export const adminChatAPI = axios.create({
         });
         return searchParams.toString();
     },
-    headers: { 
+    headers: {
         "Content-Type": "application/json",
         "Accept": "application/json"
     },
@@ -49,7 +49,7 @@ export const adminChatAPI = axios.create({
 
 export const adminChatMessagesAPI = axios.create({
     baseURL: `${BASE_URL}/admin/chat`,
-    headers: { 
+    headers: {
         "Content-Type": "application/json",
         "Accept": "application/json"
     },
@@ -57,7 +57,7 @@ export const adminChatMessagesAPI = axios.create({
 
 export const chatMessagesAPI = axios.create({
     baseURL: `${BASE_URL}/api`,
-    headers: { 
+    headers: {
         "Content-Type": "application/json",
         "Accept": "application/json"
     },
@@ -74,7 +74,6 @@ const getCurrentCountryId = () => {
     } catch (error) {
         console.error("Error getting country_id:", error);
     }
-    // Default country_id for guests
     return 1;
 };
 
@@ -84,11 +83,14 @@ userAPI.interceptors.request.use((config) => {
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;
     }
-    
-    // Add country_id to headers
+
     const countryId = getCurrentCountryId();
-    config.headers['X-country_id'] = countryId;
-    
+    config.headers['X-Country-Id'] = countryId;
+
+    if (config.data instanceof FormData) {
+        delete config.headers["Content-Type"];
+    }
+
     return config;
 });
 
@@ -115,7 +117,7 @@ adminAPI.interceptors.request.use((config) => {
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;
     }
-    
+
     // Add country ID to headers if available
     const countryId = localStorage.getItem("adminSelectedCountryId");
     if (countryId) {
@@ -123,7 +125,7 @@ adminAPI.interceptors.request.use((config) => {
         // Also add as X-country_id if backend expects that format
         config.headers["X-country_id"] = countryId;
     }
-    
+
     if (config.data instanceof FormData) {
         delete config.headers["Content-Type"];
     }
@@ -150,14 +152,14 @@ adminAPI.interceptors.response.use(
 adminChatAPI.interceptors.request.use((config) => {
     const token = localStorage.getItem("adminToken");
     if (token) config.headers.Authorization = `Bearer ${token}`;
-    
+
     // Add country ID to headers if available
     const countryId = localStorage.getItem("adminSelectedCountryId");
     if (countryId) {
         config.headers["country_id"] = countryId;
         config.headers["X-country_id"] = countryId;
     }
-    
+
     if (config.data instanceof FormData) {
         delete config.headers["Content-Type"];
     }
@@ -189,14 +191,14 @@ adminChatAPI.interceptors.response.use(
 adminChatMessagesAPI.interceptors.request.use((config) => {
     const token = localStorage.getItem("adminToken");
     if (token) config.headers.Authorization = `Bearer ${token}`;
-    
+
     // Add country ID to headers if available
     const countryId = localStorage.getItem("adminSelectedCountryId");
     if (countryId) {
         config.headers["country_id"] = countryId;
         config.headers["X-country_id"] = countryId;
     }
-    
+
     if (config.data instanceof FormData) {
         delete config.headers["Content-Type"];
     }
@@ -262,7 +264,7 @@ export const dataAPI = {
 // ====== Auction APIs ======
 export const auctionAPI = {
     getAllAuctions: () => userAPI.get('/auctions'),
-    
+
     participate: async (date, role) => {
         const response = await withCacheInvalidation(
             () => userAPI.post(`/auctions/participate`, { date, role }),
@@ -270,25 +272,22 @@ export const auctionAPI = {
         );
         return response;
     },
-    
+
     role: (auctionId) => userAPI.get(`/auctions/${auctionId}/my-role`),
-    
+
     getProducts: (auctionId) => userAPI.get(`/auctions/${auctionId}/products`),
-    
+
     getMyProducts: (auctionId) => userAPI.get(`/auctions/${auctionId}/my-products`),
-    
-    getMyPrevProducts: (auctionId, userId) =>
-        userAPI.get(`/auctions/${auctionId}/products?by_user=${userId}`),
-    
+
     addProductToAuction: async (auctionId, data) => {
         const response = await withCacheInvalidation(
             () => userAPI.post(`/auctions/${auctionId}/products`, data),
             ['auction_products', 'auctions']
         );
-        
+
         invalidateCacheById('auction_products', auctionId);
         invalidateCacheById('my_auction_products', auctionId);
-        
+
         return response;
     },
 };
@@ -307,7 +306,7 @@ export const profileAPI = {
 // ====== Chat APIs ======
 export const chatAPI = {
     getConversations: (params = {}) => userAPI.get('/conversations', { params }),
-    
+
     createConversation: async (data) => {
         const response = await withCacheInvalidation(
             () => userAPI.post('/conversations', data),
@@ -315,13 +314,13 @@ export const chatAPI = {
         );
         return response;
     },
-    
+
     getConversation: (conversationId) =>
         userAPI.get(`/conversations/${conversationId}`),
-    
+
     getMessages: (conversationId, params = { page: 1, limit: 50 }) =>
         userAPI.get(`/conversations/${conversationId}/messages`, { params }),
-    
+
     sendMessage: async (conversationId, message) => {
         const response = await withCacheInvalidation(
             () => userAPI.post(`/conversations/${conversationId}/messages`, { message }),
@@ -329,7 +328,7 @@ export const chatAPI = {
         );
         return response;
     },
-    
+
     markAsRead: async (conversationId) => {
         const response = await withCacheInvalidation(
             () => userAPI.post(`/conversations/${conversationId}/mark-read`),
@@ -337,15 +336,15 @@ export const chatAPI = {
         );
         return response;
     },
-    
+
     getUnreadCount: () => userAPI.get('/messages/unread-count'),
 };
 
 // ====== Review APIs ======
 export const reviewAPI = {
-    getAllReviews: (params = { page: 1, per_page: 15 }) => 
+    getAllReviews: (params = { page: 1, per_page: 15 }) =>
         userAPI.get('/seller-reviews', { params }),
-    
+
     createReview: async (data) => {
         const response = await withCacheInvalidation(
             () => userAPI.post('/seller-reviews', data),
@@ -353,7 +352,7 @@ export const reviewAPI = {
         );
         return response;
     },
-    
+
     deleteReview: async (reviewId) => {
         const response = await withCacheInvalidation(
             () => userAPI.delete(`/seller-reviews/${reviewId}`),
@@ -366,7 +365,7 @@ export const reviewAPI = {
 // ====== Report APIs ======
 export const reportAPI = {
     getReportReasons: () => userAPI.get('/report-reasons'),
-    
+
     createSellerReport: async (data) => {
         const response = await withCacheInvalidation(
             () => userAPI.post('/seller-reports', data),
@@ -379,9 +378,9 @@ export const reportAPI = {
 // ====== Articles APIs ======
 export const articlesAPI = {
     getAllArticles: (params = {}) => userAPI.get('/articles', { params }),
-    
+
     getArticleDetails: (articleId) => userAPI.get(`/articles/${articleId}`),
-    
+
     createArticle: async (data) => {
         const response = await withCacheInvalidation(
             () => userAPI.post('/articles', data),
@@ -389,18 +388,18 @@ export const articlesAPI = {
         );
         return response;
     },
-    
+
     updateArticle: async (articleId, data) => {
         const response = await withCacheInvalidation(
             () => userAPI.put(`/articles/${articleId}`, data),
             ['articles']
         );
-        
+
         invalidateCacheById('article', articleId);
-        
+
         return response;
     },
-    
+
     deleteArticle: async (articleId) => {
         const response = await withCacheInvalidation(
             () => userAPI.delete(`/articles/${articleId}`),
@@ -414,7 +413,7 @@ export const articlesAPI = {
 export const topSellersAPI = {
     getTopSellers: (params = { limit: 10, min_reviews: 5 }) =>
         userAPI.get('/top-sellers', { params }),
-    
+
     getSellerReviews: (sellerId, params = { page: 1 }) =>
         userAPI.get(`/seller-reviews/${sellerId}`, { params }),
 };
@@ -422,9 +421,9 @@ export const topSellersAPI = {
 // ====== Product APIs ======
 export const productAPI = {
     getAllProducts: () => userAPI.get('/products'),
-    
+
     getMyProducts: () => userAPI.get('/products/my-products'),
-    
+
     createProduct: async (data) => {
         const response = await withCacheInvalidation(
             () => userAPI.post('/products', data),
@@ -432,7 +431,7 @@ export const productAPI = {
         );
         return response;
     },
-    
+
     updateProduct: async (productId, data) => {
         const response = await withCacheInvalidation(
             () => userAPI.put(`/products/${productId}`, data),
@@ -440,11 +439,11 @@ export const productAPI = {
         );
         return response;
     },
-    
+
     deleteProduct: async (productId, reason = "product_sold") => {
         const response = await withCacheInvalidation(
-            () => userAPI.delete(`/products/${productId}`, { 
-                data: { reason } 
+            () => userAPI.delete(`/products/${productId}`, {
+                data: { reason }
             }),
             ['products', 'my_products']
         );
@@ -454,9 +453,9 @@ export const productAPI = {
 
 // ====== Notification APIs ======
 export const notificationAPI = {
-    getNotifications: (params = { status: 'all', per_page: 15, type: '' }) => 
+    getNotifications: (params = { status: 'all', per_page: 15, type: '' }) =>
         userAPI.get('/notifications', { params }),
-    
+
     markAsRead: async (notificationId) => {
         const response = await withCacheInvalidation(
             () => userAPI.post(`/notifications/${notificationId}/mark-read`),
@@ -464,7 +463,7 @@ export const notificationAPI = {
         );
         return response;
     },
-    
+
     markAllAsRead: async () => {
         const response = await withCacheInvalidation(
             () => userAPI.post('/notifications/mark-all-read'),
@@ -472,7 +471,7 @@ export const notificationAPI = {
         );
         return response;
     },
-    
+
     deleteNotification: async (notificationId) => {
         const response = await withCacheInvalidation(
             () => userAPI.delete(`/notifications/${notificationId}`),
@@ -480,13 +479,18 @@ export const notificationAPI = {
         );
         return response;
     },
-    
+
     getUnreadCount: () => userAPI.get('/notifications/unread-count'),
-    
-    registerDeviceToken: (data) => 
+
+    registerDeviceToken: (data) =>
         userAPI.post('/device-tokens', data),
 };
 
+export const searchAPI = {
+    searchProducts: (query) => userAPI.get('/get_products', {
+        params: { search: query }
+    }),
+};
 // ====== Cached APIs ======
 export const getCachedAdvertisements = async () => {
     return await cachedAPICall(
@@ -603,7 +607,7 @@ export const getCachedCategories = async () => {
             const response = await userAPI.get('/categories');
             return response.data.data.product_categories || [];
         },
-        { ttl: 60 * 60 * 1000 } 
+        { ttl: 60 * 60 * 1000 }
     );
 };
 
@@ -617,15 +621,35 @@ export const getCachedSubCategories = async (categoryId) => {
         { ttl: 60 * 60 * 1000 }
     );
 };
-
 export const getCachedMyProducts = async () => {
     return await cachedAPICall(
         'my_products',
         async () => {
             const response = await userAPI.get('/products/my-products');
-            return response.data.data || [];
+            const products = response.data.data || [];
+            
+            const productsWithDetails = await Promise.all(
+                products.map(async (product) => {
+                    try {
+                        const detailResponse = await userAPI.get(`/products/${product.id}`);
+                        const detailData = detailResponse.data?.data || detailResponse.data;
+                        
+                        return {
+                            ...product,
+                            ...detailData, 
+                            images: detailData.images || [],
+                            image: detailData.image || product.image
+                        };
+                    } catch (error) {
+                        console.error(`Error fetching details for product ${product.id}:`, error);
+                        return product;
+                    }
+                })
+            );
+            
+            return productsWithDetails;
         },
-        { ttl: 60 * 60 * 1000 } 
+        { ttl: 60 * 60 * 1000 }
     );
 };
 
@@ -647,7 +671,7 @@ export const getCachedAuctionRole = async (auctionId) => {
             const response = await auctionAPI.role(auctionId);
             return response.data;
         },
-        { ttl: 60 * 60 * 1000 } 
+        { ttl: 60 * 60 * 1000 }
     );
 };
 
@@ -658,7 +682,7 @@ export const getCachedAuctions = async () => {
             const response = await auctionAPI.getAllAuctions();
             return response.data?.data || [];
         },
-        { ttl: 60 * 60 * 1000 } 
+        { ttl: 60 * 60 * 1000 }
     );
 };
 
@@ -669,7 +693,7 @@ export const getCachedMyAuctionProducts = async (auctionId) => {
             const response = await auctionAPI.getMyProducts(auctionId);
             return response.data.data || [];
         },
-        { ttl: 60 * 60 * 1000 } 
+        { ttl: 60 * 60 * 1000 }
     );
 };
 
@@ -723,13 +747,13 @@ export const getCachedTopSellers = async (params = { limit: 10, min_reviews: 5 }
 export const adminManagementAPI = {
     // Get all permissions
     getPermissions: () => adminAPI.get("/permissions"),
-    
+
     // Get all admins
     getAdmins: (params = {}) => adminAPI.get("/admins", { params }),
-    
+
     // Get single admin by ID
     getAdmin: (adminId) => adminAPI.get(`/admins/${adminId}`),
-    
+
     // Create new admin
     createAdmin: async (data) => {
         const response = await withCacheInvalidation(
@@ -738,7 +762,7 @@ export const adminManagementAPI = {
         );
         return response;
     },
-    
+
     // Update admin
     updateAdmin: async (adminId, data) => {
         const response = await withCacheInvalidation(
@@ -748,7 +772,7 @@ export const adminManagementAPI = {
         invalidateCacheById('admin', adminId);
         return response;
     },
-    
+
     // Delete admin
     deleteAdmin: async (adminId) => {
         const response = await withCacheInvalidation(
@@ -773,16 +797,16 @@ export const adminNotificationsAPI = {
         };
         return adminAPI.get("/notifications", { params: queryParams });
     },
-    
+
     // Get notification details
     getNotification: (notificationId) => adminAPI.get(`/notifications/${notificationId}`),
-    
+
     // Send notification to specific users
     sendNotification: (data) => adminAPI.post("/notifications/send", data),
-    
+
     // Broadcast notification by country
     broadcastNotification: (data) => adminAPI.post("/notifications/broadcast", data),
-    
+
     // Get notification statistics
     getStatistics: (params = {}) => {
         const queryParams = {};
@@ -813,7 +837,7 @@ export const getCachedNotifications = async (params = { status: 'all', per_page:
             const response = await notificationAPI.getNotifications(params);
             return response.data?.data || response.data || [];
         },
-        { ttl: 5 * 60 * 1000 } 
+        { ttl: 5 * 60 * 1000 }
     );
 };
 
@@ -824,7 +848,7 @@ export const getCachedUnreadCount = async () => {
             const response = await notificationAPI.getUnreadCount();
             return response.data?.unread_count || response.data?.count || 0;
         },
-        { ttl: 2 * 60 * 1000 } 
+        { ttl: 2 * 60 * 1000 }
     );
 };
 

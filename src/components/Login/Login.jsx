@@ -3,7 +3,9 @@ import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../../contexts/AuthContext";
 import { useAdminAuth } from "../../contexts/AdminContext";
-import { authAPI, adminAuthAPI } from "../../api";
+import { authAPI, adminAuthAPI, dataAPI } from "../../api";
+import CustomSelect from "../Ui/CustomSelect/CustomSelect";
+import { countriesFlags } from "../../data/flags";
 
 const Login = () => {
     const { t, i18n } = useTranslation();
@@ -15,17 +17,52 @@ const Login = () => {
     const isAdminLogin = location.pathname.includes("/admin");
     const dir = i18n.language === "ar" ? "rtl" : "ltr";
 
-    const [formData, setFormData] = useState({ phone: "", password: "" });
+    const [formData, setFormData] = useState({ phone: "", password: "", country_id: 1 });
     const [loading, setLoading] = useState(false);
     const [errors, setErrors] = useState({});
     const [showPassword, setShowPassword] = useState(false);
     const [toast, setToast] = useState(null);
+    const [countries, setCountries] = useState([]);
 
-    // Redirect if already logged in
+    useEffect(() => {
+        if (!isAdminLogin) {
+            dataAPI.getCountries().then((res) => {
+                const data = res.data?.data?.countries || res.data?.countries || [];
+                setCountries(Array.isArray(data) ? data : []);
+            }).catch(() => setCountries([]));
+        }
+    }, [isAdminLogin]);
+
     useEffect(() => {
         if (isAdminLogin && adminAuth) navigate("/dashboard", { replace: true });
         if (!isAdminLogin && userAuth) navigate("/", { replace: true });
     }, [isAdminLogin, adminAuth, userAuth, navigate]);
+
+    const getCountryFlag = (country) => {
+        const flagData = countriesFlags.find(f =>
+            f.name_ar === country.name_ar ||
+            f.name_en === country.name_en ||
+            f.code?.toLowerCase() === country.code?.toLowerCase() ||
+            f.id === country.id
+        );
+        return flagData;
+    };
+
+    const countryOptions = countries.map(c => {
+        const flagData = getCountryFlag(c);
+        return {
+            value: c.id,
+            label: flagData?.phone_code || "",
+            icon: flagData?.flag ? (
+                <img src={flagData.flag} alt={c.name_en} className="w-6 h-6 object-cover rounded" />
+            ) : (
+                <span className="text-xl">🌍</span>
+            )
+        };
+    });
+
+    const selectedCountry = countries.find(c => c.id === formData.country_id);
+    const selectedCountryData = selectedCountry ? getCountryFlag(selectedCountry) : null;
 
     const showToast = (message, type = "success") => {
         setToast({ message, type });
@@ -41,7 +78,7 @@ const Login = () => {
     const validateForm = () => {
         const newErrors = {};
         if (!formData.phone.trim()) {
-            newErrors.phone = isAdminLogin ?  t("auth.login.emailRequired") : t("auth.login.phoneRequired");
+            newErrors.phone = isAdminLogin ? t("auth.login.emailRequired") : t("auth.login.phoneRequired");
         }
         if (!formData.password.trim()) {
             newErrors.password = t("auth.login.passwordRequired");
@@ -60,7 +97,6 @@ const Login = () => {
         setLoading(true);
         try {
             if (isAdminLogin) {
-                // Admin Login
                 const res = await adminAuthAPI.login({
                     email: formData.phone,
                     password: formData.password,
@@ -70,7 +106,6 @@ const Login = () => {
                 showToast(t("auth.login.loginSuccess"));
                 setTimeout(() => navigate("/dashboard"), 1000);
             } else {
-                // User Login
                 const res = await authAPI.login({
                     phone: formData.phone,
                     password: formData.password,
@@ -90,17 +125,15 @@ const Login = () => {
 
     const toggleLanguage = () => {
         const newLang = i18n.language === "ar" ? "en" : "ar";
-        i18n.changeLanguage(newLang); 
+        i18n.changeLanguage(newLang);
     };
 
     return (
         <div dir={dir} className="min-h-screen w-full flex justify-center px-4 sm:px-6 lg:px-8">
-            {/* Toast */}
             {toast && (
                 <div className={`fixed top-4 ${dir === "rtl" ? "left-4" : "right-4"} z-50 animate-slide-in`}>
-                    <div className={`px-6 py-4 rounded-xl shadow-lg flex items-center gap-3 ${
-                        toast.type === "success" ? "bg-green-500 text-white" : "bg-red-500 text-white"
-                    }`}>
+                    <div className={`px-6 py-4 rounded-xl shadow-lg flex items-center gap-3 ${toast.type === "success" ? "bg-green-500 text-white" : "bg-red-500 text-white"
+                        }`}>
                         {toast.type === "success" ? (
                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -119,37 +152,60 @@ const Login = () => {
                 {isAdminLogin && (
                     <button
                         onClick={toggleLanguage}
-                        className="mb-4 px-3 py-1.5 rounded-md bg-main text-white hover:bg-green-700"
+                        className="mb-4 px-3 py-1.5 cursor-pointer rounded-md bg-main text-white hover:bg-green-700"
                     >
                         {i18n.language === "ar" ? "EN" : "ع"}
                     </button>
                 )}
-                
+
                 <h2 className="text-2xl font-bold text-main mb-6 text-center">
                     {t("auth.login.title")}
                 </h2>
 
                 <form onSubmit={handleSubmit}>
-                    {/* Email/Phone */}
                     <div className="mb-4">
                         <label className="block text-gray-700 mb-2 font-medium">
-                            {isAdminLogin ?  t("auth.login.email") : t("auth.login.phone")}
+                            {isAdminLogin ? t("auth.login.email") : t("auth.login.phone")}
                         </label>
-                        <input
-                            type={isAdminLogin ? "email" : "tel"}
-                            name="phone"
-                            value={formData.phone}
-                            onChange={handleChange}
-                            dir="ltr"
-                            style={{ textAlign: dir === "rtl" ? "right" : "left" }}
-                            className={`w-full border rounded-xl p-3 focus:outline-none focus:ring-2 ${
-                                errors.phone ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:ring-green-500"
-                            }`}
-                        />
+                        {!isAdminLogin ? (
+                            <div className="flex gap-2" dir="ltr">
+                                <div className="w-36">
+                                    <CustomSelect
+                                        options={countryOptions}
+                                        value={formData.country_id}
+                                        onChange={(value) => setFormData(prev => ({ ...prev, country_id: value }))}
+                                        placeholder="+20"
+                                        isRTL={false}
+                                    />
+                                </div>
+                                <input
+                                    type="tel"
+                                    name="phone"
+                                    value={formData.phone}
+                                    onChange={handleChange}
+                                    placeholder={t("auth.login.phone")}
+                                    dir="ltr"
+                                    style={{ textAlign: dir === "rtl" ? "right" : "left" }}
+                                    className={`flex-1 border rounded-xl p-3 focus:outline-none focus:ring-2 ${errors.phone ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:ring-green-500"
+                                        }`}
+                                />
+                            </div>
+                        ) : (
+                            <input
+                                type="email"
+                                name="phone"
+                                value={formData.phone}
+                                onChange={handleChange}
+                                placeholder={t("auth.login.email")}
+                                dir="ltr"
+                                style={{ textAlign: 'left' }}
+                                className={`w-full border rounded-xl p-3 focus:outline-none focus:ring-2 ${errors.phone ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:ring-green-500"
+                                    }`}
+                            />
+                        )}
                         {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
                     </div>
 
-                    {/* Password */}
                     <div className="mb-2">
                         <label className="block text-gray-700 mb-2 font-medium">
                             {t("auth.login.password")}
@@ -160,14 +216,14 @@ const Login = () => {
                                 name="password"
                                 value={formData.password}
                                 onChange={handleChange}
-                                className={`w-full border rounded-xl p-3 focus:outline-none focus:ring-2 ${
-                                    errors.password ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:ring-green-500"
-                                }`}
+                                placeholder={t("auth.login.password")}
+                                className={`w-full border rounded-xl p-3 focus:outline-none focus:ring-2 ${errors.password ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:ring-green-500"
+                                    }`}
                             />
                             <button
                                 type="button"
                                 onClick={() => setShowPassword(!showPassword)}
-                                className="absolute top-1/2 transform -translate-y-1/2 text-gray-500"
+                                className="absolute cursor-pointer top-1/2 transform -translate-y-1/2 text-gray-500"
                                 style={{ [dir === "rtl" ? "left" : "right"]: "12px" }}
                             >
                                 {showPassword ? (
@@ -185,7 +241,6 @@ const Login = () => {
                         {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
                     </div>
 
-                    {/* Forgot Password */}
                     {!isAdminLogin && (
                         <div className="mb-4 text-left">
                             <Link to="/forgot-password" className="text-sm font-bold underline hover:text-green-600">
@@ -194,11 +249,10 @@ const Login = () => {
                         </div>
                     )}
 
-                    {/* Submit */}
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full bg-green-600 text-white py-3 rounded-xl hover:bg-green-700 disabled:opacity-50 font-semibold"
+                        className="w-full cursor-pointer bg-green-600 text-white py-3 rounded-xl hover:bg-green-700 disabled:opacity-50 font-semibold"
                     >
                         {loading ? (
                             <span className="flex items-center justify-center gap-2">
@@ -214,7 +268,6 @@ const Login = () => {
                     </button>
                 </form>
 
-                {/* Register Link */}
                 {!isAdminLogin && (
                     <div className="mt-6 text-center">
                         <p className="text-gray-600">
