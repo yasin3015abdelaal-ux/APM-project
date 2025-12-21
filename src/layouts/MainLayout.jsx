@@ -32,7 +32,6 @@ const MainLayout = () => {
 
     useEffect(() => {
         const fetchAnnouncement = async () => {
-            // Wait until auth context is loaded
             if (loading) {
                 return;
             }
@@ -61,44 +60,49 @@ const MainLayout = () => {
         sessionStorage.setItem('hasSeenAnnouncement', 'true');
     };
 
+    const handleToggleSidebar = () => {
+        setSidebarOpen(!sidebarOpen);
+    };
+
     return (
         <CartProvider>
             <ChatProvider>
                 <NotificationProvider>
-            <div className="flex flex-col min-h-screen">
-                <div className="relative">
-                    <Navbar 
-                        onMenuClick={() => setSidebarOpen(true)}
-                        onSearchClick={() => setSearchOpen(true)}
-                        showProfileHover={showProfileHover}
-                        setShowProfileHover={setShowProfileHover}
-                    />
-                </div>
+                    <div className="flex flex-col min-h-screen">
+                        <div className="relative">
+                            <Navbar 
+                                onMenuClick={handleToggleSidebar}
+                                onSearchClick={() => setSearchOpen(true)}
+                                showProfileHover={showProfileHover}
+                                setShowProfileHover={setShowProfileHover}
+                                isSidebarOpen={sidebarOpen}
+                            />
+                        </div>
 
-                <main className="flex-grow">
-                    <Outlet />
-                </main>
+                        <main className="flex-grow">
+                            <Outlet />
+                        </main>
 
-                <Footer />
+                        <Footer />
 
-                <Sidebar 
-                    isOpen={sidebarOpen} 
-                    onClose={() => setSidebarOpen(false)} 
-                />
+                        <Sidebar 
+                            isOpen={sidebarOpen} 
+                            onClose={() => setSidebarOpen(false)} 
+                        />
 
-                <SearchPage 
-                    isOpen={searchOpen} 
-                    onClose={() => setSearchOpen(false)} 
-                />
+                        <SearchPage 
+                            isOpen={searchOpen} 
+                            onClose={() => setSearchOpen(false)} 
+                        />
 
-                {showAnnouncement && (
-                    <AnnouncementPopup
-                        announcement={announcement}
-                        onClose={handleCloseAnnouncement}
-                    />
-                )}
-            </div>
-            </NotificationProvider>
+                        {showAnnouncement && (
+                            <AnnouncementPopup
+                                announcement={announcement}
+                                onClose={handleCloseAnnouncement}
+                            />
+                        )}
+                    </div>
+                </NotificationProvider>
             </ChatProvider>
         </CartProvider>
     );

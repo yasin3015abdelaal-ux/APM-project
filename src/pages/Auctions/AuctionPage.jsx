@@ -709,7 +709,7 @@ const handleContactSeller = useCallback(async (product) => {
                     <>
 {timeRemaining.registrationOpen ? (
             <>
-                <p className="text-center text-main mb-3 text-md">
+                <p className="text-center text-main mb-3 text-xl mt-8 font-bold">
                     {isRTL ? "يمكنك التسجيل المسبق للمزاد القادم والاستفادة من تخفيضات الاسعار" : "You can pre-register for the upcoming auction and benefit from price reductions"}
                 </p>
                 <div className="absolute bottom-0 left-0 right-0 py-3 z-40">
