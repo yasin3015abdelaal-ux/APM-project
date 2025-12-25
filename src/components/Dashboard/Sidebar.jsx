@@ -125,9 +125,19 @@ const Sidebar = () => {
             statKey: "packages_count"
         },
         { 
-            label: t("dashboard.sidebar.reports"), 
-            path: "/dashboard/reports",
+            label: t("dashboard.sidebar.contactUs"), 
+            path: "/dashboard/contact-us",
             statKey: "reports_count"
+        },
+        { 
+            label: t("dashboard.sidebar.sellersReviews"), 
+            path: "/dashboard/sellers-reviews",
+            statKey: null
+        },
+        { 
+            label: t("dashboard.sidebar.sellersReports"), 
+            path: "/dashboard/sellers-reports",
+            statKey: null
         },
         { 
             label: t("dashboard.sidebar.verification"), 
@@ -233,8 +243,14 @@ const Sidebar = () => {
         if (path === "/dashboard/articles") {
             return location.pathname.startsWith("/dashboard/articles");
         }
-        if (path === "/dashboard/reports") {
-            return location.pathname.startsWith("/dashboard/reports");
+        if (path === "/dashboard/contact-us") {
+            return location.pathname.startsWith("/dashboard/contact-us");
+        }
+        if (path === "/dashboard/sellers-reviews") {
+            return location.pathname.startsWith("/dashboard/sellers-reviews");
+        }
+        if (path === "/dashboard/sellers-reports") {
+            return location.pathname.startsWith("/dashboard/sellers-reports");
         }
         if (path === "/dashboard/notifications") {
             return location.pathname.startsWith("/dashboard/notifications");

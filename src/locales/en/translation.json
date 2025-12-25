@@ -432,6 +432,9 @@
   },
   "dashboard": {
     "sidebar": {
+      "sellersReviews": "Sellers Reviews",
+      "sellersReports" : "Sellers Reports",
+      "contactUs": "Contact Us",
       "accounts": "Accounts",
       "posts": "Posts",
       "auctions": "Auctions",

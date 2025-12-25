@@ -6,7 +6,7 @@ import * as XLSX from "xlsx";
 import { adminAPI } from "../../api";
 import Loader from "../../components/Ui/Loader/Loader";
 
-const ReportsPage = () => {
+const ContactUsPage = () => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const isRTL = i18n.language === "ar";
@@ -362,8 +362,8 @@ const ReportsPage = () => {
       </div>
 
       {/* Table Container with Internal Scroll */}
-      <div className="rounded-xl border border-emerald-300 bg-white shadow-sm table-container">
-        <div className="overflow-x-auto max-h-[calc(100vh-450px)] sm:max-h-[calc(100vh-400px)]">
+      <div className="rounded-xl border border-emerald-300 bg-white shadow-sm table-container flex flex-col" style={{ height: 'calc(100vh - 280px)' }}>
+        <div className="overflow-x-auto overflow-y-auto flex-1">
           <table className="min-w-full text-xs sm:text-sm">
             <thead className="bg-emerald-500 text-white sticky top-0 z-10">
               <tr>
@@ -621,4 +621,4 @@ const ReportsPage = () => {
   );
 };
 
-export default ReportsPage;
+export default ContactUsPage;

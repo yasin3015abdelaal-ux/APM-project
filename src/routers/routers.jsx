@@ -30,7 +30,9 @@ import TodayPrices from "../pages/Dashboard/TodayPrices";
 import AdvertisementsPage from "../pages/Dashboard/AdvertisementsPage";
 import PackagesPage from "../pages/Dashboard/PackagesPage";
 import ArticlesPage from "../pages/Dashboard/ArticlesPage";
-import ReportsPage from "../pages/Dashboard/ReportsPage";
+import ContactUsPage from "../pages/Dashboard/ContactUsPage";
+import SellersReviewsPage from "../pages/Dashboard/SellersReviewsPage";
+import SellersReportsPage from "../pages/Dashboard/SellersReportsPage";
 import ChatPage from "../pages/Dashboard/ChatPage";
 import AdminsPage from "../pages/Dashboard/AdminsPage";
 import NotificationsPage from "../pages/Dashboard/NotificationsPage";
@@ -368,7 +370,9 @@ export const routers = createBrowserRouter([
           { path: "auctions/:id", element: <AuctionDetails /> },
           { path: "ads", element: <AdvertisementsPage /> },
           { path: "packages", element: <PackagesPage /> },
-          { path: "reports", element: <ReportsPage /> },
+          { path: "contact-us", element: <ContactUsPage /> },
+          { path: "sellers-reviews", element: <SellersReviewsPage /> },
+          { path: "sellers-reports", element: <SellersReportsPage /> },
           { path: "articles", element: <ArticlesPage /> },
           { path: "messages", element: <ChatPage /> },
           { path: "verification", element: <VerificationsList /> },

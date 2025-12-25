@@ -166,11 +166,11 @@ const UpdateAccount = () => {
                             <span className="hidden sm:inline">{isRTL ? 'محادثة' : 'Chat'}</span>
                         </button>
                         <button
-                            onClick={() => navigate('/dashboard/accounts')}
+                            onClick={() => navigate(-1)}
                             className="bg-white text-main px-3 py-1.5 text-sm rounded hover:bg-gray-100 transition-colors"
                         >
                             <i className="fas fa-arrow-left"></i>
-                            <span className="hidden sm:inline">{isRTL ? 'الحسابات' : 'Accounts'}</span>
+                            <span className="hidden sm:inline">{isRTL ? 'رجوع' : 'Back'}</span>
                         </button>
                     </div>
                 </div>
