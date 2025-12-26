@@ -208,7 +208,7 @@ const ProfilePage = () => {
 
             {/* Delete Confirmation Modal */}
             {showDeleteModal && (
-                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl" dir={dir}>
                         <div className="flex items-center justify-center mb-4">
                             <div className="bg-red-100 rounded-full p-4">

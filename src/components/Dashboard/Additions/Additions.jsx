@@ -168,7 +168,7 @@ const Additions = () => {
 
       {/* Confirm Toggle Status Modal */}
       {showConfirmModal && (
-        <div className="fixed inset-0 bg-[#00000062] flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl p-6 w-full max-w-sm shadow-xl">
             <h2 className="text-lg font-bold text-main mb-4 text-center">
               {isRTL

@@ -27,15 +27,16 @@ const Toast = ({ message, type = "error", onClose }) => {
 const AdvertisementsPage = () => {
   const { t, i18n } = useTranslation();
   const [ads, setAds] = useState([]);
+  const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
-  const [targetSection, setTargetSection] = useState("hero");
-  const [formFile, setFormFile] = useState(null);
-  const [formOrder, setFormOrder] = useState(1);
+  const [modalType, setModalType] = useState("slider"); // "slider" or "announcement"
+  const [formFiles, setFormFiles] = useState([]); // للسلايدر - multiple files
+  const [formFile, setFormFile] = useState(null); // للإعلان الافتتاحي - single file
   const [submitting, setSubmitting] = useState(false);
   const [toast, setToast] = useState(null);
-  const [previewUrl, setPreviewUrl] = useState(null);
+  const [previewUrls, setPreviewUrls] = useState([]);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
 
   const showToast = (message, type = "error") => {
@@ -43,126 +44,178 @@ const AdvertisementsPage = () => {
   };
 
   useEffect(() => {
-    fetchAdvertisements();
+    fetchData();
   }, []);
 
-  const fetchAdvertisements = async () => {
+  const fetchData = async () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await adminAPI.get("/advertisements");
-      const data = response.data?.data ?? response.data ?? [];
-      setAds(Array.isArray(data) ? data : []);
+      
+      // جلب الإعلانات المتحركة (Advertisements)
+      const adsResponse = await adminAPI.get("/advertisements");
+      const adsData = adsResponse.data?.data ?? adsResponse.data ?? [];
+      setAds(Array.isArray(adsData) ? adsData : []);
+      
+      // جلب الإعلانات الافتتاحية (Announcements)
+      const announcementsResponse = await adminAPI.get("/announcements");
+      const announcementsData = announcementsResponse.data?.data ?? announcementsResponse.data ?? [];
+      setAnnouncements(Array.isArray(announcementsData) ? announcementsData : []);
+      
     } catch (err) {
-      console.error("Error fetching advertisements:", err);
+      console.error("Error fetching data:", err);
       setError(t("dashboard.advertisements.errors.fetch"));
     } finally {
       setLoading(false);
     }
   };
 
-  const heroAds = useMemo(
-    () =>
-      ads.filter((ad) => {
-        const order = Number(ad.order) || 0;
-        return order <= 1;
-      }),
-    [ads]
-  );
+  const sliderAds = useMemo(() => ads, [ads]);
 
-  const sliderAds = useMemo(
-    () =>
-      ads.filter((ad) => {
-        const order = Number(ad.order) || 0;
-        return order > 1;
-      }),
-    [ads]
-  );
-
-  const computeNextOrder = (section) => {
-    if (section === "hero") {
-      return 1;
-    }
-    const maxOrder = ads.reduce(
-      (max, ad) => Math.max(max, Number(ad.order) || 0),
-      1
-    );
-    return Math.max(2, maxOrder + 1);
-  };
-
-  const openModal = (section) => {
-    const currentAds = section === "hero" ? heroAds : sliderAds;
-    const maxImages = 3;
-    
-    if (currentAds.length >= maxImages) {
-      showToast(t("dashboard.advertisements.errors.maxImages") || `Maximum ${maxImages} images allowed`, "error");
-      return;
+  const openModal = (type) => {
+    if (type === "slider") {
+      const maxImages = 3;
+      if (sliderAds.length >= maxImages) {
+        showToast(t("dashboard.advertisements.errors.maxImages") || `Maximum ${maxImages} images allowed`, "error");
+        return;
+      }
     }
     
-    setTargetSection(section);
+    setModalType(type);
+    setFormFiles([]);
     setFormFile(null);
-    setPreviewUrl(null);
-    setFormOrder(computeNextOrder(section));
+    setPreviewUrls([]);
     setModalOpen(true);
   };
 
   const closeModal = () => {
     if (submitting) return;
     setModalOpen(false);
+    setFormFiles([]);
     setFormFile(null);
-    setPreviewUrl(null);
+    previewUrls.forEach(url => URL.revokeObjectURL(url));
+    setPreviewUrls([]);
   };
 
-  const handleFileChange = (e) => {
-    const file = e.target.files?.[0];
-    if (file) {
+  const handleFilesChange = (e) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    // للسلايدر - multiple files
+    if (modalType === "slider") {
+      const remainingSlots = 3 - sliderAds.length;
+      const filesToAdd = files.slice(0, remainingSlots);
+      
+      setFormFiles(filesToAdd);
+      
+      // إنشاء preview URLs
+      previewUrls.forEach(url => URL.revokeObjectURL(url));
+      const urls = filesToAdd.map(file => URL.createObjectURL(file));
+      setPreviewUrls(urls);
+    } 
+    // للإعلان الافتتاحي - single file
+    else if (modalType === "announcement") {
+      const file = files[0];
       setFormFile(file);
+      
+      previewUrls.forEach(url => URL.revokeObjectURL(url));
       const url = URL.createObjectURL(file);
-      setPreviewUrl(url);
+      setPreviewUrls([url]);
     }
   };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    if (!formFile) {
-      showToast(t("dashboard.advertisements.errors.fileRequired") || "Please select an image", "error");
-      return;
-    }
 
-    const formData = new FormData();
-    formData.append("image", formFile);
-    formData.append("order", formOrder);
+    if (modalType === "slider") {
+      // رفع صور السلايدر (Multiple)
+      if (formFiles.length === 0) {
+        showToast(t("dashboard.advertisements.errors.fileRequired") || "Please select at least one image", "error");
+        return;
+      }
 
-    try {
-      setSubmitting(true);
-      await adminAPI.post("/advertisements", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      closeModal();
-      await fetchAdvertisements();
-      showToast(t("dashboard.advertisements.messages.created") || "Advertisement created successfully", "success");
-    } catch (err) {
-      console.error("Error uploading advertisement:", err);
-      showToast(t("dashboard.advertisements.errors.upload") || "Failed to upload advertisement", "error");
-    } finally {
-      setSubmitting(false);
+      try {
+        setSubmitting(true);
+        
+        // رفع كل صورة لوحدها
+        for (let i = 0; i < formFiles.length; i++) {
+          const formData = new FormData();
+          formData.append("image", formFiles[i]);
+          formData.append("order", sliderAds.length + i + 2); // order يبدأ من 2 للسلايدر
+          
+          await adminAPI.post("/advertisements", formData, {
+            headers: { "Content-Type": "multipart/form-data" },
+          });
+        }
+        
+        closeModal();
+        await fetchData();
+        showToast(t("dashboard.advertisements.messages.created") || `${formFiles.length} advertisement(s) added successfully`, "success");
+      } catch (err) {
+        console.error("Error uploading advertisements:", err);
+        showToast(t("dashboard.advertisements.errors.upload") || "Failed to upload advertisements", "error");
+      } finally {
+        setSubmitting(false);
+      }
+      
+    } else if (modalType === "announcement") {
+      // رفع الإعلان الافتتاحي (Single)
+      if (!formFile) {
+        showToast(t("dashboard.advertisements.errors.fileRequired") || "Please select an image", "error");
+        return;
+      }
+
+      try {
+        setSubmitting(true);
+        
+        // مسح الإعلان القديم لو موجود
+        if (announcements.length > 0) {
+          await adminAPI.delete(`/announcements/${announcements[0].id}`);
+        }
+        
+        // رفع الإعلان الجديد
+        const formData = new FormData();
+        formData.append("image", formFile);
+        
+        await adminAPI.post("/announcements", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        
+        closeModal();
+        await fetchData();
+        showToast(t("dashboard.advertisements.messages.announcementCreated") || "Opening announcement updated successfully", "success");
+      } catch (err) {
+        console.error("Error uploading announcement:", err);
+        showToast(t("dashboard.advertisements.errors.upload") || "Failed to upload announcement", "error");
+      } finally {
+        setSubmitting(false);
+      }
     }
   };
 
-  const handleDelete = async (adId) => {
-    setDeleteConfirm(adId);
+  const handleDelete = async (id, type) => {
+    setDeleteConfirm({ id, type });
   };
 
   const confirmDelete = async () => {
     if (!deleteConfirm) return;
 
     try {
-      await adminAPI.delete(`/advertisements/${deleteConfirm}`);
-      await fetchAdvertisements();
-      showToast(t("dashboard.advertisements.messages.deleted") || "Advertisement deleted successfully", "success");
+      const endpoint = deleteConfirm.type === "announcement" 
+        ? `/announcements/${deleteConfirm.id}`
+        : `/advertisements/${deleteConfirm.id}`;
+        
+      await adminAPI.delete(endpoint);
+      await fetchData();
+      
+      const message = deleteConfirm.type === "announcement"
+        ? t("dashboard.advertisements.messages.announcementDeleted") || "Opening announcement deleted successfully"
+        : t("dashboard.advertisements.messages.deleted") || "Advertisement deleted successfully";
+        
+      showToast(message, "success");
     } catch (err) {
-      console.error("Error deleting advertisement:", err);
-      showToast(t("dashboard.advertisements.errors.delete") || "Failed to delete advertisement", "error");
+      console.error("Error deleting:", err);
+      showToast(t("dashboard.advertisements.errors.delete") || "Failed to delete", "error");
     } finally {
       setDeleteConfirm(null);
     }
@@ -170,11 +223,9 @@ const AdvertisementsPage = () => {
 
   useEffect(() => {
     return () => {
-      if (previewUrl) {
-        URL.revokeObjectURL(previewUrl);
-      }
+      previewUrls.forEach(url => URL.revokeObjectURL(url));
     };
-  }, [previewUrl]);
+  }, [previewUrls]);
 
   if (loading) {
     return <Loader />;
@@ -185,7 +236,7 @@ const AdvertisementsPage = () => {
       <section className="flex min-h-[50vh] flex-col items-center justify-center space-y-3">
         <p className="text-lg font-semibold text-rose-600">{error}</p>
         <button
-          onClick={fetchAdvertisements}
+          onClick={fetchData}
           className="rounded-md bg-emerald-500 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-emerald-600"
         >
           {t("common.retry")}
@@ -194,30 +245,32 @@ const AdvertisementsPage = () => {
     );
   }
 
-  const renderGallery = (list, emptyMessage) => (
+  const renderGallery = (list, emptyMessage, type) => (
     <div className="flex flex-wrap items-center gap-4">
       {list.length === 0 && (
         <p className="text-sm text-slate-500">{emptyMessage}</p>
       )}
-      {list.map((ad) => (
+      {list.map((item) => (
         <div
-          key={ad.id}
+          key={item.id}
           className="relative h-32 w-32 overflow-hidden rounded-xl border border-emerald-100 bg-white shadow-sm transition hover:shadow-md"
         >
           <img
-            src={ad.image_url}
-            alt={`advertisement-${ad.id}`}
+            src={item.image_url}
+            alt={`${type}-${item.id}`}
             className="h-full w-full object-cover"
           />
           <button
-            onClick={() => handleDelete(ad.id)}
+            onClick={() => handleDelete(item.id, type)}
             className="absolute left-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-rose-500 text-white shadow-sm transition hover:bg-rose-600"
           >
             ×
           </button>
-          <span className="absolute bottom-2 right-2 rounded-full bg-white/90 px-2 py-0.5 text-xs font-semibold text-emerald-700">
-            #{ad.order ?? "-"}
-          </span>
+          {item.order && (
+            <span className="absolute bottom-2 right-2 rounded-full bg-white/90 px-2 py-0.5 text-xs font-semibold text-emerald-700">
+              #{item.order}
+            </span>
+          )}
         </div>
       ))}
     </div>
@@ -239,44 +292,49 @@ const AdvertisementsPage = () => {
       >
         <header>
           <h1 className="text-2xl font-semibold text-emerald-700">
-            {t("dashboard.advertisements.pageTitle")}
+            {t("dashboard.advertisements.pageTitle") || "Advertisements Management"}
           </h1>
           <p className="text-sm text-slate-500">
-            {t("dashboard.advertisements.subtitle")}
+            {t("dashboard.advertisements.subtitle") || "Manage your advertisements"}
           </p>
         </header>
 
+        {/* Opening Announcement Section */}
         <div className="space-y-6 rounded-2xl border border-emerald-200 bg-white p-5 shadow-sm">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="text-lg font-semibold text-emerald-700">
-                {t("dashboard.advertisements.heroTitle")}
+                {t("dashboard.advertisements.announcementTitle") || "Opening Announcement"}
               </h2>
               <p className="text-xs text-slate-500">
-                {heroAds.length}/3 {t("dashboard.advertisements.imagesCount") || "images"}
+                {announcements.length}/1 {t("dashboard.advertisements.imageCount") || "image"}
               </p>
             </div>
             <button
-              onClick={() => openModal("hero")}
-              disabled={heroAds.length >= 3}
-              className="rounded-md border border-emerald-300 px-4 py-2 text-sm font-semibold text-emerald-600 transition hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-50"
+              onClick={() => openModal("announcement")}
+              className="rounded-md border border-emerald-300 px-4 py-2 text-sm font-semibold text-emerald-600 transition hover:bg-emerald-50"
             >
-              {t("dashboard.advertisements.actions.addHero")}
+              {announcements.length > 0 
+                ? t("dashboard.advertisements.actions.updateAnnouncement") || "Update Announcement"
+                : t("dashboard.advertisements.actions.addAnnouncement") || "Add Announcement"
+              }
             </button>
           </div>
           <div className="rounded-2xl border border-emerald-100 p-4">
             {renderGallery(
-              heroAds,
-              t("dashboard.advertisements.emptyHeroSection")
+              announcements,
+              t("dashboard.advertisements.emptyAnnouncementSection") || "No opening announcement yet",
+              "announcement"
             )}
           </div>
         </div>
 
+        {/* Slider Section */}
         <div className="space-y-6 rounded-2xl border border-emerald-200 bg-white p-5 shadow-sm">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="text-lg font-semibold text-emerald-700">
-                {t("dashboard.advertisements.sliderTitle")}
+                {t("dashboard.advertisements.sliderTitle") || "Slider Advertisements"}
               </h2>
               <p className="text-xs text-slate-500">
                 {sliderAds.length}/3 {t("dashboard.advertisements.imagesCount") || "images"}
@@ -287,37 +345,43 @@ const AdvertisementsPage = () => {
               disabled={sliderAds.length >= 3}
               className="rounded-md border border-emerald-300 px-4 py-2 text-sm font-semibold text-emerald-600 transition hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {t("dashboard.advertisements.actions.addSlider")}
+              {t("dashboard.advertisements.actions.addSlider") || "Add Slider Images"}
             </button>
           </div>
           <div className="rounded-2xl border border-emerald-100 p-4">
             {renderGallery(
               sliderAds,
-              t("dashboard.advertisements.emptySliderSection")
+              t("dashboard.advertisements.emptySliderSection") || "No slider images yet",
+              "slider"
             )}
           </div>
         </div>
 
+        {/* Upload Modal */}
         {modalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-            <form
-              onSubmit={handleSubmit}
-              className="w-full max-w-md space-y-5 rounded-2xl border border-emerald-200 bg-white p-6 shadow-xl"
-            >
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
+            <div className="w-full max-w-md space-y-5 rounded-2xl border border-emerald-200 bg-white p-6 shadow-xl">
               <h3 className="text-lg font-semibold text-emerald-700">
-                {t("dashboard.advertisements.modal.title")}
+                {modalType === "announcement"
+                  ? t("dashboard.advertisements.modal.announcementTitle") || "Upload Opening Announcement"
+                  : t("dashboard.advertisements.modal.sliderTitle") || "Upload Slider Images"
+                }
               </h3>
               
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-slate-700">
-                  {t("dashboard.advertisements.modal.imageLabel")}
+                  {modalType === "announcement"
+                    ? t("dashboard.advertisements.modal.singleImageLabel") || "Select Image (Will replace current)"
+                    : t("dashboard.advertisements.modal.multipleImageLabel") || "Select Images (Multiple)"
+                  }
                 </label>
                 
                 <div className="relative">
                   <input
                     type="file"
                     accept="image/*"
-                    onChange={handleFileChange}
+                    multiple={modalType === "slider"}
+                    onChange={handleFilesChange}
                     className="hidden"
                     id="file-upload"
                   />
@@ -325,12 +389,17 @@ const AdvertisementsPage = () => {
                     htmlFor="file-upload"
                     className="flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-emerald-300 bg-emerald-50/50 px-6 py-8 transition hover:border-emerald-400 hover:bg-emerald-50"
                   >
-                    {previewUrl ? (
-                      <img
-                        src={previewUrl}
-                        alt="Preview"
-                        className="h-32 w-32 rounded-lg object-cover"
-                      />
+                    {previewUrls.length > 0 ? (
+                      <div className="flex flex-wrap gap-2">
+                        {previewUrls.map((url, index) => (
+                          <img
+                            key={index}
+                            src={url}
+                            alt={`Preview ${index + 1}`}
+                            className="h-20 w-20 rounded-lg object-cover"
+                          />
+                        ))}
+                      </div>
                     ) : (
                       <>
                         <svg
@@ -347,32 +416,35 @@ const AdvertisementsPage = () => {
                           />
                         </svg>
                         <p className="text-sm font-medium text-emerald-600">
-                          {t("dashboard.advertisements.modal.uploadText") || "Click to upload image"}
+                          {modalType === "announcement"
+                            ? t("dashboard.advertisements.modal.uploadSingleText") || "Click to upload image"
+                            : t("dashboard.advertisements.modal.uploadMultipleText") || "Click to upload images"
+                          }
                         </p>
                         <p className="mt-1 text-xs text-slate-500">
-                          PNG, JPG up to 10MB
+                          PNG, JPG up to 10MB {modalType === "slider" && "(Multiple files allowed)"}
                         </p>
                       </>
                     )}
                   </label>
-                  {formFile && (
+                  {(formFiles.length > 0 || formFile) && (
                     <p className="mt-2 text-xs text-slate-600">
-                      {formFile.name}
+                      {modalType === "slider" 
+                        ? `${formFiles.length} file(s) selected`
+                        : formFile?.name
+                      }
                     </p>
                   )}
                 </div>
               </div>
 
-              <label className="block text-sm font-medium text-slate-700">
-                {t("dashboard.advertisements.modal.orderLabel")}
-                <input
-                  type="number"
-                  min={1}
-                  value={formOrder}
-                  onChange={(e) => setFormOrder(Number(e.target.value) || 1)}
-                  className="mt-2 w-full rounded-md border border-emerald-200 px-3 py-2 text-sm focus:border-emerald-400 focus:outline-none focus:ring-1 focus:ring-emerald-400"
-                />
-              </label>
+              {modalType === "announcement" && announcements.length > 0 && (
+                <div className="rounded-lg bg-amber-50 border border-amber-200 p-3">
+                  <p className="text-xs text-amber-800">
+                    ⚠️ {t("dashboard.advertisements.modal.replaceWarning") || "This will replace the current opening announcement"}
+                  </p>
+                </div>
+              )}
 
               <div className="flex justify-end gap-3 pt-2">
                 <button
@@ -381,24 +453,27 @@ const AdvertisementsPage = () => {
                   disabled={submitting}
                   className="rounded-md border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  {t("dashboard.advertisements.modal.cancel")}
+                  {t("dashboard.advertisements.modal.cancel") || "Cancel"}
                 </button>
                 <button
-                  type="submit"
+                  type="button"
+                  onClick={handleSubmit}
                   disabled={submitting}
                   className="rounded-md bg-emerald-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {submitting
-                    ? t("dashboard.advertisements.modal.saving")
-                    : t("dashboard.advertisements.modal.save")}
+                    ? t("dashboard.advertisements.modal.saving") || "Uploading..."
+                    : t("dashboard.advertisements.modal.save") || "Upload"
+                  }
                 </button>
               </div>
-            </form>
+            </div>
           </div>
         )}
 
+        {/* Delete Confirmation Modal */}
         {deleteConfirm && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
             <div className="w-full max-w-md space-y-4 rounded-2xl border border-rose-200 bg-white p-6 shadow-xl">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-rose-100">
@@ -417,12 +492,12 @@ const AdvertisementsPage = () => {
                   </svg>
                 </div>
                 <h3 className="text-lg font-semibold text-slate-800">
-                  {t("dashboard.advertisements.deleteModal.title") || "Delete Advertisement"}
+                  {t("dashboard.advertisements.deleteModal.title") || "Delete"} {deleteConfirm.type === "announcement" ? "Announcement" : "Advertisement"}
                 </h3>
               </div>
               
               <p className="text-sm text-slate-600">
-                {t("dashboard.advertisements.deleteModal.message") || "Are you sure you want to delete this advertisement? This action cannot be undone."}
+                {t("dashboard.advertisements.deleteModal.message") || "Are you sure you want to delete this? This action cannot be undone."}
               </p>
 
               <div className="flex justify-end gap-3 pt-2">

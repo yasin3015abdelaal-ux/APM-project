@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { userAPI } from "../../api";
 
+
 const SearchPage = ({ isOpen, onClose }) => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();

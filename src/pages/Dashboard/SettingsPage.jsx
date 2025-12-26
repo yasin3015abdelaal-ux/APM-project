@@ -526,7 +526,7 @@ const SettingsPage = () => {
 
       {/* About Modal */}
       {aboutModalMode && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
           <div className="w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-2xl border border-emerald-400 bg-white p-6 shadow-xl">
             <div className="mb-4 flex items-center justify-between sticky top-0 bg-white pb-2 border-b border-emerald-200 z-10">
               <h2 className="text-xl font-semibold text-emerald-700">
@@ -617,7 +617,7 @@ const SettingsPage = () => {
 
       {/* Terms Modal */}
       {termsModalMode && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
           <div className="w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-2xl border border-emerald-400 bg-white p-6 shadow-xl">
             <div className="mb-4 flex items-center justify-between sticky top-0 bg-white pb-2 border-b border-emerald-200 z-10">
               <h2 className="text-xl font-semibold text-emerald-700">

@@ -371,7 +371,7 @@ const ArticlesPage = () => {
 
       {/* Add Article Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
           <div className="w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-2xl border border-emerald-400 bg-white p-6 shadow-xl">
             <div className="mb-4 flex items-center justify-between sticky top-0 bg-white pb-2 border-b border-emerald-200 z-10">
               <h2 className="text-xl font-semibold text-emerald-700">
@@ -504,7 +504,7 @@ const ArticlesPage = () => {
 
       {/* Edit Article Modal */}
       {showEditModal && selectedArticle && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
           <div className="w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-2xl border border-emerald-400 bg-white p-6 shadow-xl">
             <div className="mb-4 flex items-center justify-between sticky top-0 bg-white pb-2 border-b border-emerald-200 z-10">
               <h2 className="text-xl font-semibold text-emerald-700">
@@ -644,7 +644,7 @@ const ArticlesPage = () => {
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && selectedArticle && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
           <div className="w-full max-w-md rounded-2xl border border-red-300 bg-white p-6 shadow-xl">
             <h2 className="mb-4 text-center text-lg font-semibold text-slate-800">
               {t("dashboard.articles.deleteConfirmTitle")}
@@ -675,7 +675,7 @@ const ArticlesPage = () => {
 
       {/* View Article Modal */}
       {showViewModal && selectedArticle && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
           <div className="w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-2xl border border-emerald-400 bg-white shadow-xl">
             {/* Header with sticky position */}
             <div className="sticky top-0 bg-white z-10 p-6 border-b border-emerald-200 flex items-center justify-between">

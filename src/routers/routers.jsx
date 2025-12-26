@@ -16,6 +16,9 @@ import Additions from "../components/Dashboard/Additions/Additions";
 import Category from "../components/Dashboard/Additions/Category";
 import Accounts from "../components/Dashboard/Accounts/Accounts";
 import UpdateAccount from "../components/Dashboard/Accounts/UpdateAccount";
+import UserProductsPage from "../pages/Dashboard/UserProductsPage";
+import UserReviewsPage from "../pages/Dashboard/UserReviewsPage";
+import UserReportsPage from "../pages/Dashboard/UserReportsPage";
 import DashboardInvoices from "../components/Dashboard/Invoices/Invoices";
 import SubscriptionsPage from "../pages/Dashboard/SubscriptionsPage";
 import InvoicesPage from "../pages/Dashboard/InvoicesPage";
@@ -27,7 +30,9 @@ import TodayPrices from "../pages/Dashboard/TodayPrices";
 import AdvertisementsPage from "../pages/Dashboard/AdvertisementsPage";
 import PackagesPage from "../pages/Dashboard/PackagesPage";
 import ArticlesPage from "../pages/Dashboard/ArticlesPage";
-import ReportsPage from "../pages/Dashboard/ReportsPage";
+import ContactUsPage from "../pages/Dashboard/ContactUsPage";
+import SellersReviewsPage from "../pages/Dashboard/SellersReviewsPage";
+import SellersReportsPage from "../pages/Dashboard/SellersReportsPage";
 import ChatPage from "../pages/Dashboard/ChatPage";
 import AdminsPage from "../pages/Dashboard/AdminsPage";
 import NotificationsPage from "../pages/Dashboard/NotificationsPage";
@@ -359,10 +364,15 @@ export const routers = createBrowserRouter([
           { path: "additions/category/:categoryId", element: <Category /> },
           { path: "accounts", element: <Accounts /> },
           { path: "accounts/update-account/:userId", element: <UpdateAccount /> },
+          { path: "accounts/:userId/products", element: <UserProductsPage /> },
+          { path: "accounts/:userId/reviews", element: <UserReviewsPage /> },
+          { path: "accounts/:userId/reports", element: <UserReportsPage /> },
           { path: "auctions/:id", element: <AuctionDetails /> },
           { path: "ads", element: <AdvertisementsPage /> },
           { path: "packages", element: <PackagesPage /> },
-          { path: "reports", element: <ReportsPage /> },
+          { path: "contact-us", element: <ContactUsPage /> },
+          { path: "sellers-reviews", element: <SellersReviewsPage /> },
+          { path: "sellers-reports", element: <SellersReportsPage /> },
           { path: "articles", element: <ArticlesPage /> },
           { path: "messages", element: <ChatPage /> },
           { path: "verification", element: <VerificationsList /> },

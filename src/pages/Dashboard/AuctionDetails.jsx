@@ -319,7 +319,7 @@ const AuctionDetails = () => {
 
       {/* Config modal */}
       {showConfigModal && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 px-4">
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/70 px-4">
           <div className="w-full max-w-md rounded-2xl border border-emerald-400 bg-white p-6 shadow-xl">
             <h2 className="mb-4 text-center text-lg font-semibold text-emerald-700">
               تحديد اعداد المزاد

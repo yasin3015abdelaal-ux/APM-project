@@ -23,7 +23,7 @@ const AnnouncementPopup = ({ announcement, onClose }) => {
 
     return (
         <div 
-            className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-in fade-in duration-300"
+            className="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-in fade-in duration-300"
         >
             <div 
                 className="bg-gradient-to-br from-white to-gray-50 rounded-3xl max-w-4xl w-full h-[65vh] overflow-hidden shadow-2xl animate-in zoom-in slide-in-from-bottom-4 duration-500 relative"
