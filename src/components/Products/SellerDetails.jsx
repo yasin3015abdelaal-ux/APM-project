@@ -51,7 +51,6 @@ const SellerDetails = () => {
         }));
     };
 
-    // Auto-scroll effect for reviews
     useEffect(() => {
         if (reviews.length === 0) return;
 
@@ -227,7 +226,6 @@ const SellerDetails = () => {
         setShowReportModal(true);
     };
 
-    // Close options menu when clicking outside
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (sellerOptionsRef.current && !sellerOptionsRef.current.contains(event.target)) {
@@ -321,7 +319,6 @@ const SellerDetails = () => {
         }
     };
 
-    // Calculate average ratings from reviews
     const calculateAverageRatings = () => {
         if (reviews.length === 0) {
             return {
@@ -360,7 +357,6 @@ const SellerDetails = () => {
         );
     }
 
-    // Pagination calculations
     const indexOfLastProduct = currentProductPage * productsPerPage;
     const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
     const currentProducts = sellerProducts.slice(indexOfFirstProduct, indexOfLastProduct);
@@ -472,7 +468,6 @@ const SellerDetails = () => {
             )}
 
             <div className="container mx-auto px-4 max-w-6xl">
-                {/* Header */}
                 <div className="flex items-center justify-between gap-4 mb-6">
                     <h1 className="text-2xl font-bold text-main">
                         {isRTL ? "معلومات عن التاجر" : "Seller Details"}
@@ -515,7 +510,6 @@ const SellerDetails = () => {
                     </div>
                 </div>
 
-                {/* Seller Card */}
                 <div className="bg-white border-2 border-main rounded-2xl p-6 mb-6">
                     <div className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4 mb-4">
                         <div className="flex items-center gap-4 flex-1 w-full sm:w-auto">
@@ -613,14 +607,13 @@ const SellerDetails = () => {
 
                 </div>
 
-                {/* Reviews Section */}
                 {reviews.length > 0 && (
                     <div className="mb-6">
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="text-xl font-bold text-main">
                                 {isRTL ? "تقييمات العملاء" : "Customer Reviews"}
                             </h3>
-                            <span className="text-sm text-main font-semibold">
+                            <span className="text-sm text-main font-semibold bg-main/10 px-3 py-1 rounded-lg">
                                 {reviews.length} {isRTL ? "تقييم" : "reviews"}
                             </span>
                         </div>
@@ -654,7 +647,6 @@ const SellerDetails = () => {
                                                 className={`relative min-w-[320px] max-w-[320px] snap-start rounded-xl shadow-md bg-white shrink-0 hover:shadow-xl transition-all select-none overflow-hidden border border-gray-100 ${isExpanded ? 'h-auto' : 'h-[380px]'
                                                     }`}
                                             >
-                                                {/* Header with gradient */}
                                                 <div className="bg-gradient-to-br from-main to-main/80 p-4 pb-16">
                                                     <div className="flex items-center gap-3">
                                                         <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center flex-shrink-0 shadow-md">
@@ -688,7 +680,6 @@ const SellerDetails = () => {
                                                     </div>
                                                 </div>
 
-                                                {/* Rating Badge - Overlapping */}
                                                 <div className="absolute top-[85px] left-1/2 -translate-x-1/2 bg-white rounded-2xl shadow-lg px-6 py-3 flex items-center gap-3 border-4 border-white">
                                                     <StarRating rating={review.rating} />
                                                     <span className="font-bold text-2xl text-main">
@@ -696,9 +687,7 @@ const SellerDetails = () => {
                                                     </span>
                                                 </div>
 
-                                                {/* Content */}
                                                 <div className="p-4 pt-12">
-                                                    {/* Ratings Details */}
                                                     <div className="space-y-2.5 mb-4">
                                                         <div className="flex items-center justify-between">
                                                             <div className="flex items-center gap-2">
@@ -743,7 +732,6 @@ const SellerDetails = () => {
                                                         </div>
                                                     </div>
 
-                                                    {/* Comment */}
                                                     {review.comment && (
                                                         <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-3 border border-gray-200">
                                                             <p
@@ -775,14 +763,13 @@ const SellerDetails = () => {
                     </div>
                 )}
 
-                {/* Seller Products */}
                 <div className="mb-6">
                     <div className="flex justify-between items-center mb-4">
                         <h3 className="text-xl font-bold text-main">
                             {isRTL ? "إعلانات التاجر" : "Seller's Ads"}
                         </h3>
                         {sellerProducts.length > 0 && (
-                            <span className="text-sm text-main">
+                            <span className="text-sm text-main font-semibold bg-main/10 px-3 py-1 rounded-lg">
                                 {isRTL
                                     ? `${sellerProducts.length} إعلان`
                                     : `${sellerProducts.length} ads`
@@ -816,7 +803,6 @@ const SellerDetails = () => {
                 </div>
             </div>
 
-            {/* Rating Modal */}
             <SellerRatingModal
                 isOpen={showRatingModal}
                 onClose={() => setShowRatingModal(false)}
@@ -824,7 +810,6 @@ const SellerDetails = () => {
                 sellerName={sellerData?.name}
             />
 
-            {/* Report Modal */}
             <SellerReportModal
                 isOpen={showReportModal}
                 onClose={() => setShowReportModal(false)}
