@@ -5,13 +5,11 @@ import { getCachedCategories, userAPI } from "../../api";
 
 const CategoriesSkeleton = ({ isRTL }) => (
     <div className="mx-auto p-2" dir={isRTL ? "rtl" : "ltr"}>
-        {/* Header Skeleton */}
         <div className="mb-2">
             <div className="h-8 w-48 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded animate-pulse"
                  style={{animation: 'shimmer 1.5s ease-in-out infinite', backgroundSize: '200% 100%'}}></div>
         </div>
 
-        {/* Grid Skeleton */}
         <div className="grid grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
             {[...Array(8)].map((_, index) => (
                 <div
@@ -19,11 +17,9 @@ const CategoriesSkeleton = ({ isRTL }) => (
                     className="rounded-lg p-2 md:p-3 shadow-sm border-2 border-gray-200 bg-white"
                 >
                     <div className="flex flex-col items-center text-center gap-1.5 md:gap-2">
-                        {/* Image Skeleton */}
                         <div className="w-10 h-10 md:w-12 md:h-12 lg:w-14 lg:h-14 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded animate-pulse"
                              style={{animation: 'shimmer 1.5s ease-in-out infinite', backgroundSize: '200% 100%'}}></div>
 
-                        {/* Text Skeleton */}
                         <div className="w-full space-y-1">
                             <div className="h-3 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded animate-pulse mx-auto"
                                  style={{animation: 'shimmer 1.5s ease-in-out infinite', backgroundSize: '200% 100%', width: '80%'}}></div>
@@ -111,14 +107,11 @@ const Categories = ({ mode = "products" }) => {
 
     return (
         <div className="mx-auto p-2" dir={isRTL ? "rtl" : "ltr"}>
-            {/* Header */}
             <div className="mb-2">
                 <h1 className="text-2xl font-bold text-main">{titleText}</h1>
             </div>
 
-            {/* Grid */}
             <div className="grid grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
-                {/* Product Categories */}
                 {categories.map((item, index) => {
                     const isHovered = hoveredId === item.id;
                     const hasImageError = imageErrors[item.id];
@@ -170,7 +163,6 @@ const Categories = ({ mode = "products" }) => {
                     );
                 })}
 
-                {/* Articles Section */}
                 {mode === "products" && articlesSection && (
                     <div
                         onMouseEnter={() => setHoveredId('articles')}

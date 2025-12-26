@@ -1,156 +1,132 @@
-import { useState, useEffect } from 'react';
-import { Heart, MapPin, Filter, X, ChevronDown, ChevronUp } from 'lucide-react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useState, useEffect, useCallback, useReducer, useRef } from 'react';
+import { MapPin, Filter, X, ChevronDown, ChevronLeft, ChevronRight, SlidersHorizontal, RefreshCw, Check } from 'lucide-react';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { adminAPI, chatAPI, getCachedGovernorates, userAPI } from '../../api';
 import Loader from '../Ui/Loader/Loader';
 import ProductCard from '../ProductCard/ProductCard';
 
+const filterReducer = (state, action) => {
+    switch (action.type) {
+        case 'SET_CATEGORIES': return { ...state, selectedCategories: action.payload };
+        case 'TOGGLE_CATEGORY':
+            return { 
+                ...state, 
+                selectedCategories: state.selectedCategories.includes(action.payload)
+                    ? state.selectedCategories.filter(id => id !== action.payload) 
+                    : [...state.selectedCategories, action.payload] 
+            };
+        case 'SET_GOVERNORATES': return { ...state, selectedGovernorates: action.payload };
+        case 'SET_WEIGHT_RANGE': return { ...state, weightRange: action.payload };
+        case 'SET_CONTACT_METHOD': return { ...state, contactMethod: action.payload };
+        case 'SET_PRICE_RANGE': return { ...state, priceRange: action.payload };
+        case 'SET_QUANTITY_RANGE': return { ...state, quantityRange: action.payload };
+        case 'SET_DELIVERY_OPTIONS': return { ...state, selectedDeliveryOptions: action.payload };
+        case 'SET_FARM_PREP': return { ...state, farmPrep: action.payload };
+        case 'CLEAR_FILTERS':
+            return { 
+                selectedCategories: [], selectedGovernorates: [], weightRange: [1, 1000], 
+                contactMethod: null, priceRange: [100, 100000], quantityRange: [1, 10000], 
+                selectedDeliveryOptions: [], farmPrep: null 
+            };
+        default: return state;
+    }
+};
+
 const ProductsPage = () => {
     const { categoryId } = useParams();
     const navigate = useNavigate();
+    const location = useLocation();
     const { t, i18n } = useTranslation();
     const isRTL = i18n.language === 'ar';
+    const isViewAllPage = location.pathname === '/products';
 
     const [products, setProducts] = useState([]);
     const [categories, setCategories] = useState([]);
+    const [currentCategory, setCurrentCategory] = useState(null);
     const [governorates, setGovernorates] = useState([]);
     const [loading, setLoading] = useState(true);
     const [favorites, setFavorites] = useState(new Set());
     const [toast, setToast] = useState(null);
     const [isFilterOpen, setIsFilterOpen] = useState(false);
-
-    const [selectedCategory, setSelectedCategory] = useState('');
-    const [selectedGovernorate, setSelectedGovernorate] = useState('');
-    const [priceRange, setPriceRange] = useState([0, 10000]);
-    const [genderMale, setGenderMale] = useState(false);
-    const [genderFemale, setGenderFemale] = useState(false);
-    const [deliveryAvailable, setDeliveryAvailable] = useState(false);
-    const [retailSaleAvailable, setRetailSaleAvailable] = useState(false);
-    const [priceNegotiable, setPriceNegotiable] = useState(false);
-    const [needsVaccinations, setNeedsVaccinations] = useState(false);
-    const [contactPhone, setContactPhone] = useState(false);
-    const [contactChat, setContactChat] = useState(false);
-    const [contactBoth, setContactBoth] = useState(false);
-
-    // Collapsible filter sections
+    const [userData, setUserData] = useState(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pagination, setPagination] = useState({ current_page: 1, last_page: 1, per_page: 12, total: 0 });
+    
+    const [filterState, dispatchFilter] = useReducer(filterReducer, {
+        selectedCategories: [], selectedGovernorates: [], weightRange: [1, 1000], 
+        contactMethod: null, priceRange: [100, 100000], quantityRange: [1, 10000], 
+        selectedDeliveryOptions: [], farmPrep: null
+    });
+    
+    const [appliedFilters, setAppliedFilters] = useState({
+        selectedCategories: [], selectedGovernorates: [], weightRange: [1, 1000], 
+        contactMethod: null, priceRange: [100, 100000], quantityRange: [1, 10000], 
+        selectedDeliveryOptions: [], farmPrep: null
+    });
+    
     const [openSections, setOpenSections] = useState({
-        categories: false,
-        governorates: false,
-        price: false,
-        gender: false,
-        saleOptions: false,
-        contactMethod: false
+        categories: false, governorates: false, weight: false, contactMethod: false,
+        price: false, quantity: false, delivery: false, farmPreparation: false
     });
 
-    const toggleSection = (section) => {
-        setOpenSections(prev => ({
-            ...prev,
-            [section]: !prev[section]
-        }));
-    };
+    const filterSidebarRef = useRef(null);
+    const scrollPositionRef = useRef(0);
 
-    const showToast = (message, type = "success") => {
-        setToast({ message, type });
-        setTimeout(() => setToast(null), 4000);
-    };
-
-    const userData = JSON.parse(localStorage.getItem('userData'));
     const countryId = userData?.country?.id;
 
-    useEffect(() => {
-        if (categoryId) {
-            setSelectedCategory(categoryId);
+    const showToast = useCallback((message, type = "success") => setToast({ message, type }), []);
+
+    const dispatchFilterWithScroll = useCallback((action) => {
+        if (filterSidebarRef.current) {
+            scrollPositionRef.current = filterSidebarRef.current.scrollTop;
         }
-    }, [categoryId]);
-
-    useEffect(() => {
-        fetchCategories();
-        fetchGovernorates();
-        fetchFavorites();
-    }, []);
-
-    useEffect(() => {
-        fetchProducts();
-    }, [selectedCategory, selectedGovernorate, priceRange]);
-
-    useEffect(() => {
-        const handleEscape = (e) => {
-            if (e.key === 'Escape') {
-                setIsFilterOpen(false);
-            }
-        };
-        window.addEventListener('keydown', handleEscape);
-        return () => window.removeEventListener('keydown', handleEscape);
-    }, []);
-
-    const fetchFavorites = async () => {
-        try {
-            const response = await userAPI.get('/favorites');
-            let favoritesArray = [];
-
-            if (Array.isArray(response.data)) {
-                favoritesArray = response.data;
-            } else if (response.data.data && Array.isArray(response.data.data)) {
-                favoritesArray = response.data.data;
-            } else if (response.data.favorites && Array.isArray(response.data.favorites)) {
-                favoritesArray = response.data.favorites;
-            }
-
-            const favoriteIds = new Set(
-                favoritesArray.map(fav => {
-                    const product = fav.product || fav;
-                    return product.id;
-                })
-            );
-
-            setFavorites(favoriteIds);
-        } catch (error) {
-            console.error('Error fetching favorites:', error);
-        }
-    };
-
-    const fetchCategories = async () => {
-        try {
-            const response = await adminAPI.get(`/subcategories?category_id=${categoryId}`);
-            const data = response.data;
-            let categoriesArray = Array.isArray(data) ? data : (data.data && Array.isArray(data.data)) ? data.data : [];
-            setCategories(categoriesArray);
-        } catch (error) {
-            console.error('Error fetching categories:', error);
-            setCategories([]);
-        }
-    };
-
-const fetchGovernorates = async () => {
-    try {
-        const { data, fromCache } = await getCachedGovernorates(countryId);
-        console.log(fromCache ? '📦 Governorates من الكاش' : '🌐 Governorates من API');
         
-        setGovernorates(data);
-    } catch (error) {
-        console.error('Error fetching governorates:', error);
-        setGovernorates([]);
-    }
-};
+        dispatchFilter(action);
+        
+        requestAnimationFrame(() => {
+            if (filterSidebarRef.current) {
+                filterSidebarRef.current.scrollTop = scrollPositionRef.current;
+            }
+        });
+    }, []);
 
-    const fetchProducts = async () => {
+    const buildFilterURL = useCallback((page = 1) => {
+        const params = new URLSearchParams({ page: page.toString(), per_page: '12' });
+        if (categoryId && !isViewAllPage) params.append('category_id', categoryId);
+        if (appliedFilters.selectedCategories.length > 0) params.append('sub_category_id', appliedFilters.selectedCategories.join(','));
+        if (appliedFilters.selectedGovernorates.length > 0) params.append('governorate_id', appliedFilters.selectedGovernorates.join(','));
+        if (appliedFilters.weightRange[0] > 1 || appliedFilters.weightRange[1] < 1000) {
+            params.append('min_weight', appliedFilters.weightRange[0]);
+            params.append('max_weight', appliedFilters.weightRange[1]);
+        }
+        if (appliedFilters.contactMethod) params.append('contact_method', appliedFilters.contactMethod);
+        if (appliedFilters.priceRange[0] > 100 || appliedFilters.priceRange[1] < 100000) {
+            params.append('min_price', appliedFilters.priceRange[0]);
+            params.append('max_price', appliedFilters.priceRange[1]);
+        }
+        if (appliedFilters.quantityRange[0] > 1 || appliedFilters.quantityRange[1] < 10000) {
+            params.append('min_quantity', appliedFilters.quantityRange[0]);
+            params.append('max_quantity', appliedFilters.quantityRange[1]);
+        }
+        if (appliedFilters.selectedDeliveryOptions.length > 0) {
+            if (appliedFilters.selectedDeliveryOptions.includes('available')) params.append('delivery_available', '1');
+            if (appliedFilters.selectedDeliveryOptions.includes('not_available')) params.append('delivery_available', '0');
+            const deliveryTextOptions = appliedFilters.selectedDeliveryOptions.filter(opt => !['available', 'not_available'].includes(opt));
+            if (deliveryTextOptions.length > 0) params.append('delivery_text', deliveryTextOptions.join(','));
+        }
+        if (appliedFilters.farmPrep !== null) params.append('farm_preparation_available', appliedFilters.farmPrep ? '1' : '0');
+        return `/products?${params.toString()}`;
+    }, [categoryId, isViewAllPage, appliedFilters]);
+
+    const fetchProducts = useCallback(async (page = 1) => {
         try {
             setLoading(true);
-            const params = new URLSearchParams();
-
-            if (selectedCategory) params.append('subcategory_id', selectedCategory);
-            if (selectedGovernorate) params.append('governorate_id', selectedGovernorate);
-
-            const url = `/products${params.toString() ? '?' + params.toString() : ''}`;
-            console.log('Fetching products with URL:', url);
-
-            const response = await userAPI.get(url);
+            const response = await userAPI.get(buildFilterURL(page));
             const data = response.data;
-
-            let productsArray = Array.isArray(data) ? data : (data.data && Array.isArray(data.data)) ? data.data : [];
-            console.log('Products fetched:', productsArray.length);
+            const productsArray = Array.isArray(data) ? data : (data.data || data.products || []);
             setProducts(productsArray);
+            setPagination(data.pagination || { current_page: page, last_page: 1, per_page: 12, total: productsArray.length });
         } catch (error) {
             console.error('Error fetching products:', error);
             setProducts([]);
@@ -158,573 +134,521 @@ const fetchGovernorates = async () => {
         } finally {
             setLoading(false);
         }
+    }, [buildFilterURL, t, showToast]);
+
+    const applyFilters = () => {
+        setAppliedFilters(filterState);
+        setCurrentPage(1);
+        setIsFilterOpen(false);
     };
+
+    const clearFilters = () => {
+        dispatchFilterWithScroll({ type: 'CLEAR_FILTERS' });
+        setAppliedFilters({
+            selectedCategories: [], selectedGovernorates: [], weightRange: [1, 1000], 
+            contactMethod: null, priceRange: [100, 100000], quantityRange: [1, 10000], 
+            selectedDeliveryOptions: [], farmPrep: null
+        });
+    };
+
+    useEffect(() => {
+        const data = localStorage.getItem('userData');
+        if (data) setUserData(JSON.parse(data));
+    }, []);
+
+    useEffect(() => {
+        if (!isViewAllPage && categoryId) {
+            adminAPI.get(`/subcategories?category_id=${categoryId}`)
+                .then(res => setCategories(Array.isArray(res.data) ? res.data : (res.data.data || [])))
+                .catch(() => setCategories([]));
+            
+            adminAPI.get('/categories')
+                .then(res => {
+                    const allCategories = Array.isArray(res.data) ? res.data : (res.data.data || []);
+                    const current = allCategories.find(cat => cat.id === parseInt(categoryId));
+                    setCurrentCategory(current);
+                })
+                .catch(() => {});
+        }
+        getCachedGovernorates(countryId).then(({data}) => setGovernorates(data)).catch(() => setGovernorates([]));
+        userAPI.get('/favorites').then(res => {
+            const favs = Array.isArray(res.data) ? res.data : (res.data.data || res.data.favorites || []);
+            setFavorites(new Set(favs.map(fav => (fav.product || fav).id)));
+        }).catch(() => {});
+    }, [isViewAllPage, categoryId, countryId]);
+    
+    useEffect(() => {
+        if (countryId) fetchProducts(1);
+    }, [appliedFilters, countryId, categoryId, isViewAllPage]);
+
+    useEffect(() => { if (countryId && currentPage > 1) fetchProducts(currentPage); }, [currentPage]);
+    
+    useEffect(() => {
+        if (categoryId) {
+            dispatchFilterWithScroll({ type: 'CLEAR_FILTERS' });
+            setAppliedFilters({
+                selectedCategories: [], selectedGovernorates: [], weightRange: [1, 1000], 
+                contactMethod: null, priceRange: [100, 100000], quantityRange: [1, 10000], 
+                selectedDeliveryOptions: [], farmPrep: null
+            });
+        }
+    }, [categoryId]);
+    
+    useEffect(() => {
+        const handleEscape = (e) => { if (e.key === 'Escape') setIsFilterOpen(false); };
+        window.addEventListener('keydown', handleEscape);
+        return () => window.removeEventListener('keydown', handleEscape);
+    }, []);
+    
+    useEffect(() => {
+        if (toast) {
+            const timer = setTimeout(() => setToast(null), 4000);
+            return () => clearTimeout(timer);
+        }
+    }, [toast]);
 
     const toggleFavorite = async (productId) => {
         const isFavorite = favorites.has(productId);
-
         try {
             if (isFavorite) {
                 await userAPI.delete(`/favorites/${productId}`);
-                setFavorites(prev => {
-                    const newFavorites = new Set(prev);
-                    newFavorites.delete(productId);
-                    return newFavorites;
-                });
+                setFavorites(prev => { const newFavs = new Set(prev); newFavs.delete(productId); return newFavs; });
                 showToast(isRTL ? 'تم إزالة المنتج من المفضلة' : 'Product removed from favorites');
             } else {
                 await userAPI.post(`/favorites/${productId}`);
-                setFavorites(prev => {
-                    const newFavorites = new Set(prev);
-                    newFavorites.add(productId);
-                    return newFavorites;
-                });
+                setFavorites(prev => new Set([...prev, productId]));
                 showToast(isRTL ? 'تم إضافة المنتج للمفضلة' : 'Product added to favorites');
             }
         } catch (error) {
-            console.error('Error toggling favorite:', error);
             showToast(t('common.error'), 'error');
         }
     };
 
-    const handleProductClick = (productId) => {
-        navigate(`/product-details/${productId}`);
-    };
-
     const handleContactSeller = async (product) => {
+        const sellerId = product.user_id || product.seller_id;
+        if (!sellerId) return showToast(isRTL ? 'لا يمكن التواصل مع البائع' : 'Cannot contact seller', 'error');
         try {
-            const sellerId = product.user_id || product.seller_id;
-
-            if (!sellerId) {
-                showToast(isRTL ? 'لا يمكن التواصل مع البائع' : 'Cannot contact seller', 'error');
-                return;
-            }
-
-            const response = await chatAPI.createConversation({
-                user_id: sellerId,
-                type: "auction"
-            });
-
-            if (response.data) {
-                const conversationId = response.data.id || response.data.data?.id;
-                navigate(`/chat/${conversationId}`);
-                showToast(isRTL ? 'جاري فتح المحادثة...' : 'Opening conversation...', 'success');
-            }
+            const response = await chatAPI.createConversation({ user_id: sellerId, type: "auction" });
+            const conversationId = response.data.id || response.data.data?.id;
+            navigate(`/chat/${conversationId}`);
         } catch (error) {
-            console.error('Error creating conversation:', error);
-
             if (error.response?.status === 409 || error.response?.data?.conversation_id) {
-                const existingConversationId = error.response.data.conversation_id;
-                navigate(`/chat/${existingConversationId}`);
-                showToast(isRTL ? 'جاري فتح المحادثة...' : 'Opening conversation...', 'success');
+                navigate(`/chat/${error.response.data.conversation_id}`);
             } else {
-                showToast(isRTL ? 'حدث خطأ، حاول مرة أخرى' : 'Error occurred, try again', 'error');
+                showToast(isRTL ? 'حدث خطأ' : 'Error occurred', 'error');
             }
         }
     };
-    const handleCategoryChange = (categoryId) => {
-        setSelectedCategory(categoryId);
+
+    const hasActiveFilters = appliedFilters.selectedCategories.length > 0 || appliedFilters.selectedGovernorates.length > 0 ||
+        appliedFilters.weightRange[0] > 1 || appliedFilters.weightRange[1] < 1000 || appliedFilters.contactMethod !== null ||
+        appliedFilters.priceRange[0] > 100 || appliedFilters.priceRange[1] < 100000 || appliedFilters.quantityRange[0] > 1 ||
+        appliedFilters.quantityRange[1] < 10000 || appliedFilters.selectedDeliveryOptions.length > 0 || appliedFilters.farmPrep !== null;
+
+    const handleContactMethodChange = (method) => {
+        let newMethod = null;
+        if (method === 'chat') {
+            if (filterState.contactMethod === 'chat') newMethod = null;
+            else if (filterState.contactMethod === 'phone') newMethod = 'both';
+            else if (filterState.contactMethod === 'both') newMethod = 'phone';
+            else newMethod = 'chat';
+        } else if (method === 'phone') {
+            if (filterState.contactMethod === 'phone') newMethod = null;
+            else if (filterState.contactMethod === 'chat') newMethod = 'both';
+            else if (filterState.contactMethod === 'both') newMethod = 'chat';
+            else newMethod = 'phone';
+        }
+        dispatchFilterWithScroll({ type: 'SET_CONTACT_METHOD', payload: newMethod });
     };
 
-    const handlePriceRangeChange = (newRange) => {
-        setPriceRange(newRange);
-    };
-
-    const filteredProducts = products.filter(product => {
-        const productSubCategoryId = product.sub_category?.id || product.subcategory_id || product.sub_category_id;
-        const matchesCategory = !selectedCategory || String(productSubCategoryId) === String(selectedCategory);
-
-        const productGovernorateId = product.governorate?.id || product.governorate_id;
-        const matchesGovernorate = !selectedGovernorate || String(productGovernorateId) === String(selectedGovernorate);
-
-        const productPrice = product.price ? parseFloat(product.price) : 0;
-        const matchesPrice = productPrice >= priceRange[0] && productPrice <= priceRange[1];
-
-        const matchesGender = (() => {
-            if (!genderMale && !genderFemale) return true;
-            if (genderMale && product.gender === 'male') return true;
-            if (genderFemale && product.gender === 'female') return true;
-            return false;
-        })();
-
-        const matchesDelivery = !deliveryAvailable || product.delivery_available === true;
-        const matchesRetailSale = !retailSaleAvailable || product.retail_sale_available === true;
-        const matchesPriceNegotiable = !priceNegotiable || product.price_negotiable === true;
-        const matchesVaccinations = !needsVaccinations || product.needs_vaccinations === true;
-
-        const matchesContactMethod = (() => {
-            if (!contactPhone && !contactChat && !contactBoth) return true;
-            if (contactPhone && product.contact_method === 'phone') return true;
-            if (contactChat && product.contact_method === 'chat') return true;
-            if (contactBoth && product.contact_method === 'both') return true;
-            return false;
-        })();
-
-        return matchesCategory && matchesGovernorate && matchesPrice &&
-            matchesGender && matchesDelivery && matchesRetailSale && matchesPriceNegotiable &&
-            matchesVaccinations && matchesContactMethod;
-    });
-
-    const clearFilters = () => {
-        setSelectedCategory('');
-        setSelectedGovernorate('');
-        setPriceRange([0, 10000]);
-        setGenderMale(false);
-        setGenderFemale(false);
-        setDeliveryAvailable(false);
-        setRetailSaleAvailable(false);
-        setPriceNegotiable(false);
-        setNeedsVaccinations(false);
-        setContactPhone(false);
-        setContactChat(false);
-        setContactBoth(false);
-    };
-
-    const currentCategory = categories.find(c => c?.id && String(c.id) === String(selectedCategory)) || null;
-
-    const hasActiveFilters = selectedCategory || selectedGovernorate || priceRange[0] > 0 || priceRange[1] < 10000 || genderMale || genderFemale ||
-        deliveryAvailable || retailSaleAvailable || priceNegotiable || needsVaccinations ||
-        contactPhone || contactChat || contactBoth;
-
-    const PriceRangeFilter = () => {
-        const [minValue, setMinValue] = useState(priceRange[0]);
-        const [maxValue, setMaxValue] = useState(priceRange[1]);
-        const maxPrice = 10000;
+    const RangeFilter = ({ min, max, value, onChange, step = 1 }) => {
+        const [localMin, setLocalMin] = useState(value[0]);
+        const [localMax, setLocalMax] = useState(value[1]);
+        const isDragging = useRef(false);
 
         useEffect(() => {
-            setMinValue(priceRange[0]);
-            setMaxValue(priceRange[1]);
-        }, [priceRange]);
+            if (!isDragging.current) {
+                setLocalMin(value[0]);
+                setLocalMax(value[1]);
+            }
+        }, [value]);
 
-        const handleMinChange = (e) => {
-            const value = Math.min(Number(e.target.value), maxValue - 100);
-            setMinValue(value);
-            handlePriceRangeChange([value, maxValue]);
-        };
-
-        const handleMaxChange = (e) => {
-            const value = Math.max(Number(e.target.value), minValue + 100);
-            setMaxValue(value);
-            handlePriceRangeChange([minValue, value]);
-        };
-
-        const minPosition = (minValue / maxPrice) * 100;
-        const maxPosition = (maxValue / maxPrice) * 100;
+        const getPercent = (val) => ((val - min) / (max - min)) * 100;
 
         return (
-            <div className="space-y-6 mt-4">
-                <div className="relative h-2 bg-gray-200 rounded-full">
-                    <div
-                        className="absolute h-full bg-main rounded-full"
-                        style={{
-                            left: `${minPosition}%`,
-                            right: `${100 - maxPosition}%`
-                        }}
-                    />
-
-                    <input
-                        type="range"
-                        min="0"
-                        max={maxPrice}
-                        value={minValue}
-                        onChange={handleMinChange}
-                        className="absolute w-full h-2 opacity-0 cursor-pointer z-20"
-                    />
-                    <div
-                        className="absolute w-6 h-6 bg-white border-2 border-main rounded-full shadow-lg cursor-pointer hover:scale-110 transition-transform z-10"
-                        style={{ left: `${minPosition}%`, top: '50%', transform: 'translate(-50%, -50%)' }}
-                    />
-
-                    <input
-                        type="range"
-                        min="0"
-                        max={maxPrice}
-                        value={maxValue}
-                        onChange={handleMaxChange}
-                        className="absolute w-full h-2 opacity-0 cursor-pointer z-20"
-                    />
-                    <div
-                        className="absolute w-6 h-6 bg-white border-2 border-main rounded-full shadow-lg cursor-pointer hover:scale-110 transition-transform z-10"
-                        style={{ left: `${maxPosition}%`, top: '50%', transform: 'translate(-50%, -50%)' }}
-                    />
+            <div className="space-y-4 mt-3" dir="ltr">
+                <div className="flex items-center gap-2 justify-center">
+                    <input type="number" value={localMin} onChange={(e) => setLocalMin(Number(e.target.value) || min)}
+                        onBlur={() => onChange([Math.max(min, Math.min(localMin, localMax - step)), localMax])}
+                        className="w-24 px-3 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-main text-sm text-center" />
+                    <span className="text-gray-400 font-bold">—</span>
+                    <input type="number" value={localMax} onChange={(e) => setLocalMax(Number(e.target.value) || max)}
+                        onBlur={() => onChange([localMin, Math.min(max, Math.max(localMax, localMin + step))])}
+                        className="w-24 px-3 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-main text-sm text-center" />
                 </div>
-
-                <div className="flex items-center justify-between text-sm text-gray-600">
-                    <span>{minValue} {t('ads.concurrency')}</span>
-                    <span>-</span>
-                    <span>{maxValue} {t('ads.concurrency')}</span>
+                <div className="relative pt-2 pb-6">
+                    <div className="relative h-2 bg-gray-200 rounded-full">
+                        <div className="absolute h-full bg-gradient-to-r from-main to-green-600 rounded-full" 
+                            style={{ left: `${getPercent(localMin)}%`, width: `${getPercent(localMax) - getPercent(localMin)}%` }} />
+                    </div>
+                    <div className="relative">
+                        <input type="range" min={min} max={max} step={step} value={localMin}
+                            onMouseDown={() => isDragging.current = true}
+                            onMouseUp={() => { isDragging.current = false; onChange([localMin, localMax]); }}
+                            onTouchStart={() => isDragging.current = true}
+                            onTouchEnd={() => { isDragging.current = false; onChange([localMin, localMax]); }}
+                            onChange={(e) => { const val = Number(e.target.value); if (val < localMax - step) setLocalMin(val); }}
+                            className="range-thumb absolute w-full -top-1.5" style={{ zIndex: localMin > max - (max - min) / 4 ? 5 : 3 }} />
+                        <input type="range" min={min} max={max} step={step} value={localMax}
+                            onMouseDown={() => isDragging.current = true}
+                            onMouseUp={() => { isDragging.current = false; onChange([localMin, localMax]); }}
+                            onTouchStart={() => isDragging.current = true}
+                            onTouchEnd={() => { isDragging.current = false; onChange([localMin, localMax]); }}
+                            onChange={(e) => { const val = Number(e.target.value); if (val > localMin + step) setLocalMax(val); }}
+                            className="range-thumb absolute w-full -top-1.5" style={{ zIndex: 4 }} />
+                    </div>
+                    <style>{`
+                        .range-thumb {
+                            -webkit-appearance: none; appearance: none; background: transparent;
+                            pointer-events: all; height: 0; width: 100%; position: absolute; top: -15px; direction: ltr;
+                        }
+                        .range-thumb::-webkit-slider-thumb {
+                            -webkit-appearance: none; appearance: none; width: 20px; height: 20px;
+                            border-radius: 50%; background: white; border: 3px solid #16a34a;
+                            cursor: grab; pointer-events: all; box-shadow: 0 2px 8px rgba(0,0,0,0.25); transition: all 0.2s;
+                        }
+                        .range-thumb:active::-webkit-slider-thumb { cursor: grabbing; }
+                        .range-thumb::-webkit-slider-thumb:hover { transform: scale(1.15); box-shadow: 0 3px 12px rgba(22, 163, 74, 0.4); }
+                        .range-thumb::-moz-range-thumb {
+                            width: 20px; height: 20px; border-radius: 50%; background: white; border: 3px solid #16a34a;
+                            cursor: grab; pointer-events: all; box-shadow: 0 2px 8px rgba(0,0,0,0.25); transition: all 0.2s;
+                        }
+                        .range-thumb:active::-moz-range-thumb { cursor: grabbing; }
+                        .range-thumb::-moz-range-thumb:hover { transform: scale(1.15); box-shadow: 0 3px 12px rgba(22, 163, 74, 0.4); }
+                        .range-thumb::-webkit-slider-runnable-track { background: transparent; height: 0; }
+                        .range-thumb::-moz-range-track { background: transparent; height: 0; }
+                    `}</style>
                 </div>
             </div>
         );
     };
 
+    const FilterSection = ({ title, isOpen, onToggle, children }) => (
+        <div className="mb-3.5 pb-3.5 border-b border-gray-100">
+            <button onClick={onToggle} className="flex cursor-pointer items-center justify-between w-full font-bold text-sm hover:text-main group">
+                <span className="flex items-center gap-2">{title}</span>
+                <ChevronDown size={20} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+            </button>
+            <div className={`overflow-hidden transition-all ${isOpen ? 'max-h-[300px] mt-3 overflow-y-auto' : 'max-h-0'}`}>
+                {children}
+            </div>
+        </div>
+    );
+
     const FilterSidebar = () => (
-        <div className="bg-white h-full shadow-sm p-6 overflow-y-auto">
-            <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold text-main">
-                    {isRTL ? 'الفلاتر' : 'Filters'}
-                </h2>
-                <div className="flex items-center gap-2">
-                    {hasActiveFilters && (
-                        <button
-                            onClick={clearFilters}
-                            className="text-sm text-red-600 hover:text-red-700 cursor-pointer"
-                        >
-                            {isRTL ? 'مسح الكل' : 'Clear All'}
-                        </button>
-                    )}
-                    <button
-                        onClick={() => setIsFilterOpen(false)}
-                        className="lg:hidden p-1 hover:bg-gray-100 rounded-full cursor-pointer"
-                    >
-                        <X size={24} className="text-gray-600" />
+        <div className="flex flex-col max-h-full">
+            <div className="bg-gradient-to-r from-main to-green-600 p-5 flex-shrink-0">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <SlidersHorizontal size={22} className="text-white" />
+                        <h2 className="text-xl font-bold text-white">{isRTL ? 'الفلاتر' : 'Filters'}</h2>
+                        {hasActiveFilters && (
+                            <button onClick={clearFilters}
+                                className="flex items-center gap-1.5 bg-white/20 hover:bg-white/30 text-white px-3 py-1.5 rounded-lg text-xs transition-all">
+                                <RefreshCw size={14} />
+                                {isRTL ? 'مسح' : 'Clear'}
+                            </button>
+                        )}
+                    </div>
+                    <button onClick={() => setIsFilterOpen(false)} className="lg:hidden text-white">
+                        <X size={22} />
                     </button>
                 </div>
             </div>
-
-            {/* Categories Section */}
-            <div className="mb-4 border-b border-gray-200 pb-4">
-                <button
-                    onClick={() => toggleSection('categories')}
-                    className="flex items-center justify-between w-full text-left font-bold text-gray-800 mb-2 cursor-pointer"
-                >
-                    <span>{isRTL ? 'الفئات' : 'Categories'}</span>
-                    {openSections.categories ?
-                        <ChevronUp size={20} className="text-gray-500" /> :
-                        <ChevronDown size={20} className="text-gray-500" />
+            
+            <div ref={filterSidebarRef} className="flex-1 overflow-y-auto p-5" style={{scrollBehavior: 'auto', overscrollBehavior: 'contain'}}>
+                <style>{`
+                    input[type="checkbox"] {
+                        appearance: none; width: 18px; height: 18px; border: 2px solid #d1d5db;
+                        border-radius: 4px; cursor: pointer; position: relative; flex-shrink: 0;
                     }
-                </button>
-                {openSections.categories && (
-                    <div className="space-y-2 mt-3">
-                        {categories.map(category => (
-                            <label
-                                key={category.id}
-                                className={`flex items-center cursor-pointer p-3 rounded-lg transition-all ${String(selectedCategory) === String(category.id)
-                                        ? 'bg-main text-white shadow-md scale-[1.02]'
-                                        : 'hover:bg-gray-50 border border-gray-200'
-                                    }`}
-                            >
-                                <input
-                                    type="radio"
-                                    name="category"
-                                    checked={String(selectedCategory) === String(category.id)}
-                                    onChange={() => handleCategoryChange(String(category.id))}
-                                    className="w-4 h-4 cursor-pointer accent-white"
-                                />
-                                <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm font-medium`}>
-                                    {isRTL ? category.name_ar : category.name_en}
-                                </span>
-                            </label>
-                        ))}
-                    </div>
+                    input[type="checkbox"]:checked {
+                        background: #16a34a; border-color: #16a34a;
+                    }
+                    input[type="checkbox"]:checked::before {
+                        content: '✓'; position: absolute; color: white; font-size: 14px;
+                        top: 50%; left: 50%; transform: translate(-50%, -50%);
+                    }
+                `}</style>
+
+                {!isViewAllPage && categories.length > 0 && (
+                    <FilterSection title={isRTL ? 'النوع' : 'Type'} isOpen={openSections.categories}
+                        onToggle={() => setOpenSections(p => ({ ...p, categories: !p.categories }))}>
+                        <div className="space-y-2">
+                            {categories.map(cat => (
+                                <label key={cat.id} className="flex items-center cursor-pointer hover:bg-green-50 p-2.5 rounded-xl text-sm">
+                                    <input type="checkbox" checked={filterState.selectedCategories.includes(String(cat.id))}
+                                        onChange={() => dispatchFilterWithScroll({ type: 'TOGGLE_CATEGORY', payload: String(cat.id) })} />
+                                    <span className={`${isRTL ? 'mr-3' : 'ml-3'}`}>
+                                        {isRTL ? cat.name_ar : cat.name_en}
+                                    </span>
+                                </label>
+                            ))}
+                        </div>
+                    </FilterSection>
                 )}
-            </div>
 
-            {/* Governorates Section */}
-            <div className="mb-4 border-b border-gray-200 pb-4">
-                <button
-                    onClick={() => toggleSection('governorates')}
-                    className="flex items-center justify-between w-full text-left font-bold text-gray-800 mb-2 cursor-pointer"
-                >
-                    <span>{isRTL ? 'المحافظات' : 'Governorates'}</span>
-                    {openSections.governorates ?
-                        <ChevronUp size={20} className="text-gray-500" /> :
-                        <ChevronDown size={20} className="text-gray-500" />
-                    }
-                </button>
-                {openSections.governorates && (
-                    <div className="space-y-2 max-h-48 overflow-y-auto mt-3">
+                <FilterSection title={isRTL ? 'المحافظة' : 'Governorate'} isOpen={openSections.governorates}
+                    onToggle={() => setOpenSections(p => ({ ...p, governorates: !p.governorates }))}>
+                    <div className="space-y-2">
                         {governorates.map(gov => (
-                            <label key={gov.id} className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
-                                <input
-                                    type="checkbox"
-                                    checked={String(selectedGovernorate) === String(gov.id)}
-                                    onChange={() => setSelectedGovernorate(
-                                        String(selectedGovernorate) === String(gov.id) ? '' : String(gov.id)
-                                    )}
-                                    className="w-4 h-4 text-main border-gray-300 rounded focus:ring-green-500 cursor-pointer"
-                                />
-                                <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm text-gray-700`}>
+                            <label key={gov.id} className="flex items-center cursor-pointer hover:bg-green-50 p-2.5 rounded-xl text-sm">
+                                <input type="checkbox" checked={filterState.selectedGovernorates.includes(String(gov.id))}
+                                    onChange={() => {
+                                        const newGovs = filterState.selectedGovernorates.includes(String(gov.id))
+                                            ? filterState.selectedGovernorates.filter(id => id !== String(gov.id))
+                                            : [...filterState.selectedGovernorates, String(gov.id)];
+                                        dispatchFilterWithScroll({ type: 'SET_GOVERNORATES', payload: newGovs });
+                                    }} />
+                                <span className={`${isRTL ? 'mr-3' : 'ml-3'}`}>
                                     {isRTL ? gov.name_ar : gov.name_en}
                                 </span>
                             </label>
                         ))}
                     </div>
-                )}
-            </div>
+                </FilterSection>
 
-            {/* Price Section */}
-            <div className="mb-4 border-b border-gray-200 pb-4">
-                <button
-                    onClick={() => toggleSection('price')}
-                    className="flex items-center justify-between w-full text-left font-bold text-gray-800 mb-2 cursor-pointer"
-                >
-                    <span>{t('ads.price')}</span>
-                    {openSections.price ?
-                        <ChevronUp size={20} className="text-gray-500" /> :
-                        <ChevronDown size={20} className="text-gray-500" />
-                    }
-                </button>
-                {openSections.price && (
-                    <PriceRangeFilter />
-                )}
-            </div>
+                <FilterSection title={isRTL ? 'الوزن' : 'Weight'} isOpen={openSections.weight}
+                    onToggle={() => setOpenSections(p => ({ ...p, weight: !p.weight }))}>
+                    <RangeFilter min={1} max={1000} value={filterState.weightRange}
+                        onChange={(val) => dispatchFilterWithScroll({ type: 'SET_WEIGHT_RANGE', payload: val })} step={10} />
+                </FilterSection>
 
-            {/* Gender Section */}
-            <div className="mb-4 border-b border-gray-200 pb-4">
-                <button
-                    onClick={() => toggleSection('gender')}
-                    className="flex items-center justify-between w-full text-left font-bold text-gray-800 mb-2 cursor-pointer"
-                >
-                    <span>{t('ads.gender')}</span>
-                    {openSections.gender ?
-                        <ChevronUp size={20} className="text-gray-500" /> :
-                        <ChevronDown size={20} className="text-gray-500" />
-                    }
-                </button>
-                {openSections.gender && (
-                    <div className="space-y-2 mt-3">
-                        <label className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
-                            <input
-                                type="checkbox"
-                                checked={genderMale}
-                                onChange={() => setGenderMale(!genderMale)}
-                                className="w-4 h-4 text-main border-gray-300 rounded focus:ring-green-500 cursor-pointer"
-                            />
-                            <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm text-gray-700`}>
-                                {t('ads.male')}
-                            </span>
+                <FilterSection title={isRTL ? 'التواصل عن طريق' : 'Contact Via'} isOpen={openSections.contactMethod}
+                    onToggle={() => setOpenSections(p => ({ ...p, contactMethod: !p.contactMethod }))}>
+                    <div className="space-y-2">
+                        <label className="flex items-center cursor-pointer hover:bg-green-50 p-2.5 rounded-xl text-sm">
+                            <input type="checkbox" checked={filterState.contactMethod === 'chat' || filterState.contactMethod === 'both'}
+                                onChange={() => handleContactMethodChange('chat')} />
+                            <span className={`${isRTL ? 'mr-3' : 'ml-3'}`}>{isRTL ? 'محادثة' : 'Chat'}</span>
                         </label>
-                        <label className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
-                            <input
-                                type="checkbox"
-                                checked={genderFemale}
-                                onChange={() => setGenderFemale(!genderFemale)}
-                                className="w-4 h-4 text-main border-gray-300 rounded focus:ring-green-500 cursor-pointer"
-                            />
-                            <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm text-gray-700`}>
-                                {t('ads.female')}
-                            </span>
+                        <label className="flex items-center cursor-pointer hover:bg-green-50 p-2.5 rounded-xl text-sm">
+                            <input type="checkbox" checked={filterState.contactMethod === 'phone' || filterState.contactMethod === 'both'}
+                                onChange={() => handleContactMethodChange('phone')} />
+                            <span className={`${isRTL ? 'mr-3' : 'ml-3'}`}>{isRTL ? 'مكالمة' : 'Phone'}</span>
                         </label>
                     </div>
-                )}
-            </div>
+                </FilterSection>
 
-            {/* Sale Options Section */}
-            <div className="mb-4 border-b border-gray-200 pb-4">
-                <button
-                    onClick={() => toggleSection('saleOptions')}
-                    className="flex items-center justify-between w-full text-left font-bold text-gray-800 mb-2 cursor-pointer"
-                >
-                    <span>{isRTL ? 'خيارات البيع' : 'Sale Options'}</span>
-                    {openSections.saleOptions ?
-                        <ChevronUp size={20} className="text-gray-500" /> :
-                        <ChevronDown size={20} className="text-gray-500" />
-                    }
-                </button>
-                {openSections.saleOptions && (
-                    <div className="space-y-2 mt-3">
-                        <label className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
-                            <input
-                                type="checkbox"
-                                checked={deliveryAvailable}
-                                onChange={() => setDeliveryAvailable(!deliveryAvailable)}
-                                className="w-4 h-4 text-main border-gray-300 rounded focus:ring-green-500 cursor-pointer"
-                            />
-                            <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm text-gray-700`}>
-                                {t('ads.deliveryAvailable')}
-                            </span>
+                <FilterSection title={isRTL ? 'السعر' : 'Price'} isOpen={openSections.price}
+                    onToggle={() => setOpenSections(p => ({ ...p, price: !p.price }))}>
+                    <RangeFilter min={100} max={100000} value={filterState.priceRange}
+                        onChange={(val) => dispatchFilterWithScroll({ type: 'SET_PRICE_RANGE', payload: val })} step={500} />
+                </FilterSection>
+
+                <FilterSection title={isRTL ? 'الكمية' : 'Quantity'} isOpen={openSections.quantity}
+                    onToggle={() => setOpenSections(p => ({ ...p, quantity: !p.quantity }))}>
+                    <RangeFilter min={1} max={10000} value={filterState.quantityRange}
+                        onChange={(val) => dispatchFilterWithScroll({ type: 'SET_QUANTITY_RANGE', payload: val })} step={50} />
+                </FilterSection>
+
+                <FilterSection title={isRTL ? 'التوصيل' : 'Delivery'} isOpen={openSections.delivery}
+                    onToggle={() => setOpenSections(p => ({ ...p, delivery: !p.delivery }))}>
+                    <div className="space-y-2">
+                        {[
+                            { value: 'available', label: isRTL ? 'متاح' : 'Available' },
+                            { value: 'not_available', label: isRTL ? 'غير متاح' : 'Not Available' },
+                            { value: '50_governorate', label: isRTL ? '50ج داخل المحافظة' : '50 EGP within gov' },
+                            { value: '50_governorate_cairo_giza', label: isRTL ? '50ج (المحافظة، القاهرة، الجيزة)' : '50 EGP (Gov, Cairo, Giza)' },
+                            { value: '50_all', label: isRTL ? '50ج لجميع المحافظات' : '50 EGP to all' },
+                            { value: '25_governorate', label: isRTL ? '25ج داخل المحافظة' : '25 EGP within gov' },
+                            { value: '25_governorate_cairo_giza', label: isRTL ? '25ج (المحافظة، القاهرة، الجيزة)' : '25 EGP (Gov, Cairo, Giza)' },
+                            { value: '25_all', label: isRTL ? '25ج لجميع المحافظات' : '25 EGP to all' },
+                            { value: 'free_all', label: isRTL ? 'مجانًا لجميع المحافظات' : 'Free to all' }
+                        ].map(opt => (
+                            <label key={opt.value} className="flex items-center cursor-pointer hover:bg-green-50 p-2.5 rounded-xl text-xs">
+                                <input type="checkbox" checked={filterState.selectedDeliveryOptions.includes(opt.value)}
+                                    onChange={() => {
+                                        const newOpts = filterState.selectedDeliveryOptions.includes(opt.value)
+                                            ? filterState.selectedDeliveryOptions.filter(o => o !== opt.value)
+                                            : [...filterState.selectedDeliveryOptions, opt.value];
+                                        dispatchFilterWithScroll({ type: 'SET_DELIVERY_OPTIONS', payload: newOpts });
+                                    }} />
+                                <span className={`${isRTL ? 'mr-3' : 'ml-3'}`}>{opt.label}</span>
+                            </label>
+                        ))}
+                    </div>
+                </FilterSection>
+
+                <FilterSection title={isRTL ? 'متاح تجهيز مزارع' : 'Farm Preparation'} isOpen={openSections.farmPreparation}
+                    onToggle={() => setOpenSections(p => ({ ...p, farmPreparation: !p.farmPreparation }))}>
+                    <div className="space-y-2">
+                        <label className="flex items-center cursor-pointer hover:bg-green-50 p-2.5 rounded-xl text-sm">
+                            <input type="checkbox" checked={filterState.farmPrep === true}
+                                onChange={() => dispatchFilterWithScroll({ type: 'SET_FARM_PREP', payload: filterState.farmPrep === true ? null : true })} />
+                            <span className={`${isRTL ? 'mr-3' : 'ml-3'}`}>{isRTL ? 'نعم' : 'Yes'}</span>
                         </label>
-                        <label className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
-                            <input
-                                type="checkbox"
-                                checked={retailSaleAvailable}
-                                onChange={() => setRetailSaleAvailable(!retailSaleAvailable)}
-                                className="w-4 h-4 text-main border-gray-300 rounded focus:ring-green-500 cursor-pointer"
-                            />
-                            <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm text-gray-700`}>
-                                {t('ads.retailSaleAvailable')}
-                            </span>
-                        </label>
-                        <label className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
-                            <input
-                                type="checkbox"
-                                checked={priceNegotiable}
-                                onChange={() => setPriceNegotiable(!priceNegotiable)}
-                                className="w-4 h-4 text-main border-gray-300 rounded focus:ring-green-500 cursor-pointer"
-                            />
-                            <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm text-gray-700`}>
-                                {t('ads.priceNegotiable')}
-                            </span>
-                        </label>
-                        <label className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
-                            <input
-                                type="checkbox"
-                                checked={needsVaccinations}
-                                onChange={() => setNeedsVaccinations(!needsVaccinations)}
-                                className="w-4 h-4 text-main border-gray-300 rounded focus:ring-green-500 cursor-pointer"
-                            />
-                            <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm text-gray-700`}>
-                                {t('ads.needsVaccinations')}
-                            </span>
+                        <label className="flex items-center cursor-pointer hover:bg-green-50 p-2.5 rounded-xl text-sm">
+                            <input type="checkbox" checked={filterState.farmPrep === false}
+                                onChange={() => dispatchFilterWithScroll({ type: 'SET_FARM_PREP', payload: filterState.farmPrep === false ? null : false })} />
+                            <span className={`${isRTL ? 'mr-3' : 'ml-3'}`}>{isRTL ? 'لا' : 'No'}</span>
                         </label>
                     </div>
-                )}
+                </FilterSection>
             </div>
 
-            {/* Contact Method Section */}
-            <div className="mb-6">
-                <button
-                    onClick={() => toggleSection('contactMethod')}
-                    className="flex items-center justify-between w-full text-left font-bold text-gray-800 mb-2 cursor-pointer"
-                >
-                    <span>{t('ads.contactMethod')}</span>
-                    {openSections.contactMethod ?
-                        <ChevronUp size={20} className="text-gray-500" /> :
-                        <ChevronDown size={20} className="text-gray-500" />
-                    }
-                </button>
-                {openSections.contactMethod && (
-                    <div className="space-y-2 mt-3">
-                        <label className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
-                            <input
-                                type="checkbox"
-                                checked={contactPhone}
-                                onChange={() => setContactPhone(!contactPhone)}
-                                className="w-4 h-4 text-main border-gray-300 rounded focus:ring-green-500 cursor-pointer"
-                            />
-                            <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm text-gray-700`}>
-                                {t('ads.call')}
-                            </span>
-                        </label>
-                        <label className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
-                            <input
-                                type="checkbox"
-                                checked={contactChat}
-                                onChange={() => setContactChat(!contactChat)}
-                                className="w-4 h-4 text-main border-gray-300 rounded focus:ring-green-500 cursor-pointer"
-                            />
-                            <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm text-gray-700`}>
-                                {t('ads.chat')}
-                            </span>
-                        </label>
-                        <label className="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded">
-                            <input
-                                type="checkbox"
-                                checked={contactBoth}
-                                onChange={() => setContactBoth(!contactBoth)}
-                                className="w-4 h-4 text-main border-gray-300 rounded focus:ring-green-500 cursor-pointer"
-                            />
-                            <span className={`${isRTL ? 'mr-2' : 'ml-2'} text-sm text-gray-700`}>
-                                {t('ads.both')}
-                            </span>
-                        </label>
-                    </div>
-                )}
+            <div className="p-5 border-t border-gray-200 bg-white flex-shrink-0">
+                <div className="space-y-3">
+                    <button onClick={applyFilters}
+                        className="w-full bg-gradient-to-r from-main to-green-600 hover:from-green-700 hover:to-green-800 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg hover:shadow-xl">
+                        <Check size={20} />
+                        {isRTL ? 'تطبيق الفلاتر' : 'Apply Filters'}
+                    </button>
+                    <button onClick={clearFilters}
+                        className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all">
+                        <RefreshCw size={18} />
+                        {isRTL ? 'مسح الكل' : 'Clear All'}
+                    </button>
+                </div>
             </div>
         </div>
     );
 
-    if (loading) {
-        return <Loader />;
-    }
+    if (loading && currentPage === 1) return <Loader />;
 
     return (
-        <div className="min-h-screen bg-gray-50" dir={isRTL ? 'rtl' : 'ltr'}>
+        <div className="bg-gray-50 min-h-screen" dir={isRTL ? 'rtl' : 'ltr'}>
             {toast && (
-                <div className={`fixed top-4 sm:top-5 ${isRTL ? "left-4 sm:left-5" : "right-4 sm:right-5"} z-50 animate-slide-in max-w-[90%] sm:max-w-md`}>
-                    <div className={`px-4 py-3 sm:px-6 sm:py-4 rounded-lg sm:rounded-xl shadow-lg flex items-center gap-2 sm:gap-3 ${toast.type === "success" ? "bg-main text-white" : "bg-red-500 text-white"}`}>
-                        {toast.type === "success" ? (
-                            <svg className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                            </svg>
-                        ) : (
-                            <svg className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        )}
-                        <span className="font-semibold text-sm sm:text-base break-words">{toast.message}</span>
+                <div className={`fixed top-6 ${isRTL ? "left-6" : "right-6"} z-50`}>
+                    <div className={`px-6 py-4 rounded-2xl shadow-2xl ${toast.type === "success" ? "bg-gradient-to-r from-main to-green-600 text-white" : "bg-red-500 text-white"}`}>
+                        {toast.message}
                     </div>
                 </div>
             )}
 
-            <div className="flex relative">
-                <div className="hidden lg:block w-64 min-h-screen sticky top-0 max-h-screen">
-                    <FilterSidebar />
-                </div>
-
-                {isFilterOpen && (
-                    <div
-                        className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity duration-300"
-                        onClick={() => setIsFilterOpen(false)}
-                    />
+            <div className="flex min-h-screen">
+                {!isViewAllPage && (
+                    <div className={`hidden lg:block ${isRTL ? 'border-l' : 'border-r'} border-gray-200 bg-white`} style={{width: '320px', minWidth: '320px', height: '100vh', position: 'sticky', top: 0}}>
+                        <FilterSidebar />
+                    </div>
                 )}
 
-                <div
-                    className={`lg:hidden fixed top-0 ${isRTL ? 'right-0' : 'left-0'} h-full w-80 max-w-[85vw] bg-white z-50 transform transition-transform duration-300 ease-in-out ${isFilterOpen ? 'translate-x-0' : isRTL ? 'translate-x-full' : '-translate-x-full'
-                        }`}
-                >
-                    <FilterSidebar />
-                </div>
+                {!isViewAllPage && isFilterOpen && (
+                    <>
+                        <div className="lg:hidden fixed inset-0 bg-black/50 z-40" onClick={() => setIsFilterOpen(false)} />
+                        <div className={`lg:hidden fixed top-0 ${isRTL ? 'right-0' : 'left-0'} h-full w-80 bg-white z-50 transform transition-transform ${
+                            isFilterOpen ? 'translate-x-0' : isRTL ? 'translate-x-full' : '-translate-x-full'
+                        }`}>
+                            <FilterSidebar />
+                        </div>
+                    </>
+                )}
 
-                <div className="flex-1 p-4 lg:p-6">
-                    <div className="lg:hidden mb-4">
-                        <button
-                            onClick={() => setIsFilterOpen(true)}
-                            className="flex items-center gap-2 bg-main hover:bg-green-800 text-white px-4 py-2.5 rounded-lg font-medium transition cursor-pointer shadow-md"
-                        >
-                            <Filter size={20} />
-                            <span>{isRTL ? 'الفلاتر' : 'Filters'}</span>
-                            {hasActiveFilters && (
-                                <span className="bg-white text-main rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">
-                                    {[selectedCategory, selectedGovernorate, priceRange[0] > 0, priceRange[1] < 10000, genderMale, genderFemale,
-                                        deliveryAvailable, retailSaleAvailable, priceNegotiable, needsVaccinations,
-                                        contactPhone, contactChat, contactBoth].filter(Boolean).length}
-                                </span>
-                            )}
-                        </button>
-                    </div>
-
-                    <div className="mb-6">
-                        <h1 className="text-2xl lg:text-3xl font-bold text-main">
-                            {currentCategory
-                                ? (isRTL ? currentCategory.name_ar : currentCategory.name_en)
-                                : (isRTL ? 'جميع المنتجات' : 'All Products')
-                            }
-                        </h1>
-                        <p className="text-gray-600 mt-2">
-                            {isRTL ? `${filteredProducts.length} منتج` : `${filteredProducts.length} products`}
-                        </p>
-                    </div>
-
-                    {filteredProducts.length === 0 ? (
-                        <div className="text-center py-12">
-                            <div className="text-gray-400 mb-4">
-                                <svg className="w-24 h-24 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-                                </svg>
+                <div className="flex-1 min-w-0" style={{height: '100vh', overflow: 'auto'}}>
+                    <div className="w-full px-4 py-6">
+                        <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
+                            <div className="flex items-center gap-3">
+                                {!isViewAllPage && (
+                                    <button onClick={() => setIsFilterOpen(true)}
+                                        className="lg:hidden flex items-center gap-3 bg-gradient-to-r from-main to-green-600 text-white px-6 py-3 rounded-xl shadow-lg">
+                                        <Filter size={20} />
+                                        <span>{isRTL ? 'الفلاتر' : 'Filters'}</span>
+                                    </button>
+                                )}
+                                
+                                <h1 className="text-2xl md:text-3xl font-bold text-main">
+                                    {isViewAllPage 
+                                        ? (isRTL ? 'جميع المنتجات' : 'All Products')
+                                        : (isRTL 
+                                            ? `منتجات ${currentCategory ? currentCategory.name_ar : ''}`
+                                            : `${currentCategory ? currentCategory.name_en : ''} Products`
+                                        )
+                                    }
+                                </h1>
                             </div>
-                            <h3 className="text-xl font-semibold text-gray-600 mb-2">
-                                {isRTL ? 'لا توجد منتجات' : 'No products found'}
-                            </h3>
-                            <p className="text-gray-500">
-                                {isRTL ? 'جرب تعديل الفلاتر للحصول على نتائج' : 'Try adjusting filters to get results'}
-                            </p>
+                            
+                            <div className="bg-white px-4 py-2 rounded-xl shadow-md">
+                                <span className="text-sm text-gray-600">
+                                    {isRTL ? `${pagination.total} منتج` : `${pagination.total} products`}
+                                </span>
+                            </div>
                         </div>
-                    ) : (
-                        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-6">
-                            {filteredProducts.map((product) => (
-                                <ProductCard
-                                    key={product.id}
-                                    product={product}
-                                    isFavorite={favorites.has(product.id)}
-                                    onToggleFavorite={toggleFavorite}
-                                    onProductClick={handleProductClick}
-                                    onContactSeller={handleContactSeller} 
-                                />
-                            ))}
-                        </div>
-                    )}
+
+                        {products.length === 0 && !loading ? (
+                            <div className="text-center py-20 bg-white rounded-2xl shadow-lg">
+                                <div className="bg-gray-100 w-32 h-32 mx-auto rounded-full flex items-center justify-center mb-6">
+                                    <svg className="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                                    </svg>
+                                </div>
+                                <h3 className="text-2xl font-bold text-gray-700 mb-3">
+                                    {isRTL ? 'لا توجد منتجات' : 'No products found'}
+                                </h3>
+                                <p className="text-gray-500 mb-6">
+                                    {isRTL ? 'جرب تعديل الفلاتر' : 'Try adjusting filters'}
+                                </p>
+                            </div>
+                        ) : (
+                            <>
+                                {loading && currentPage > 1 && (
+                                    <div className="mb-4 text-center">
+                                        <div className="inline-flex items-center gap-2 bg-white px-4 py-2 rounded-xl shadow-md">
+                                            <RefreshCw size={18} className="animate-spin text-main" />
+                                            <span className="text-gray-600">{isRTL ? 'جاري التحميل...' : 'Loading...'}</span>
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-8">
+                                    {products.map((product) => (
+                                        <ProductCard key={product.id} product={product} isFavorite={favorites.has(product.id)}
+                                            onToggleFavorite={toggleFavorite} onProductClick={(id) => navigate(`/product-details/${id}`)}
+                                            onContactSeller={handleContactSeller} />
+                                    ))}
+                                </div>
+
+                                {pagination.last_page > 1 && (
+                                    <div className="flex flex-col items-center gap-4">
+                                        <div className="flex items-center gap-2">
+                                            <button onClick={() => currentPage > 1 && setCurrentPage(currentPage - 1)} 
+                                                disabled={currentPage === 1}
+                                                className={`p-3 rounded-xl ${currentPage === 1 ? 'bg-gray-100 text-gray-400' : 'bg-white border-2 border-gray-200 hover:border-main shadow-md'}`}>
+                                                {isRTL ? <ChevronRight size={22} /> : <ChevronLeft size={22} />}
+                                            </button>
+
+                                            <div className="flex gap-2">
+                                                {Array.from({length: Math.min(5, pagination.last_page)}, (_, i) => i + 1).map(page => (
+                                                    <button key={page} onClick={() => setCurrentPage(page)}
+                                                        className={`min-w-[48px] h-[48px] px-4 rounded-xl font-bold ${
+                                                            currentPage === page 
+                                                                ? 'bg-gradient-to-r from-main to-green-600 text-white shadow-lg' 
+                                                                : 'bg-white border-2 border-gray-200 hover:border-main shadow-md'
+                                                        }`}>
+                                                        {page}
+                                                    </button>
+                                                ))}
+                                            </div>
+
+                                            <button onClick={() => currentPage < pagination.last_page && setCurrentPage(currentPage + 1)}
+                                                disabled={currentPage === pagination.last_page}
+                                                className={`p-3 rounded-xl ${currentPage === pagination.last_page ? 'bg-gray-100 text-gray-400' : 'bg-white border-2 border-gray-200 hover:border-main shadow-md'}`}>
+                                                {isRTL ? <ChevronLeft size={22} /> : <ChevronRight size={22} />}
+                                            </button>
+                                        </div>
+
+                                        <div className="bg-white px-6 py-3 rounded-xl shadow-md">
+                                            <p className="text-gray-600 text-sm">
+                                                {isRTL 
+                                                    ? `الصفحة ${pagination.current_page} من ${pagination.last_page}` 
+                                                    : `Page ${pagination.current_page} of ${pagination.last_page}`
+                                                }
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
+                            </>
+                        )}
+                    </div>
                 </div>
             </div>
         </div>

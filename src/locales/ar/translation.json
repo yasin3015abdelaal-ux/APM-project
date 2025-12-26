@@ -331,7 +331,7 @@
     "errorSendingMessage": "خطأ في إرسال الرسالة",
     "errorLoadingUserData": "خطأ في تحميل بيانات المستخدم"
   },
- "notifications": {
+"notifications": {
     "title": "الإشعارات",
     "unread": "غير مقروء",
     "markAsRead": "تعيين كمقروء",
@@ -350,6 +350,10 @@
     "deleteError": "فشل حذف الإشعار",
     "noNotifications": "لا توجد إشعارات",
     "noNotificationsDesc": "ستظهر هنا جميع إشعاراتك عند وصولها",
+    "noUnread": "لا توجد إشعارات غير مقروءة",
+    "noUnreadNotifications": "جميع إشعاراتك مقروءة",
+    "noRead": "لا توجد إشعارات مقروءة",
+    "noReadNotifications": "لم تقرأ أي إشعارات بعد",
     "autoDelete": "يتم حذف الإشعارات تلقائياً بعد 30 يوماً",
     "page": "صفحة",
     "of": "من",

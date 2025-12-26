@@ -4,7 +4,8 @@ import { useNavigate } from "react-router-dom";
 import { userAPI, dataAPI } from "../../api";
 import { Camera, Save, ArrowLeft } from "lucide-react";
 import Loader from "../../components/Ui/Loader/Loader";
-import CustomSelect from "../../components/Ui/CustomSelect/CustomSelect"; 
+import CustomSelect from "../../components/Ui/CustomSelect/CustomSelect";
+import { useAuth } from "../../contexts/AuthContext"; 
 
 const EditProfilePage = () => {
     const { t, i18n } = useTranslation();
@@ -12,6 +13,7 @@ const EditProfilePage = () => {
     const isRTL = i18n.language === "ar";
     const navigate = useNavigate();
     const fileInputRef = useRef(null);
+    const { updateUser } = useAuth(); 
 
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -171,7 +173,6 @@ const EditProfilePage = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        // Validate password confirmation
         if (formData.password && formData.password !== formData.password_confirmation) {
             showToast(
                 isRTL ? "كلمات المرور غير متطابقة" : "Passwords do not match",
@@ -184,10 +185,8 @@ const EditProfilePage = () => {
         try {
             const formDataToSend = new FormData();
             
-            // ✅ CRITICAL: Add _method for Laravel PUT request
             formDataToSend.append("_method", "put");
             
-            // Add required fields
             formDataToSend.append("name", formData.name);
 
             if (formData.governorate_id) {
@@ -199,19 +198,27 @@ const EditProfilePage = () => {
                 formDataToSend.append("password_confirmation", formData.password_confirmation);
             }
 
-            // ✅ Add image if selected
             if (imageFile) {
                 formDataToSend.append("image", imageFile);
             }
 
-            // Debug: Log FormData contents
             console.log("=== FormData Contents ===");
             for (let pair of formDataToSend.entries()) {
                 console.log(pair[0] + ':', pair[1]);
             }
 
-            // ✅ Use POST instead of PUT (Laravel requirement for FormData)
             await userAPI.post("/profile", formDataToSend);
+
+            const profileRes = await userAPI.get("/profile");
+            const updatedUserData = profileRes.data?.data?.user || profileRes.data?.user;
+
+            if (updatedUserData) {
+                updateUser(updatedUserData);
+                
+                setProfile(updatedUserData);
+                
+                setImagePreview(updatedUserData.image);
+            }
 
             showToast(
                 isRTL ? "تم حفظ التعديلات بنجاح" : "Changes saved successfully"
@@ -300,16 +307,13 @@ const EditProfilePage = () => {
             )}
 
             <div className="max-w-2xl mx-auto">
-                {/* Profile Card */}
                 <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-                    {/* Header Section */}
                     <div className="bg-gradient-to-br from-main to-main/80 px-6 pt-8 pb-20 relative">
                         <h2 className="text-white font-bold text-2xl text-center">
                             {t("profile.editProfile")}
                         </h2>
                     </div>
 
-                    {/* Profile Image */}
                     <div className="relative -mt-16 px-6">
                         <div className="flex flex-col items-center mb-6">
                             <div
@@ -357,7 +361,6 @@ const EditProfilePage = () => {
                             </p>
                         </div>
 
-                        {/* Form */}
                         <form onSubmit={handleSubmit} className="space-y-4 pb-6">
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div className="flex flex-col">

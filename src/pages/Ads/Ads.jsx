@@ -511,6 +511,7 @@ export default function Ads() {
         setLoading(true);
         setError(null);
         const { data } = await getCachedMyProducts();
+        console.log(data)
         setAdsItems(data);
         setFilteredAds(data);
       } catch (err) {

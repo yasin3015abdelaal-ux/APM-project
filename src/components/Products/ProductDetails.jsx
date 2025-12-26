@@ -8,6 +8,133 @@ import PlaceholderSVG from '../../assets/PlaceholderSVG';
 import Loader from '../../components/Ui/Loader/Loader';
 import SellerReportModal from '../SellerRating/SellerReport';
 
+// الحقول اللي مش محتاجين نعرضها (System Fields)
+const systemFields = [
+    'id', 'country_id', 'user_id', 'created_at', 'updated_at',
+    'status', 'watchers_count', 'interested_count', 'is_active',
+    'is_favorited', 'is_in_last_auction', 'has_special_label',
+    'category', 'sub_category', 'user', 'country', 'governorate',
+    'image', 'images', 'attributes', 'name', 'description',
+    'name_ar', 'name_en', 'description_ar', 'description_en', 'price'
+];
+
+// دالة لتحويل اسم الحقل لعنوان مقروء
+const getFieldLabel = (fieldName, isRTL) => {
+    const labels = {
+        'age': { ar: 'العمر', en: 'Age' },
+        'gender': { ar: 'النوع', en: 'Gender' },
+        'quantity': { ar: 'الكمية', en: 'Quantity' },
+        'location': { ar: 'الموقع', en: 'Location' },
+        'governorate_id': { ar: 'المحافظة', en: 'Governorate' },
+        'contact_method': { ar: 'طريقة التواصل', en: 'Contact Method' },
+        'needs_vaccinations': { ar: 'التطعيمات', en: 'Vaccinations' },
+        'delivery_available': { ar: 'التوصيل', en: 'Delivery' },
+        'retail_sale_available': { ar: 'البيع بالقطعة', en: 'Retail Sale' },
+        'price_negotiable': { ar: 'السعر قابل للتفاوض', en: 'Price Negotiable' },
+        'has_iso_certification': { ar: 'شهادة ISO', en: 'ISO Certification' },
+        'has_fracture_scan': { ar: 'فحص الكسور', en: 'Fracture Scan' },
+        'client_slaughter_available': { ar: 'ذبح العميل متاح', en: 'Client Slaughter Available' },
+        'farm_preparation_available': { ar: 'تجهيز المزرعة متاح', en: 'Farm Preparation Available' },
+        'breed_type': { ar: 'نوع السلالة', en: 'Breed Type' },
+        'color': { ar: 'اللون', en: 'Color' },
+        'preparation_type': { ar: 'نوع التجهيز', en: 'Preparation Type' },
+        'herd_price': { ar: 'سعر القطيع', en: 'Herd Price' },
+        'type': { ar: 'النوع', en: 'Type' },
+        'protein_percentage': { ar: 'نسبة البروتين', en: 'Protein Percentage' },
+        'package_size': { ar: 'حجم العبوة', en: 'Package Size' },
+        'weight': { ar: 'الوزن', en: 'Weight' },
+        'height': { ar: 'الطول', en: 'Height' },
+        'width': { ar: 'العرض', en: 'Width' },
+    };
+
+    if (labels[fieldName]) {
+        return isRTL ? labels[fieldName].ar : labels[fieldName].en;
+    }
+
+    return fieldName.replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
+};
+
+// دالة لتنسيق القيمة
+const formatFieldValue = (fieldName, value, isRTL, product) => {
+    if (value === null || value === undefined || value === '') {
+        return null;
+    }
+
+    if (typeof value === 'boolean') {
+        return value ? (isRTL ? 'نعم' : 'Yes') : (isRTL ? 'لا' : 'No');
+    }
+
+    if (fieldName === 'gender') {
+        return value === 'male' ? (isRTL ? 'ذكر' : 'Male') : (isRTL ? 'أنثى' : 'Female');
+    }
+
+    if (fieldName === 'age') {
+        return `${value} ${isRTL ? 'شهر' : 'months'}`;
+    }
+
+    if (fieldName === 'contact_method') {
+        const methods = {
+            'chat': isRTL ? 'محادثة' : 'Chat',
+            'phone': isRTL ? 'هاتف' : 'Phone',
+            'both': isRTL ? 'كلاهما' : 'Both'
+        };
+        return methods[value] || value;
+    }
+
+    if (fieldName === 'governorate_id' && product.governorate) {
+        return isRTL ? product.governorate.name_ar : product.governorate.name_en;
+    }
+
+    return value;
+};
+
+// دالة لاستخراج كل الـ attributes من المنتج
+const extractProductDetails = (product, isRTL) => {
+    if (!product) return [];
+
+    const details = [];
+
+    // إضافة الفئة والفئة الفرعية أولاً
+    if (product.category) {
+        details.push({
+            label: isRTL ? 'الفئة' : 'Category',
+            value: isRTL ? product.category.name_ar : product.category.name_en
+        });
+    }
+
+    if (product.sub_category) {
+        details.push({
+            label: isRTL ? 'الفئة الفرعية' : 'Sub Category',
+            value: isRTL ? product.sub_category.name_ar : product.sub_category.name_en
+        });
+    }
+
+    // نمر على كل حقل في المنتج
+    Object.keys(product).forEach(key => {
+        if (systemFields.includes(key)) {
+            return;
+        }
+
+        const value = product[key];
+
+        if (value === null || value === undefined || value === '') {
+            return;
+        }
+
+        const label = getFieldLabel(key, isRTL);
+        const formattedValue = formatFieldValue(key, value, isRTL, product);
+
+        if (formattedValue !== null) {
+            details.push({
+                label,
+                value: formattedValue
+            });
+        }
+    });
+
+    return details;
+};
+
 const ProductDetails = () => {
     const { id } = useParams();
     const navigate = useNavigate();
@@ -62,7 +189,6 @@ const ProductDetails = () => {
             try {
                 setLoading(true);
                 const response = await userAPI.get(`/products/${id}`);
-                console.log("#########", response);
                 const data = response.data;
                 let productData = null;
 
@@ -283,13 +409,7 @@ const ProductDetails = () => {
                     const isHalfFilled = star === Math.ceil(rating) && rating % 1 !== 0;
 
                     return (
-                        <svg
-                            key={star}
-                            className="w-3.5 h-3.5"
-                            viewBox="0 0 24 24"
-                            strokeWidth={1.5}
-                        >
-                            {/* Empty star background */}
+                        <svg key={star} className="w-3.5 h-3.5" viewBox="0 0 24 24" strokeWidth={1.5}>
                             <path
                                 className="stroke-gray-300"
                                 fill="none"
@@ -298,7 +418,6 @@ const ProductDetails = () => {
                                 d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"
                             />
 
-                            {/* Filled star */}
                             {(isFilled || isHalfFilled) && (
                                 <>
                                     {isHalfFilled && (
@@ -340,8 +459,7 @@ const ProductDetails = () => {
             <button
                 onClick={handleChat}
                 disabled={isContacting}
-                className={`bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white py-3 px-4 rounded-lg font-bold transition-all duration-300 transform hover:scale-[1.02] shadow-md hover:shadow-lg flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed text-sm ${contactMethod === 'chat' ? 'w-full' : 'flex-1'
-                    }`}
+                className={`bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white py-3 px-4 rounded-lg font-bold transition-all duration-300 transform hover:scale-[1.02] shadow-md hover:shadow-lg flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed text-sm ${contactMethod === 'chat' ? 'w-full' : 'flex-1'}`}
             >
                 {isContacting ? (
                     <>
@@ -363,8 +481,7 @@ const ProductDetails = () => {
         const renderCallButton = () => (
             <button
                 onClick={handleCall}
-                className={`bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white py-3 px-4 rounded-lg font-bold transition-all duration-300 transform hover:scale-[1.02] shadow-md hover:shadow-lg flex items-center justify-center gap-2 cursor-pointer text-sm ${contactMethod === 'phone' ? 'w-full' : 'flex-1'
-                    }`}
+                className={`bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white py-3 px-4 rounded-lg font-bold transition-all duration-300 transform hover:scale-[1.02] shadow-md hover:shadow-lg flex items-center justify-center gap-2 cursor-pointer text-sm ${contactMethod === 'phone' ? 'w-full' : 'flex-1'}`}
             >
                 <Phone size={20} />
                 <span>{isRTL ? 'اتصال' : 'Call'}</span>
@@ -374,10 +491,8 @@ const ProductDetails = () => {
         switch (contactMethod) {
             case 'chat':
                 return renderChatButton();
-
             case 'phone':
                 return renderCallButton();
-
             case 'both':
             default:
                 return (
@@ -412,50 +527,7 @@ const ProductDetails = () => {
     }
 
     const images = product.images || (product.image ? [product.image] : []);
-
-    const productDetails = [
-        product.category && {
-            label: isRTL ? 'الفئة' : 'Category',
-            value: isRTL ? product.category.name_ar : product.category.name_en
-        },
-        product.sub_category && {
-            label: isRTL ? 'الفئة الفرعية' : 'Sub Category',
-            value: isRTL ? product.sub_category.name_ar : product.sub_category.name_en
-        },
-        product.gender && {
-            label: isRTL ? 'النوع' : 'Gender',
-            value: product.gender === 'male' ? (isRTL ? 'ذكر' : 'Male') : (isRTL ? 'أنثى' : 'Female')
-        },
-        product.age && {
-            label: isRTL ? 'العمر' : 'Age',
-            value: `${product.age} ${isRTL ? 'شهر' : 'months'}`
-        },
-        product.type && {
-            label: isRTL ? 'النوع' : 'Type',
-            value: product.type
-        },
-        product.quantity && {
-            label: isRTL ? 'الكمية' : 'Quantity',
-            value: product.quantity
-        },
-        product.needs_vaccinations !== undefined && {
-            label: isRTL ? 'التطعيمات' : 'Vaccinations',
-            value: product.needs_vaccinations ? (isRTL ? 'مطعم' : 'Vaccinated') : (isRTL ? 'غير مطعم' : 'Not Vaccinated')
-        },
-        product.delivery_available !== undefined && {
-            label: isRTL ? 'التوصيل' : 'Delivery',
-            value: product.delivery_available ? (isRTL ? 'متاح' : 'Available') : (isRTL ? 'غير متاح' : 'Not Available')
-        },
-        product.retail_sale_available !== undefined && {
-            label: isRTL ? 'البيع بالقطعة' : 'Retail Sale',
-            value: product.retail_sale_available ? (isRTL ? 'متاح' : 'Available') : (isRTL ? 'غير متاح' : 'Not Available')
-        },
-        product.price_negotiable !== undefined && {
-            label: isRTL ? 'السعر قابل للتفاوض' : 'Price Negotiable',
-            value: product.price_negotiable ? (isRTL ? 'نعم' : 'Yes') : (isRTL ? 'لا' : 'No')
-        },
-    ].filter(Boolean);
-
+    const productDetails = extractProductDetails(product, isRTL);
     const getCurrency = () => {
         if (product.country?.currency) {
             return product.country.currency;
@@ -464,7 +536,6 @@ const ProductDetails = () => {
     };
 
     const seller = product?.user || {};
-    console.log("##### Seller Data:", seller);
     const sellerName = isRTL ? (seller.name_ar || seller.name) : (seller.name || seller.name_ar);
     const sellerRating = seller?.rating_avg || 0;
     const sellerReviewsCount = seller.reviews_count || 0;
@@ -472,7 +543,6 @@ const ProductDetails = () => {
 
     return (
         <div dir={isRTL ? 'rtl' : 'ltr'}>
-            {/* Report Modal */}
             <SellerReportModal
                 isOpen={showReportModal}
                 onClose={() => setShowReportModal(false)}
@@ -506,18 +576,10 @@ const ProductDetails = () => {
                                 <button
                                     onClick={toggleFavorite}
                                     disabled={!isAuthenticated}
-                                    className={`absolute top-2 ${isRTL ? 'left-2' : 'right-2'} z-10 p-1.5 rounded-full shadow transition cursor-pointer text-xs ${!isAuthenticated
-                                        ? 'bg-gray-300 cursor-not-allowed opacity-70'
-                                        : isFavorite
-                                            ? 'bg-red-500 hover:bg-red-600'
-                                            : 'bg-white/90 backdrop-blur-sm hover:bg-white'
-                                        }`}
+                                    className={`absolute top-2 ${isRTL ? 'left-2' : 'right-2'} z-10 p-1.5 rounded-full shadow transition cursor-pointer text-xs ${!isAuthenticated ? 'bg-gray-300 cursor-not-allowed opacity-70' : isFavorite ? 'bg-red-500 hover:bg-red-600' : 'bg-white/90 backdrop-blur-sm hover:bg-white'}`}
                                     title={!isAuthenticated ? (isRTL ? 'سجل دخول لإضافة للمفضلة' : 'Login to add to favorites') : ''}
                                 >
-                                    <Heart
-                                        size={16}
-                                        className={isFavorite ? 'fill-white text-white' : 'text-gray-600'}
-                                    />
+                                    <Heart size={16} className={isFavorite ? 'fill-white text-white' : 'text-gray-600'} />
                                 </button>
 
                                 <div className={`absolute top-2 ${isRTL ? 'right-2' : 'left-2'} z-10`} ref={optionsRef}>
@@ -538,31 +600,22 @@ const ProductDetails = () => {
                                                 className="w-full px-3 py-2 hover:bg-blue-50 text-blue-600 flex items-center gap-1.5 transition cursor-pointer text-xs border-b border-gray-100"
                                             >
                                                 <Share2 size={14} />
-                                                <span className="font-medium">
-                                                    {isRTL ? 'مشاركة الإعلان' : 'Share Ad'}
-                                                </span>
+                                                <span className="font-medium">{isRTL ? 'مشاركة الإعلان' : 'Share Ad'}</span>
                                             </button>
                                             <button
                                                 onClick={handleReportAd}
                                                 className="w-full px-3 py-2 hover:bg-red-50 text-red-600 flex items-center gap-1.5 transition cursor-pointer text-xs"
                                             >
                                                 <AlertTriangle size={14} />
-                                                <span className="font-medium">
-                                                    {isRTL ? 'الإبلاغ عن الإعلان' : 'Report Ad'}
-                                                </span>
+                                                <span className="font-medium">{isRTL ? 'الإبلاغ عن الإعلان' : 'Report Ad'}</span>
                                             </button>
                                         </div>
                                     )}
                                 </div>
 
                                 {showShareMenu && (
-                                    <div
-                                        ref={shareRef}
-                                        className={`absolute top-12 ${isRTL ? 'right-2' : 'left-2'} z-20 w-48 bg-white rounded-lg shadow-lg border border-gray-200 p-2`}
-                                    >
-                                        <div className="text-xs font-bold text-gray-700 px-2 py-1 mb-1">
-                                            {isRTL ? 'مشاركة عبر' : 'Share via'}
-                                        </div>
+                                    <div ref={shareRef} className={`absolute top-12 ${isRTL ? 'right-2' : 'left-2'} z-20 w-48 bg-white rounded-lg shadow-lg border border-gray-200 p-2`}>
+                                        <div className="text-xs font-bold text-gray-700 px-2 py-1 mb-1">{isRTL ? 'مشاركة عبر' : 'Share via'}</div>
                                         <button
                                             onClick={() => handleShare('whatsapp')}
                                             className="w-full px-3 py-2 hover:bg-green-50 text-green-600 flex items-center gap-2 transition cursor-pointer text-xs rounded"
@@ -622,9 +675,7 @@ const ProductDetails = () => {
                                         }}
                                     />
                                 ) : null}
-                                <div
-                                    className={`${images.length > 0 && images[selectedImage] ? 'hidden' : 'flex'} w-full h-full items-center justify-center bg-gray-100`}
-                                >
+                                <div className={`${images.length > 0 && images[selectedImage] ? 'hidden' : 'flex'} w-full h-full items-center justify-center bg-gray-100`}>
                                     <PlaceholderSVG />
                                 </div>
                             </div>
@@ -635,10 +686,7 @@ const ProductDetails = () => {
                                         <button
                                             key={index}
                                             onClick={() => setSelectedImage(index)}
-                                            className={`flex-shrink-0 w-10 h-10 rounded transition cursor-pointer text-xs ${selectedImage === index
-                                                ? 'border-2 border-main'
-                                                : 'border border-gray-300 hover:border-gray-400'
-                                                }`}
+                                            className={`flex-shrink-0 w-10 h-10 rounded transition cursor-pointer text-xs ${selectedImage === index ? 'border-2 border-main' : 'border border-gray-300 hover:border-gray-400'}`}
                                         >
                                             {image ? (
                                                 <img
@@ -658,10 +706,7 @@ const ProductDetails = () => {
                             )}
                         </div>
 
-                        <div
-                            onClick={handleSellerClick}
-                            className="bg-white rounded-lg p-3 border border-gray-200 hover:border-main transition cursor-pointer"
-                        >
+                        <div onClick={handleSellerClick} className="bg-white rounded-lg p-3 border border-gray-200 hover:border-main transition cursor-pointer">
                             <div className="flex items-center gap-3">
                                 <div className="flex-shrink-0">
                                     {sellerAvatar ? (
@@ -688,9 +733,7 @@ const ProductDetails = () => {
                                     </h3>
                                     <div className="flex items-center gap-2">
                                         <StarRating rating={sellerRating} />
-                                        <span className="text-sm font-bold text-gray-700">
-                                            {sellerRating}
-                                        </span>
+                                        <span className="text-sm font-bold text-gray-700">{sellerRating}</span>
                                         {sellerReviewsCount > 0 && (
                                             <span className="text-xs text-gray-500">
                                                 ({sellerReviewsCount} {isRTL ? 'تقييم' : 'reviews'})
@@ -723,17 +766,14 @@ const ProductDetails = () => {
                         </div>
 
                         <div className="bg-gray-50 rounded-lg p-3">
-                            <h1 className="text-lg font-bold text-gray-800 mb-2 line-clamp-2"
-                                onClick={() => navigate(`/product-details/${product.id}`)}>
+                            <h1 className="text-lg font-bold text-gray-800 mb-2 line-clamp-2" onClick={() => navigate(`/product-details/${product.id}`)}>
                                 {isRTL ? product.name_ar : product.name_en}
                             </h1>
 
                             <div className="flex justify-between items-center mb-3">
                                 <div className="flex items-center text-gray-600 text-xs">
                                     <MapPin size={14} className={isRTL ? 'ml-1.5' : 'mr-1.5'} />
-                                    <span>
-                                        {isRTL ? product.governorate?.name_ar : product.governorate?.name_en}
-                                    </span>
+                                    <span>{isRTL ? product.governorate?.name_ar : product.governorate?.name_en}</span>
                                 </div>
                                 <div className="text-xl font-bold text-main">
                                     {product.price} <span className="text-sm">{getCurrency()}</span>
@@ -742,27 +782,19 @@ const ProductDetails = () => {
 
                             {(product.description_ar || product.description_en || product.description) && (
                                 <div className="mb-3">
-                                    <h2 className="text-base font-bold text-gray-800">
-                                        {isRTL ? 'الوصف' : 'Description'}
-                                    </h2>
+                                    <h2 className="text-base font-bold text-gray-800">{isRTL ? 'الوصف' : 'Description'}</h2>
                                     <p className="text-gray-600 text-xs leading-relaxed">
-                                        {isRTL
-                                            ? (product.description_ar || product.description)
-                                            : (product.description_en || product.description)}
+                                        {isRTL ? (product.description_ar || product.description) : (product.description_en || product.description)}
                                     </p>
                                 </div>
                             )}
-                            <div className="hidden sm:block">
-                                {renderContactButtons()}
-                            </div>
+                            <div className="hidden sm:block">{renderContactButtons()}</div>
                         </div>
                     </div>
 
                     {productDetails.length > 0 && (
                         <div className="bg-gray-50 rounded-lg p-3.5">
-                            <h2 className="text-base font-bold text-gray-800 mb-3">
-                                {isRTL ? 'تفاصيل المنتج' : 'Product Details'}
-                            </h2>
+                            <h2 className="text-base font-bold text-gray-800 mb-3">{isRTL ? 'تفاصيل المنتج' : 'Product Details'}</h2>
                             <div className="space-y-3">
                                 {productDetails.map((detail, index) => (
                                     <div key={index} className="flex justify-between items-center p-4 bg-white rounded-lg text-xs">
@@ -782,9 +814,7 @@ const ProductDetails = () => {
                                 {isRTL ? 'تحذير هام' : 'Important Warning'}
                             </h3>
                             <p className="text-yellow-700 text-xs leading-relaxed cursor-pointer">
-                                {isRTL
-                                    ? 'لا تحول او تدفع اي اموال قبل الفحص والمعاينة في مكان عام'
-                                    : 'Do not transfer or pay any money before inspection in a public place.'}
+                                {isRTL ? 'لا تحول او تدفع اي اموال قبل الفحص والمعاينة في مكان عام' : 'Do not transfer or pay any money before inspection in a public place.'}
                             </p>
                         </div>
                     </div>

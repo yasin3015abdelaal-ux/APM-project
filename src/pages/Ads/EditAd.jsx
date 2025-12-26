@@ -69,15 +69,13 @@ function DeleteConfirmModal({ isOpen, onClose, onConfirm, isRTL = false }) {
 
     const handleConfirm = async () => {
         const finalReason = selectedReason === "other" ? otherReasonText : selectedReason;
-
         setLoading(true);
         await onConfirm(finalReason);
         setLoading(false);
         handleClose();
     };
 
-    const isConfirmDisabled = !selectedReason ||
-        (selectedReason === "other" && otherReasonText.trim() === "");
+    const isConfirmDisabled = !selectedReason || (selectedReason === "other" && otherReasonText.trim() === "");
 
     const handleClose = () => {
         setSelectedReason("");
@@ -88,83 +86,38 @@ function DeleteConfirmModal({ isOpen, onClose, onConfirm, isRTL = false }) {
     if (!isOpen) return null;
 
     return (
-        <div
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-            onClick={handleClose}
-        >
-            <div
-                className="bg-white rounded-2xl p-6 max-w-md w-full shadow-xl"
-                onClick={(e) => e.stopPropagation()}
-                dir={isRTL ? 'rtl' : 'ltr'}
-            >
-                {/* Header */}
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={handleClose}>
+            <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-xl" onClick={(e) => e.stopPropagation()} dir={isRTL ? 'rtl' : 'ltr'}>
                 <div className="flex items-center justify-between mb-6">
                     <h3 className="text-xl font-bold text-gray-900">
                         {isRTL ? 'حذف الإعلان' : 'Delete Ad'}
                     </h3>
-                    <button
-                        onClick={handleClose}
-                        className="text-gray-400 cursor-pointer hover:text-gray-600 transition-colors"
-                    >
+                    <button onClick={handleClose} className="text-gray-400 cursor-pointer hover:text-gray-600 transition-colors">
                         <X className="w-5 h-5" />
                     </button>
                 </div>
 
-                {/* Description */}
                 <p className="text-gray-600 text-sm mb-5">
-                    {isRTL
-                        ? 'الرجاء اختيار سبب حذف الإعلان:'
-                        : 'Please select a reason for deletion:'}
+                    {isRTL ? 'الرجاء اختيار سبب حذف الإعلان:' : 'Please select a reason for deletion:'}
                 </p>
 
-                {/* Reasons List */}
                 <div className="space-y-2 mb-5">
                     {reasons.map((reason) => {
                         const isSelected = selectedReason === reason.value;
                         return (
-                            <label
-                                key={reason.value}
-                                className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer
-                                transition-colors duration-200
-                                ${isSelected
-                                        ? `${reason.activeBg} border-2 ${reason.activeBorder}`
-                                        : `${reason.bgColor} border border-transparent`
-                                    }`}
-                            >
-                                {/* custom radio */}
-                                <span
-                                    className={`w-5 h-5 rounded-full border-2 flex items-center justify-center
-                                    transition-colors
-                                    ${isSelected ? reason.activeBorder : "border-gray-300"}
-                                `}
-                                >
-                                    {isSelected && (
-                                        <span
-                                            className={`w-2.5 h-2.5 rounded-full ${reason.dotColor}`}
-                                        />
-                                    )}
+                            <label key={reason.value} className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors duration-200 ${isSelected ? `${reason.activeBg} border-2 ${reason.activeBorder}` : `${reason.bgColor} border border-transparent`}`}>
+                                <span className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${isSelected ? reason.activeBorder : "border-gray-300"}`}>
+                                    {isSelected && <span className={`w-2.5 h-2.5 rounded-full ${reason.dotColor}`} />}
                                 </span>
-
-                                {/* text */}
                                 <span className="flex-1 font-medium text-sm">
                                     {isRTL ? reason.labelAr : reason.labelEn}
                                 </span>
-
-                                {/* hidden input */}
-                                <input
-                                    type="radio"
-                                    name="deleteReason"
-                                    value={reason.value}
-                                    checked={isSelected}
-                                    onChange={(e) => handleReasonChange(e.target.value)}
-                                    className="hidden"
-                                />
+                                <input type="radio" name="deleteReason" value={reason.value} checked={isSelected} onChange={(e) => handleReasonChange(e.target.value)} className="hidden" />
                             </label>
                         );
                     })}
                 </div>
 
-                {/* Other reason textarea */}
                 {selectedReason === "other" && (
                     <div className="mb-5">
                         <textarea
@@ -181,13 +134,8 @@ function DeleteConfirmModal({ isOpen, onClose, onConfirm, isRTL = false }) {
                     </div>
                 )}
 
-                {/* Buttons */}
                 <div className="flex gap-3">
-                    <button
-                        onClick={handleConfirm}
-                        disabled={loading || isConfirmDisabled}
-                        className="flex-1 cursor-pointer bg-red-600 hover:bg-red-700 text-white font-semibold py-3 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                    >
+                    <button onClick={handleConfirm} disabled={loading || isConfirmDisabled} className="flex-1 cursor-pointer bg-red-600 hover:bg-red-700 text-white font-semibold py-3 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
                         {loading ? (
                             <>
                                 <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
@@ -203,11 +151,7 @@ function DeleteConfirmModal({ isOpen, onClose, onConfirm, isRTL = false }) {
                             </>
                         )}
                     </button>
-                    <button
-                        onClick={handleClose}
-                        disabled={loading}
-                        className="flex-1 cursor-pointer bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-3 rounded-lg transition disabled:opacity-50"
-                    >
+                    <button onClick={handleClose} disabled={loading} className="flex-1 cursor-pointer bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-3 rounded-lg transition disabled:opacity-50">
                         {isRTL ? 'إلغاء' : 'Cancel'}
                     </button>
                 </div>
@@ -266,16 +210,11 @@ const EditAds = () => {
             const userData = JSON.parse(localStorage.getItem('userData'));
             const country_id = userData.country?.id;
 
-            console.log('Loading product with ID:', id);
-
+            // جلب بيانات المنتج
             let productRes;
             try {
                 productRes = await userAPI.get(`/products/${id}`);
-                console.log('Product Full Response:', productRes.data);
             } catch (err) {
-                console.error('Error loading product:', err);
-                console.error('Error response:', err.response?.data);
-
                 if (err.response?.status === 404) {
                     throw new Error(isRTL ? 'المنتج غير موجود أو تم حذفه' : 'Product not found or deleted');
                 } else if (err.response?.status === 403) {
@@ -285,13 +224,11 @@ const EditAds = () => {
                 }
             }
 
+            // جلب الفئات والمحافظات
             const [categoriesRes, governoratesRes] = await Promise.all([
                 userAPI.get('/categories'),
                 userAPI.get(`/governorates?country_id=${country_id}`)
             ]);
-
-            console.log('Categories:', categoriesRes.data);
-            console.log('Governorates:', governoratesRes.data.data.governorates);
 
             const productData = productRes?.data?.data || productRes?.data;
             const categoriesData = categoriesRes?.data?.data || categoriesRes?.data?.categories;
@@ -302,41 +239,52 @@ const EditAds = () => {
 
             if (productData) {
                 const categoryId = productData.category?.id || productData.category_id;
+                const subCategoryId = productData.sub_category?.id || productData.sub_category_id;
 
+                // نحمل attributes الفئة أولاً
                 if (categoryId) {
-                    await loadCategoryAttributes(categoryId);
+                    const attrsResponse = await userAPI.get(`/categories/${categoryId}/attributes`);
+                    const attrs = attrsResponse.data?.data || [];
+                    setCategoryAttributes(attrs);
+
+                    // بعد ما نجيب الـ attributes، نشوف القيم الموجودة في المنتج
+                    const extractedAttributes = {};
+                    
+                    // نمر على كل attribute ونشوف لو موجود في المنتج
+                    attrs.forEach(attr => {
+                        const attrName = attr.name_en;
+                        if (productData[attrName] !== undefined && productData[attrName] !== null) {
+                            // نحول القيم للنوع الصحيح
+                            let value = productData[attrName];
+                            
+                            // لو boolean، نحوله لـ string
+                            if (typeof value === 'boolean') {
+                                value = value.toString();
+                            }
+                            
+                            extractedAttributes[attrName] = value;
+                        }
+                    });
+
+                    console.log('Extracted Attributes:', extractedAttributes);
+
+                    // نحمل الـ subcategories
                     await loadSubCategories(categoryId);
+
+                    setFormData({
+                        category_id: categoryId || '',
+                        sub_category_id: subCategoryId || '',
+                        images: [],
+                        attributes: extractedAttributes
+                    });
                 }
 
-                const extractedAttributes = {};
-                Object.keys(productData).forEach(key => {
-                    if (!['id', 'category', 'category_id', 'sub_category', 'sub_category_id',
-                        'images', 'image', 'created_at', 'updated_at', 'user', 'user_id',
-                        'status', 'watchers_count', 'interested_count', 'renewed_at'].includes(key)) {
-                        extractedAttributes[key] = productData[key];
-                    }
-                });
-
-                console.log('Extracted Attributes:', extractedAttributes);
-
-                setFormData({
-                    category_id: categoryId || '',
-                    sub_category_id: productData.sub_category?.id || productData.sub_category_id || '',
-                    images: [],
-                    attributes: extractedAttributes
-                });
-
-                console.log('Raw Product Images:', productData.images);
-                console.log('Raw Product Image:', productData.image);
-
+                // معالجة الصور
                 if (productData.images && Array.isArray(productData.images) && productData.images.length > 0) {
-                    console.log('Setting existing images from array');
                     setExistingImages(productData.images);
                 } else if (productData.image) {
-                    console.log('Setting existing images from single image');
                     setExistingImages([productData.image]);
                 } else {
-                    console.log('No images found');
                     setExistingImages([]);
                 }
             }
@@ -353,7 +301,6 @@ const EditAds = () => {
     const loadSubCategories = async (categoryId) => {
         try {
             const { data, fromCache } = await getCachedSubCategories(categoryId);
-            console.log(fromCache ? '📦 SubCategories من الكاش' : '🌐 SubCategories من API');
             setSubCategories(Array.isArray(data) ? data : []);
         } catch (error) {
             console.error('Error loading subcategories:', error);
@@ -365,7 +312,6 @@ const EditAds = () => {
         try {
             const response = await userAPI.get(`/categories/${categoryId}/attributes`);
             const attributes = response.data?.data || [];
-            console.log('Category Attributes:', attributes);
             setCategoryAttributes(attributes);
         } catch (error) {
             console.error('Error loading category attributes:', error);
@@ -420,10 +366,12 @@ const EditAds = () => {
         const value = formData.attributes[attribute.name_en] || '';
         const label = isRTL ? attribute.name_ar : attribute.name_en;
 
+        // نخفي حقل الصورة
         if (attribute.name_en === 'image') {
             return null;
         }
 
+        // حقل المحافظة
         if (attribute.name_en === 'governorate_id') {
             const governorateOptions = [
                 { value: "", label: isRTL ? 'اختر المحافظة' : 'Select Governorate' },
@@ -440,7 +388,7 @@ const EditAds = () => {
                     </label>
                     <CustomSelect
                         options={governorateOptions}
-                        value={value}
+                        value={value.toString()}
                         onChange={(val) => handleAttributeChange(attribute.name_en, val)}
                         placeholder={isRTL ? 'اختر المحافظة' : 'Select Governorate'}
                         isRTL={isRTL}
@@ -450,6 +398,7 @@ const EditAds = () => {
             );
         }
 
+        // حقل الفئة الفرعية
         if (attribute.name_en === 'sub_category_id') {
             const subCategoryOptions = [
                 { value: "", label: isRTL ? 'اختر النوع' : 'Select Type' },
@@ -466,7 +415,7 @@ const EditAds = () => {
                     </label>
                     <CustomSelect
                         options={subCategoryOptions}
-                        value={formData.sub_category_id}
+                        value={formData.sub_category_id.toString()}
                         onChange={(val) => setFormData(prev => ({ ...prev, sub_category_id: val }))}
                         placeholder={isRTL ? 'اختر النوع' : 'Select Type'}
                         isRTL={isRTL}
@@ -477,6 +426,7 @@ const EditAds = () => {
             );
         }
 
+        // Dropdown attributes
         if (attribute.type === 'dropdown' && attribute.options && attribute.options.length > 0) {
             const dropdownOptions = [
                 { value: "", label: isRTL ? 'اختر' : 'Select' },
@@ -493,7 +443,7 @@ const EditAds = () => {
                     </label>
                     <CustomSelect
                         options={dropdownOptions}
-                        value={value}
+                        value={value.toString()}
                         onChange={(val) => handleAttributeChange(attribute.name_en, val)}
                         placeholder={isRTL ? 'اختر' : 'Select'}
                         isRTL={isRTL}
@@ -502,6 +452,7 @@ const EditAds = () => {
             );
         }
 
+        // حقول الوصف
         if (attribute.name_en.includes('description')) {
             return (
                 <div key={attribute.id} className="w-full">
@@ -520,6 +471,7 @@ const EditAds = () => {
             );
         }
 
+        // الحقول العادية
         return (
             <div key={attribute.id} className="w-full">
                 <label className="block text-gray-700 font-semibold mb-2.5 text-sm">
@@ -543,10 +495,7 @@ const EditAds = () => {
         e.preventDefault();
 
         if (existingImages.length === 0 && formData.images.length === 0) {
-            showToast(
-                isRTL ? 'يجب إضافة صورة واحدة على الأقل' : 'Please add at least one image',
-                'error'
-            );
+            showToast(isRTL ? 'يجب إضافة صورة واحدة على الأقل' : 'Please add at least one image', 'error');
             return;
         }
 
@@ -554,7 +503,6 @@ const EditAds = () => {
 
         try {
             const dataToSend = new FormData();
-
             dataToSend.append('_method', 'PUT');
 
             if (formData.category_id) {
@@ -565,6 +513,7 @@ const EditAds = () => {
                 dataToSend.append("sub_category_id", formData.sub_category_id);
             }
 
+            // إضافة كل الـ attributes
             Object.keys(formData.attributes).forEach(key => {
                 const value = formData.attributes[key];
                 if (value !== null && value !== undefined && value !== '') {
@@ -572,27 +521,28 @@ const EditAds = () => {
                 }
             });
 
+            // إضافة الصور الجديدة
             formData.images.forEach((image) => {
                 dataToSend.append('images[]', image);
             });
 
+            // إضافة الصور الموجودة
             if (existingImages.length > 0) {
                 existingImages.forEach((image) => {
                     let imageValue;
-
                     if (typeof image === 'object' && image !== null) {
                         imageValue = image.id || image.image_id || image.url || image.image_url;
                     } else if (typeof image === 'string') {
                         imageValue = image;
                     }
-
                     if (imageValue) {
                         dataToSend.append('keep_images[]', imageValue);
                     }
                 });
             }
 
-            console.log("=== FormData Contents ===");
+            // طباعة الـ FormData للتأكد
+            console.log("=== Data Being Sent ===");
             for (let pair of dataToSend.entries()) {
                 console.log(pair[0] + ':', pair[1]);
             }
@@ -605,17 +555,13 @@ const EditAds = () => {
 
             console.log('Update Response:', response.data);
 
-            showToast(
-                isRTL ? 'تم تعديل الإعلان بنجاح!' : 'Ad updated successfully!',
-                'success'
-            );
+            showToast(isRTL ? 'تم تعديل الإعلان بنجاح!' : 'Ad updated successfully!', 'success');
 
             setTimeout(() => {
                 navigate('/ads');
             }, 1500);
         } catch (error) {
             console.error("Error updating product:", error);
-            console.error("Error response:", error.response?.data);
 
             const validationErrors = error.response?.data?.errors;
             let errorMessage = '';
@@ -625,8 +571,7 @@ const EditAds = () => {
                 const firstError = validationErrors[firstErrorKey];
                 errorMessage = Array.isArray(firstError) ? firstError[0] : firstError;
             } else {
-                errorMessage = error.response?.data?.message ||
-                    (isRTL ? 'حدث خطأ أثناء تعديل الإعلان' : 'Error updating ad');
+                errorMessage = error.response?.data?.message || (isRTL ? 'حدث خطأ أثناء تعديل الإعلان' : 'Error updating ad');
             }
 
             showToast(errorMessage, 'error');
@@ -644,19 +589,13 @@ const EditAds = () => {
                 }
             });
 
-            showToast(
-                isRTL ? 'تم حذف الإعلان بنجاح' : 'Ad deleted successfully',
-                'success'
-            );
+            showToast(isRTL ? 'تم حذف الإعلان بنجاح' : 'Ad deleted successfully', 'success');
             setTimeout(() => {
                 navigate('/ads');
             }, 1500);
         } catch (error) {
             console.error('Error deleting product:', error);
-            showToast(
-                isRTL ? 'حدث خطأ أثناء حذف الإعلان' : 'Error deleting ad',
-                'error'
-            );
+            showToast(isRTL ? 'حدث خطأ أثناء حذف الإعلان' : 'Error deleting ad', 'error');
         }
         setShowDeleteConfirm(false);
     };
@@ -671,19 +610,10 @@ const EditAds = () => {
                 <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md">
                     <p className="text-red-600 text-center mb-4 text-base font-medium">{error}</p>
                     <div className="flex gap-3">
-                        <button
-                            onClick={() => navigate('/ads')}
-                            className="flex-1 cursor-pointer bg-main text-white py-2 px-4 rounded-lg hover:bg-green-700 text-sm font-semibold transition"
-                        >
+                        <button onClick={() => navigate('/ads')} className="flex-1 cursor-pointer bg-main text-white py-2 px-4 rounded-lg hover:bg-green-700 text-sm font-semibold transition">
                             {isRTL ? 'الرجوع للإعلانات' : 'Back to Ads'}
                         </button>
-                        <button
-                            onClick={() => {
-                                setError(null);
-                                loadInitialData();
-                            }}
-                            className="flex-1 cursor-pointer bg-gray-200 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-300 text-sm font-semibold transition"
-                        >
+                        <button onClick={() => { setError(null); loadInitialData(); }} className="flex-1 cursor-pointer bg-gray-200 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-300 text-sm font-semibold transition">
                             {isRTL ? 'إعادة المحاولة' : 'Retry'}
                         </button>
                     </div>
@@ -692,6 +622,7 @@ const EditAds = () => {
         );
     }
 
+    // تصفية الـ attributes حسب اللغة
     const filteredAttributes = categoryAttributes.filter(attr => {
         const attrName = attr.name_en.toLowerCase();
         if (isRTL) {
@@ -731,20 +662,14 @@ const EditAds = () => {
             </div>
 
             <form onSubmit={handleUpdate} className="space-y-8">
+                {/* قسم الصور */}
                 <div className="bg-gray-50 rounded-xl p-6 space-y-5">
                     <h2 className="text-lg font-bold text-gray-800 mb-4">
                         {isRTL ? 'صور الإعلان' : 'Ad Images'}
                     </h2>
 
                     <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 bg-white hover:border-main transition-colors">
-                        <input
-                            type="file"
-                            accept="image/*"
-                            multiple
-                            onChange={handleImageChange}
-                            className="hidden"
-                            id="images-upload"
-                        />
+                        <input type="file" accept="image/*" multiple onChange={handleImageChange} className="hidden" id="images-upload" />
                         <label htmlFor="images-upload" className="cursor-pointer block">
                             <div className="flex flex-col items-center">
                                 <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
@@ -772,20 +697,8 @@ const EditAds = () => {
 
                                 return (
                                     <div key={`existing-${index}`} className="relative group">
-                                        <img
-                                            src={imageUrl}
-                                            alt={`Existing ${index + 1}`}
-                                            className="w-full h-32 sm:h-36 object-cover rounded-xl border-2 border-blue-300 shadow-sm group-hover:shadow-md transition-shadow"
-                                            onError={(e) => {
-                                                console.error('Error loading image:', imageUrl);
-                                                e.target.src = <PlaceholderSVG />;
-                                            }}
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={() => removeExistingImage(index)}
-                                            className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center cursor-pointer transition shadow-lg"
-                                        >
+                                        <img src={imageUrl} alt={`Existing ${index + 1}`} className="w-full h-32 sm:h-36 object-cover rounded-xl border-2 border-blue-300 shadow-sm group-hover:shadow-md transition-shadow" />
+                                        <button type="button" onClick={() => removeExistingImage(index)} className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center cursor-pointer transition shadow-lg">
                                             <X className="w-4 h-4" />
                                         </button>
                                         <div className="absolute bottom-2 left-2 bg-blue-500 text-white text-xs px-2.5 py-1 rounded-md font-semibold shadow">
@@ -797,16 +710,8 @@ const EditAds = () => {
 
                             {imagePreviews.map((preview, index) => (
                                 <div key={`new-${index}`} className="relative group">
-                                    <img
-                                        src={preview}
-                                        alt={`Preview ${index + 1}`}
-                                        className="w-full h-32 sm:h-36 object-cover rounded-xl border-2 border-green-400 shadow-sm group-hover:shadow-md transition-shadow"
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => removeNewImage(index)}
-                                        className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center cursor-pointer transition shadow-lg"
-                                    >
+                                    <img src={preview} alt={`Preview ${index + 1}`} className="w-full h-32 sm:h-36 object-cover rounded-xl border-2 border-green-400 shadow-sm group-hover:shadow-md transition-shadow" />
+                                    <button type="button" onClick={() => removeNewImage(index)} className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center cursor-pointer transition shadow-lg">
                                         <X className="w-4 h-4" />
                                     </button>
                                     <div className="absolute cursor-pointer bottom-2 left-2 bg-green-500 text-white text-xs px-2.5 py-1 rounded-md font-semibold shadow">
@@ -818,6 +723,7 @@ const EditAds = () => {
                     )}
                 </div>
 
+                {/* قسم البيانات */}
                 <div className="bg-gray-50 rounded-xl p-6">
                     <h2 className="text-lg font-bold text-gray-800 mb-6">
                         {isRTL ? 'بيانات الإعلان' : 'Ad Details'}
@@ -852,12 +758,9 @@ const EditAds = () => {
                     )}
                 </div>
 
+                {/* أزرار التحكم */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className="w-full cursor-pointer bg-main hover:bg-green-700 text-white font-bold py-4 rounded-xl transition-all disabled:bg-gray-400 disabled:cursor-not-allowed text-base sm:text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-                    >
+                    <button type="submit" disabled={loading} className="w-full cursor-pointer bg-main hover:bg-green-700 text-white font-bold py-4 rounded-xl transition-all disabled:bg-gray-400 disabled:cursor-not-allowed text-base sm:text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
                         {loading ? (
                             <span className="flex items-center justify-center gap-3">
                                 <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -871,24 +774,14 @@ const EditAds = () => {
                         )}
                     </button>
 
-                    <button
-                        type="button"
-                        onClick={() => setShowDeleteConfirm(true)}
-                        className="w-full cursor-pointer bg-white hover:bg-red-50 text-red-600 font-bold py-4 rounded-xl border-2 border-red-600 transition-all text-base sm:text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center gap-2"
-                    >
+                    <button type="button" onClick={() => setShowDeleteConfirm(true)} className="w-full cursor-pointer bg-white hover:bg-red-50 text-red-600 font-bold py-4 rounded-xl border-2 border-red-600 transition-all text-base sm:text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center gap-2">
                         <Trash2 className="w-5 h-5" />
                         {t('ads.delete')}
                     </button>
                 </div>
             </form>
 
-            {/* Delete Confirmation Modal */}
-            <DeleteConfirmModal
-                isOpen={showDeleteConfirm}
-                onClose={() => setShowDeleteConfirm(false)}
-                onConfirm={handleDelete}
-                isRTL={isRTL}
-            />
+            <DeleteConfirmModal isOpen={showDeleteConfirm} onClose={() => setShowDeleteConfirm(false)} onConfirm={handleDelete} isRTL={isRTL} />
         </div>
     );
 };

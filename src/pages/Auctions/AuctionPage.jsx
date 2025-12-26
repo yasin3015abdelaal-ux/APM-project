@@ -7,6 +7,145 @@ import Loader from "../../components/Ui/Loader/Loader";
 import PlaceholderSVG from "../../assets/PlaceholderSVG";
 import { IoLocationOutline } from "react-icons/io5";
 
+function ProductCard({ product, onProductClick, onContactSeller, isAuctionOpen }) {
+    const { i18n } = useTranslation();
+    const isRTL = i18n.language === 'ar';
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+    const {
+        id,
+        images,
+        image,
+        name_ar,
+        name_en,
+        governorate,
+        price,
+        original_price,
+        auction_price
+    } = product;
+
+    const allImages = images && images.length > 0
+        ? images
+        : (image ? [image] : []);
+
+    const hasMultipleImages = allImages.length > 1;
+
+    useEffect(() => {
+        if (!hasMultipleImages) return;
+
+        const interval = setInterval(() => {
+            setCurrentImageIndex((prev) => (prev + 1) % allImages.length);
+        }, 3000);
+
+        return () => clearInterval(interval);
+    }, [hasMultipleImages, allImages.length]);
+
+    const goToImage = (e, index) => {
+        e.stopPropagation();
+        setCurrentImageIndex(index);
+    };
+
+    const displayName = isRTL ? name_ar : name_en;
+    const displayPrice = auction_price || price;
+
+    return (
+        <div className="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+            <div
+                className="h-32 bg-gray-100 relative cursor-pointer group"
+                onClick={() => onProductClick(id)}
+            >
+                {allImages.length > 0 && allImages[currentImageIndex] ? (
+                    <>
+                        <img
+                            src={allImages[currentImageIndex]}
+                            alt={displayName}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                                e.target.style.display = 'none';
+                                e.target.nextElementSibling.style.display = 'flex';
+                            }}
+                        />
+                        <div className="hidden w-full h-full items-center justify-center bg-gray-100 absolute top-0 left-0">
+                            <PlaceholderSVG />
+                        </div>
+                    </>
+                ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                        <PlaceholderSVG />
+                    </div>
+                )}
+
+                {hasMultipleImages && (
+                    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 z-10 bg-black/30 px-2 py-1 rounded-full backdrop-blur-sm">
+                        {allImages.map((_, index) => (
+                            <button
+                                key={index}
+                                onClick={(e) => goToImage(e, index)}
+                                className={`transition-all rounded-full cursor-pointer ${index === currentImageIndex
+                                    ? 'bg-white w-4 h-2'
+                                    : 'bg-white/50 hover:bg-white/75 w-2 h-2'
+                                    }`}
+                                aria-label={`Go to image ${index + 1}`}
+                            />
+                        ))}
+                    </div>
+                )}
+            </div>
+
+            <div className="p-2">
+                <h3 className="font-bold text-xs mb-1 line-clamp-1 text-main">
+                    {displayName}
+                </h3>
+
+                <div className="flex items-center gap-0.5 mb-1.5">
+                    <IoLocationOutline className="text-main" size={12} />
+                    <p className="font-medium text-xs text-gray-700">
+                        {isRTL ? governorate?.name_ar : governorate?.name_en}
+                    </p>
+                </div>
+
+                <div className="flex items-center gap-2 mb-1.5 text-[10px] text-gray-600">
+                    <div className="flex items-center gap-0.5">
+                        <svg className="w-3 h-3 text-main" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                        <span>{product.watchers_count || 0}</span>
+                    </div>
+                    <div className="flex items-center gap-0.5">
+                        <HeartIcon className="w-3 h-3 text-red-600" />
+                        <span>{product.interested_count || 0}</span>
+                    </div>
+                </div>
+
+                <div className="flex items-center justify-between mb-1.5">
+                    <div>
+                        <h6 className="font-bold text-xs text-main">
+                            {displayPrice} {isRTL ? "جنيه" : "EGP"}
+                        </h6>
+                        {auction_price && original_price && auction_price !== original_price && (
+                            <p className="text-[10px] text-gray-500 line-through">
+                                {original_price} {isRTL ? "جنيه" : "EGP"}
+                            </p>
+                        )}
+                    </div>
+                </div>
+
+                <button
+                    onClick={() => onContactSeller(product)}
+                    disabled={!isAuctionOpen}
+                    className={`w-full py-1.5 px-2 rounded-lg transition text-xs font-medium ${isAuctionOpen
+                        ? "bg-main hover:bg-green-700 text-white cursor-pointer"
+                        : "bg-gray-400 text-gray-200 cursor-not-allowed"
+                        }`}
+                >
+                    {isRTL ? "تواصل مع البائع" : "Contact Seller"}
+                </button>
+            </div>
+        </div>
+    );
+}
+
 const AuctionPage = () => {
     const { i18n } = useTranslation();
     const navigate = useNavigate();
@@ -26,8 +165,8 @@ const AuctionPage = () => {
     const [auctions, setAuctions] = useState([]);
     const [currentAuctionId, setCurrentAuctionId] = useState(null);
     const [currentAuctionStatus, setCurrentAuctionStatus] = useState(null);
+    const [showShadow, setShowShadow] = useState(false);
 
-    // Pagination states
     const [currentPage, setCurrentPage] = useState(1);
     const [productsPerPage] = useState(8);
 
@@ -40,92 +179,84 @@ const AuctionPage = () => {
         navigate(`/product-details/${productId}`);
     }, [navigate]);
 
-const handleContactSeller = useCallback(async (product) => {
-    if (!timeRemaining.isOpen) {
-        showToast(
-            isRTL ? "المزاد لم يُفتح بعد" : "Auction has not opened yet",
-            "error"
-        );
-        return;
-    }
-
-    // if (participantRole === 'seller') {
-    //     showToast(
-    //         isRTL ? "لا يمكنك التواصل كبائع" : "You cannot contact as a seller",
-    //         "error"
-    //     );
-    //     return;
-    // }
-
-    const token = localStorage.getItem('authToken');
-    if (!token) {
-        navigate('/login', { state: { from: `/auction` } });
-        return;
-    }
-
-    try {
-        const sellerId = product.user_id || product.seller_id || product.owner_id || product.user?.id;
-        
-        if (!sellerId) {
+    const handleContactSeller = useCallback(async (product) => {
+        if (!timeRemaining.isOpen) {
             showToast(
-                isRTL ? 'لا يمكن العثور على معرف البائع' : 'Cannot find seller ID',
-                'error'
+                isRTL ? "المزاد لم يُفتح بعد" : "Auction has not opened yet",
+                "error"
             );
             return;
         }
-        
-        const currentUser = JSON.parse(localStorage.getItem('userData') || '{}');
-        if (currentUser.id === sellerId) {
-            showToast(
-                isRTL ? 'لا يمكنك إرسال رسالة لنفسك' : 'You cannot message yourself',
-                'error'
-            );
+
+        const token = localStorage.getItem('authToken');
+        if (!token) {
+            navigate('/login', { state: { from: `/auction` } });
             return;
         }
-        
-        const conversationData = {
-            user_id: parseInt(sellerId),
-            type: 'auction'
-        };
-        
-        const response = await chatAPI.createConversation(conversationData);
 
-        if (response.data.success) {
-            const conversationId = response.data.conversation?.id || response.data.data?.id;
+        try {
+            const sellerId = product.user_id || product.seller_id || product.owner_id || product.user?.id;
             
-            if (conversationId) {
-                navigate('/chats', { 
-                    state: { conversationId } 
-                });
-            } else {
+            if (!sellerId) {
                 showToast(
-                    isRTL ? 'حدث خطأ أثناء إنشاء المحادثة' : 'Error creating conversation',
+                    isRTL ? 'لا يمكن العثور على معرف البائع' : 'Cannot find seller ID',
                     'error'
                 );
-            }
-        }
-    } catch (error) {
-        if (error.response?.status === 409 || error.response?.data?.conversation) {
-            const existingConvId = error.response.data.conversation?.id || error.response.data.data?.id;
-            if (existingConvId) {
-                navigate('/chats', { state: { conversationId: existingConvId } });
                 return;
             }
+            
+            const currentUser = JSON.parse(localStorage.getItem('userData') || '{}');
+            if (currentUser.id === sellerId) {
+                showToast(
+                    isRTL ? 'لا يمكنك إرسال رسالة لنفسك' : 'You cannot message yourself',
+                    'error'
+                );
+                return;
+            }
+            
+            const conversationData = {
+                user_id: parseInt(sellerId),
+                type: 'auction'
+            };
+            
+            const response = await chatAPI.createConversation(conversationData);
+
+            if (response.data.success) {
+                const conversationId = response.data.conversation?.id || response.data.data?.id;
+                
+                if (conversationId) {
+                    navigate('/chats', { 
+                        state: { conversationId } 
+                    });
+                } else {
+                    showToast(
+                        isRTL ? 'حدث خطأ أثناء إنشاء المحادثة' : 'Error creating conversation',
+                        'error'
+                    );
+                }
+            }
+        } catch (error) {
+            if (error.response?.status === 409 || error.response?.data?.conversation) {
+                const existingConvId = error.response.data.conversation?.id || error.response.data.data?.id;
+                if (existingConvId) {
+                    navigate('/chats', { state: { conversationId: existingConvId } });
+                    return;
+                }
+            }
+            
+            const errorMessage = error.response?.data?.message 
+                || error.response?.data?.error 
+                || error.message 
+                || 'Unknown error';
+            
+            showToast(
+                isRTL 
+                    ? `حدث خطأ: ${errorMessage}` 
+                    : `Error: ${errorMessage}`,
+                'error'
+            );
         }
-        
-        const errorMessage = error.response?.data?.message 
-            || error.response?.data?.error 
-            || error.message 
-            || 'Unknown error';
-        
-        showToast(
-            isRTL 
-                ? `حدث خطأ: ${errorMessage}` 
-                : `Error: ${errorMessage}`,
-            'error'
-        );
-    }
-}, [timeRemaining.isOpen, participantRole, showToast, isRTL, navigate]);
+    }, [timeRemaining.isOpen, showToast, isRTL, navigate]);
 
     const checkParticipationStatus = useCallback(async (auctionId) => {
         if (!auctionId) return null;
@@ -152,6 +283,17 @@ const handleContactSeller = useCallback(async (product) => {
             return null;
         }
     }, []);
+
+    const calculateTimeDiff = useCallback((start, end, isOpen, registrationOpen) => {
+        const diff = end - start;
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+        return { days, hours, minutes, seconds, isOpen, registrationOpen };
+    }, []);
+
     const calculateTimeRemaining = useCallback(() => {
         const now = new Date();
         const currentDay = now.getDay();
@@ -187,17 +329,8 @@ const handleContactSeller = useCallback(async (product) => {
         const registrationOpen = !(currentDay === 5 && currentHour >= 7 && currentHour < 22);
 
         return calculateTimeDiff(now, nextFriday, false, registrationOpen);
-    }, []);
+    }, [calculateTimeDiff]);
 
-    const calculateTimeDiff = (start, end, isOpen, registrationOpen) => {
-        const diff = end - start;
-        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-        return { days, hours, minutes, seconds, isOpen, registrationOpen };
-    };
     const fetchProducts = useCallback(async (auctionId = currentAuctionId) => {
         if (!auctionId) return;
 
@@ -271,6 +404,19 @@ const handleContactSeller = useCallback(async (product) => {
 
         return () => clearInterval(timer);
     }, [calculateTimeRemaining]);
+
+    useEffect(() => {
+        const handleScroll = () => {
+            if (window.scrollY > 50) {
+                setShowShadow(true);
+            } else {
+                setShowShadow(false);
+            }
+        };
+
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
 
     const handleParticipate = async (role) => {
         if (!currentAuctionId) {
@@ -372,154 +518,6 @@ const handleContactSeller = useCallback(async (product) => {
             created_at: product.created_at || auctionProduct.added_at
         };
     };
-
-    function ProductCard({ product, onProductClick, onContactSeller, isAuctionOpen }) {
-        const { i18n } = useTranslation();
-        const isRTL = i18n.language === 'ar';
-        const [currentImageIndex, setCurrentImageIndex] = useState(0);
-
-        const {
-            id,
-            images,
-            image,
-            name_ar,
-            name_en,
-            governorate,
-            price,
-            original_price,
-            auction_price
-        } = product;
-
-        // Get all images
-        const allImages = images && images.length > 0
-            ? images
-            : (image ? [image] : []);
-
-        const hasMultipleImages = allImages.length > 1;
-
-        // Auto-slide effect
-        useEffect(() => {
-            if (!hasMultipleImages) return;
-
-            const interval = setInterval(() => {
-                setCurrentImageIndex((prev) => (prev + 1) % allImages.length);
-            }, 3000);
-
-            return () => clearInterval(interval);
-        }, [hasMultipleImages, allImages.length]);
-
-        const goToImage = (e, index) => {
-            e.stopPropagation();
-            setCurrentImageIndex(index);
-        };
-
-        const displayName = isRTL ? name_ar : name_en;
-        const displayPrice = auction_price || price;
-
-        return (
-            <div className="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
-                {/* Product Image with Auto Slider */}
-                <div
-                    className="h-32 bg-gray-100 relative cursor-pointer group"
-                    onClick={() => onProductClick(id)}
-                >
-                    {allImages.length > 0 && allImages[currentImageIndex] ? (
-                        <>
-                            <img
-                                src={allImages[currentImageIndex]}
-                                alt={displayName}
-                                className="w-full h-full object-cover"
-                                onError={(e) => {
-                                    e.target.style.display = 'none';
-                                    e.target.nextElementSibling.style.display = 'flex';
-                                }}
-                            />
-                            <div className="hidden w-full h-full items-center justify-center bg-gray-100 absolute top-0 left-0">
-                                <PlaceholderSVG />
-                            </div>
-                        </>
-                    ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                            <PlaceholderSVG />
-                        </div>
-                    )}
-
-                    {/* Image Indicators (Dots) */}
-                    {hasMultipleImages && (
-                        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 z-10 bg-black/30 px-2 py-1 rounded-full backdrop-blur-sm">
-                            {allImages.map((_, index) => (
-                                <button
-                                    key={index}
-                                    onClick={(e) => goToImage(e, index)}
-                                    className={`transition-all rounded-full cursor-pointer ${index === currentImageIndex
-                                        ? 'bg-white w-4 h-2'
-                                        : 'bg-white/50 hover:bg-white/75 w-2 h-2'
-                                        }`}
-                                    aria-label={`Go to image ${index + 1}`}
-                                />
-                            ))}
-                        </div>
-                    )}
-                </div>
-
-                {/* Product Details */}
-                <div className="p-2">
-                    <h3 className="font-bold text-xs mb-1 line-clamp-1 text-main">
-                        {displayName}
-                    </h3>
-
-                    {/* Location */}
-                    <div className="flex items-center gap-0.5 mb-1.5">
-                        <IoLocationOutline className="text-main" size={12} />
-                        <p className="font-medium text-xs text-gray-700">
-                            {isRTL ? governorate?.name_ar : governorate?.name_en}
-                        </p>
-                    </div>
-
-                    {/* Watchers and Interested */}
-                    <div className="flex items-center gap-2 mb-1.5 text-[10px] text-gray-600">
-                        <div className="flex items-center gap-0.5">
-                            <svg className="w-3 h-3 text-main" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                            </svg>
-                            <span>{product.watchers_count || 0}</span>
-                        </div>
-                        <div className="flex items-center gap-0.5">
-                            <HeartIcon className="w-3 h-3 text-red-600" />
-                            <span>{product.interested_count || 0}</span>
-                        </div>
-                    </div>
-
-                    {/* Price Section */}
-                    <div className="flex items-center justify-between mb-1.5">
-                        <div>
-                            <h6 className="font-bold text-xs text-main">
-                                {displayPrice} {isRTL ? "جنيه" : "EGP"}
-                            </h6>
-                            {auction_price && original_price && auction_price !== original_price && (
-                                <p className="text-[10px] text-gray-500 line-through">
-                                    {original_price} {isRTL ? "جنيه" : "EGP"}
-                                </p>
-                            )}
-                        </div>
-                    </div>
-
-                    <button
-                        onClick={() => onContactSeller(product)}
-                        disabled={!isAuctionOpen}
-                        className={`w-full py-1.5 px-2 rounded-lg transition text-xs font-medium ${isAuctionOpen
-                            ? "bg-main hover:bg-green-700 text-white cursor-pointer"
-                            : "bg-gray-400 text-gray-200 cursor-not-allowed"
-                            }`}
-                    >
-                        {isRTL ? "تواصل مع البائع" : "Contact Seller"}
-                    </button>
-                </div>
-            </div>
-        );
-    }
-
 
     return (
         <div className="min-h-screen bg-white" dir={isRTL ? "rtl" : "ltr"}>
@@ -639,13 +637,12 @@ const handleContactSeller = useCallback(async (product) => {
                 </div>
 
                 <div className="grid grid-cols-2 gap-3 mb-4">
-                    <div className="bg-white border border-gray-200 text-center rounded-xl p-3 hover:border-main transition-all">
+                                        <div className="bg-white border border-gray-200 text-center rounded-xl p-3 hover:border-main transition-all">
                         <h3 className="text-xs font-bold text-gray-800 mb-1">
                             {isRTL ? "التجار المسجلين في المزاد حتي الان" : "Sellers registered in the auction so far"}
                         </h3>
                         <div className="text-xl font-bold text-main">{sellersCount}</div>
                     </div>
-
                     <div className="bg-white border border-gray-200 text-center rounded-xl p-3 hover:border-main transition-all">
                         <h3 className="text-xs font-bold text-gray-800 mb-1">
                             {isRTL ? "المشترين المسجلين في المزاد حتي الان" : "Buyers registered in the auction so far"}
@@ -676,6 +673,7 @@ const handleContactSeller = useCallback(async (product) => {
                             </h3>
                         </div>
                     )}
+
                     {!loading && !isParticipating && (
                         <div className="bg-white border border-gray-200 text-center rounded-xl p-3 hover:border-main transition-all">
                             <h3 className="text-xs font-bold text-gray-800 mb-1">
@@ -691,7 +689,6 @@ const handleContactSeller = useCallback(async (product) => {
                                 ) : (
                                     <>
                                         Book as a buyer in the upcoming auction <br />
-                                        متبقي{" "}
                                         {(!maxBuyers || maxBuyers - buyersCount <= 0)
                                             ? "∞"
                                             : maxBuyers - buyersCount}{" "}
@@ -707,59 +704,59 @@ const handleContactSeller = useCallback(async (product) => {
                     <Loader />
                 ) : !isParticipating ? (
                     <>
-{timeRemaining.registrationOpen ? (
-            <>
-                <p className="text-center text-main mb-3 text-xl mt-8 font-bold">
-                    {isRTL ? "يمكنك التسجيل المسبق للمزاد القادم والاستفادة من تخفيضات الاسعار" : "You can pre-register for the upcoming auction and benefit from price reductions"}
-                </p>
-                <div className="absolute bottom-0 left-0 right-0 py-3 z-40">
-                    <div className="max-w-6xl mx-auto px-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            <button
-                                onClick={() => {
-                                    if (!canRegisterAsBuyer) {
-                                        showToast(isRTL ? "تم الوصول للحد الأقصى من المشترين" : "Maximum buyers reached", "error");
-                                        return;
-                                    }
-                                    setParticipateRole("buyer");
-                                    setShowParticipateModal(true);
-                                }}
-                                disabled={!canRegisterAsBuyer}
-                                className={`w-full ${canRegisterAsBuyer ? "bg-main hover:bg-green-700 cursor-pointer" : "bg-gray-400 cursor-not-allowed"} text-white px-6 py-3 rounded-xl font-bold transition text-base`}
-                            >
-                                {isRTL ? "احجز كمشتري" : "Register as Buyer"}
-                            </button>
-                            <button
-                                onClick={() => {
-                                    if (!canRegisterAsSeller) {
-                                        showToast(isRTL ? "تم الوصول للحد الأقصى من التجار" : "Maximum sellers reached", "error");
-                                        return;
-                                    }
-                                    setParticipateRole("seller");
-                                    setShowParticipateModal(true);
-                                }}
-                                disabled={!canRegisterAsSeller}
-                                className={`w-full ${canRegisterAsSeller ? "bg-main hover:bg-green-700 cursor-pointer" : "bg-gray-400 cursor-not-allowed"} text-white px-6 py-3 rounded-xl font-bold transition text-base`}
-                            >
-                                {isRTL ? "احجز كتاجر" : "Register as Seller"}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </>
-        ) : (
-            <div className="text-center py-6 bg-gray-50 rounded-xl">
-                <svg className="w-12 h-12 mx-auto text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
-                <h3 className="text-lg font-bold text-gray-800 mb-1">
-                    {isRTL ? "التسجيل مغلق حاليًا" : "Registration is currently closed"}
-                </h3>
-                <p className="text-gray-600 text-sm">
-                    {isRTL ? "سيتم فتح الحجز بعد المزاد لتتمكن من التسجيل في المزاد القادم" : "Registration will open after the auction to register for the next auction"}
-                </p>
-            </div>
-        )}
+                        {timeRemaining.registrationOpen ? (
+                            <>
+                                <p className="text-center text-main mb-3 text-xl mt-8 font-bold">
+                                    {isRTL ? "يمكنك التسجيل المسبق للمزاد القادم والاستفادة من تخفيضات الاسعار" : "You can pre-register for the upcoming auction and benefit from price reductions"}
+                                </p>
+                                <div className={`absolute bottom-0 left-0 right-0 py-3 z-40 bg-white transition-shadow duration-300 ${showShadow ? 'shadow-lg border-t border-gray-200' : ''}`}>
+                                    <div className="max-w-6xl mx-auto px-4">
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <button
+                                                onClick={() => {
+                                                    if (!canRegisterAsBuyer) {
+                                                        showToast(isRTL ? "تم الوصول للحد الأقصى من المشترين" : "Maximum buyers reached", "error");
+                                                        return;
+                                                    }
+                                                    setParticipateRole("buyer");
+                                                    setShowParticipateModal(true);
+                                                }}
+                                                disabled={!canRegisterAsBuyer}
+                                                className={`w-full ${canRegisterAsBuyer ? "bg-main hover:bg-green-700 cursor-pointer" : "bg-gray-400 cursor-not-allowed"} text-white px-6 py-3 rounded-xl font-bold transition text-base active:scale-95`}
+                                            >
+                                                {isRTL ? "احجز كمشتري" : "Register as Buyer"}
+                                            </button>
+                                            <button
+                                                onClick={() => {
+                                                    if (!canRegisterAsSeller) {
+                                                        showToast(isRTL ? "تم الوصول للحد الأقصى من التجار" : "Maximum sellers reached", "error");
+                                                        return;
+                                                    }
+                                                    setParticipateRole("seller");
+                                                    setShowParticipateModal(true);
+                                                }}
+                                                disabled={!canRegisterAsSeller}
+                                                className={`w-full ${canRegisterAsSeller ? "bg-main hover:bg-green-700 cursor-pointer" : "bg-gray-400 cursor-not-allowed"} text-white px-6 py-3 rounded-xl font-bold transition text-base active:scale-95`}
+                                            >
+                                                {isRTL ? "احجز كتاجر" : "Register as Seller"}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </>
+                        ) : (
+                            <div className="text-center py-6 bg-gray-50 rounded-xl">
+                                <svg className="w-12 h-12 mx-auto text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                </svg>
+                                <h3 className="text-lg font-bold text-gray-800 mb-1">
+                                    {isRTL ? "التسجيل مغلق حاليًا" : "Registration is currently closed"}
+                                </h3>
+                                <p className="text-gray-600 text-sm">
+                                    {isRTL ? "سيتم فتح الحجز بعد المزاد لتتمكن من التسجيل في المزاد القادم" : "Registration will open after the auction to register for the next auction"}
+                                </p>
+                            </div>
+                        )}
                     </>
                 ) : (
                     <div className="mb-4">
@@ -778,7 +775,7 @@ const handleContactSeller = useCallback(async (product) => {
                         </div>
 
                         {shouldShowProducts && (
-                            <div >
+                            <div>
                                 <div>
                                     <h2 className="text-lg font-bold text-gray-800">
                                         {isRTL ? "منتجات المزاد" : "Auction Products"}
@@ -813,7 +810,6 @@ const handleContactSeller = useCallback(async (product) => {
                                                 );
                                             })}
                                         </div>
-                                        {/* Pagination Controls */}
                                         {totalPages > 1 && (
                                             <div className="flex justify-center mt-6">
                                                 <div className="flex items-center space-x-1">
@@ -863,15 +859,15 @@ const handleContactSeller = useCallback(async (product) => {
             </div>
 
             {isParticipating && (
-                <div className="sticky bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-3 z-40 shadow-lg">
+                <div className={`sticky bottom-0 left-0 right-0 bg-white py-3 z-40 transition-shadow duration-300 ${showShadow ? 'shadow-lg border-t border-gray-200' : ''}`}>
                     <div className="max-w-6xl mx-auto px-4">
-                        <div className={`grid ${participantRole === 'buyer' ? 'grid-cols-1' : 'grid-cols-2'} gap-3`}>
+                        <div className="grid grid-cols-2 gap-3">
                             {participantRole !== 'buyer' && (
                                 <button
                                     onClick={() => navigate('/my-auctions')}
                                     className="w-full cursor-pointer bg-white border-2 border-main text-main hover:bg-main hover:text-white active:scale-95 transition-all duration-200 px-3 py-2.5 rounded-lg font-bold text-sm flex items-center justify-center gap-2 whitespace-nowrap"
                                 >
-                                    <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                     </svg>
                                     <span>{isRTL ? "مزاداتي" : "My Auctions"}</span>
@@ -880,9 +876,9 @@ const handleContactSeller = useCallback(async (product) => {
 
                             <button
                                 onClick={() => navigate('/previous-auctions')}
-                                className="w-full cursor-pointer bg-white border-2 border-gray-300 text-gray-700 hover:border-main hover:text-main active:scale-95 transition-all duration-200 px-3 py-2.5 rounded-lg font-bold text-sm flex items-center justify-center gap-2 whitespace-nowrap"
+                                className={`w-full cursor-pointer bg-white border-2 border-gray-300 text-gray-700 hover:border-main hover:text-main active:scale-95 transition-all duration-200 px-3 py-2.5 rounded-lg font-bold text-sm flex items-center justify-center gap-2 whitespace-nowrap ${participantRole === 'buyer' ? 'col-span-2' : ''}`} 
                             >
-                                <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
                                 <span>{isRTL ? "المزادات السابقة" : "Previous Auctions"}</span>

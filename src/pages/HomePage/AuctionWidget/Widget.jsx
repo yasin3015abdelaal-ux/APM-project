@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { getCachedAuctions, getCachedAuctionRole } from "../../../api";
+import { useAuth } from "../../../contexts/AuthContext";
 
 const AuctionSkeleton = ({ isRTL }) => (
     <div className="mx-auto p-2" dir={isRTL ? "rtl" : "ltr"}>
@@ -72,7 +73,7 @@ const AuctionHomeWidget = ({ isRTL = false }) => {
     const [maxSellers, setMaxSellers] = useState(null);
     const [currentAuctionId, setCurrentAuctionId] = useState(null);
     const [loading, setLoading] = useState(false);
-
+    const { isAuthenticated } = useAuth();
     const navigate = useNavigate();
 
     const checkParticipationStatus = useCallback(async (auctionId) => {
@@ -305,20 +306,30 @@ const AuctionHomeWidget = ({ isRTL = false }) => {
                                             {isRTL ? (
                                                 <>
                                                     احجز <span style={{ color: "red" }}>ك</span>تاجر في
-                                                    المزاد القادم <br />
-                                                    متبقي{" "}
-                                                    {!maxSellers || maxSellers - sellersCount <= 0
-                                                        ? "∞"
-                                                        : maxSellers - sellersCount}{" "}
-                                                    تجار
+                                                    المزاد القادم
+                                                    {isAuthenticated && (
+                                                        <>
+                                                            <br />
+                                                            متبقي{" "}
+                                                            {maxSellers === null || maxSellers - sellersCount <= 0
+                                                                ? "∞"
+                                                                : maxSellers - sellersCount}{" "}
+                                                            تجار
+                                                        </>
+                                                    )}
                                                 </>
                                             ) : (
                                                 <>
-                                                    Book as a seller in the upcoming auction <br />
-                                                    {!maxSellers || maxSellers - sellersCount <= 0
-                                                        ? "∞"
-                                                        : maxSellers - sellersCount}{" "}
-                                                    sellers remaining
+                                                    Book as a seller in the upcoming auction
+                                                    {isAuthenticated && (
+                                                        <>
+                                                            <br />
+                                                            {maxSellers === null || maxSellers - sellersCount <= 0
+                                                                ? "∞"
+                                                                : maxSellers - sellersCount}{" "}
+                                                            sellers remaining
+                                                        </>
+                                                    )}
                                                 </>
                                             )}
                                         </h3>
@@ -332,20 +343,30 @@ const AuctionHomeWidget = ({ isRTL = false }) => {
                                             {isRTL ? (
                                                 <>
                                                     احجز <span style={{ color: "red" }}>ك</span>مشتري في
-                                                    المزاد القادم <br />
-                                                    متبقي{" "}
-                                                    {!maxBuyers || maxBuyers - buyersCount <= 0
-                                                        ? "∞"
-                                                        : maxBuyers - buyersCount}{" "}
-                                                    مشترين
+                                                    المزاد القادم
+                                                    {isAuthenticated && (
+                                                        <>
+                                                            <br />
+                                                            متبقي{" "}
+                                                            {maxBuyers === null || maxBuyers - buyersCount <= 0
+                                                                ? "∞"
+                                                                : maxBuyers - buyersCount}{" "}
+                                                            مشترين
+                                                        </>
+                                                    )}
                                                 </>
                                             ) : (
                                                 <>
-                                                    Book as a buyer in the upcoming auction <br />
-                                                    {!maxBuyers || maxBuyers - buyersCount <= 0
-                                                        ? "∞"
-                                                        : maxBuyers - buyersCount}{" "}
-                                                    buyers remaining
+                                                    Book as a buyer in the upcoming auction
+                                                    {isAuthenticated && (
+                                                        <>
+                                                            <br />
+                                                            {maxBuyers === null || maxBuyers - buyersCount <= 0
+                                                                ? "∞"
+                                                                : maxBuyers - buyersCount}{" "}
+                                                            buyers remaining
+                                                        </>
+                                                    )}
                                                 </>
                                             )}
                                         </h3>
