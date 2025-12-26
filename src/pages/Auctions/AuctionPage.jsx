@@ -169,7 +169,32 @@ const AuctionPage = () => {
 
     const [currentPage, setCurrentPage] = useState(1);
     const [productsPerPage] = useState(8);
+    const [isButtonsFixed, setIsButtonsFixed] = useState(false);
+    const buttonsRef = useRef(null);
 
+    useEffect(() => {
+        const handleScroll = () => {
+            if (buttonsRef.current) {
+                const rect = buttonsRef.current.getBoundingClientRect();
+                const viewportHeight = window.innerHeight;
+
+                if (rect.top > viewportHeight) {
+                    setIsButtonsFixed(true);
+                } else {
+                    setIsButtonsFixed(false);
+                }
+            }
+
+            if (window.scrollY > 50) {
+                setShowShadow(true);
+            } else {
+                setShowShadow(false);
+            }
+        };
+
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
     const showToast = useCallback((message, type = "success") => {
         setToast({ message, type });
         setTimeout(() => setToast(null), 4000);
@@ -196,7 +221,7 @@ const AuctionPage = () => {
 
         try {
             const sellerId = product.user_id || product.seller_id || product.owner_id || product.user?.id;
-            
+
             if (!sellerId) {
                 showToast(
                     isRTL ? 'لا يمكن العثور على معرف البائع' : 'Cannot find seller ID',
@@ -204,7 +229,7 @@ const AuctionPage = () => {
                 );
                 return;
             }
-            
+
             const currentUser = JSON.parse(localStorage.getItem('userData') || '{}');
             if (currentUser.id === sellerId) {
                 showToast(
@@ -213,20 +238,20 @@ const AuctionPage = () => {
                 );
                 return;
             }
-            
+
             const conversationData = {
                 user_id: parseInt(sellerId),
                 type: 'auction'
             };
-            
+
             const response = await chatAPI.createConversation(conversationData);
 
             if (response.data.success) {
                 const conversationId = response.data.conversation?.id || response.data.data?.id;
-                
+
                 if (conversationId) {
-                    navigate('/chats', { 
-                        state: { conversationId } 
+                    navigate('/chats', {
+                        state: { conversationId }
                     });
                 } else {
                     showToast(
@@ -243,15 +268,15 @@ const AuctionPage = () => {
                     return;
                 }
             }
-            
-            const errorMessage = error.response?.data?.message 
-                || error.response?.data?.error 
-                || error.message 
+
+            const errorMessage = error.response?.data?.message
+                || error.response?.data?.error
+                || error.message
                 || 'Unknown error';
-            
+
             showToast(
-                isRTL 
-                    ? `حدث خطأ: ${errorMessage}` 
+                isRTL
+                    ? `حدث خطأ: ${errorMessage}`
                     : `Error: ${errorMessage}`,
                 'error'
             );
@@ -519,6 +544,8 @@ const AuctionPage = () => {
         };
     };
 
+
+
     return (
         <div className="min-h-screen bg-white" dir={isRTL ? "rtl" : "ltr"}>
             {toast && (
@@ -637,7 +664,7 @@ const AuctionPage = () => {
                 </div>
 
                 <div className="grid grid-cols-2 gap-3 mb-4">
-                                        <div className="bg-white border border-gray-200 text-center rounded-xl p-3 hover:border-main transition-all">
+                    <div className="bg-white border border-gray-200 text-center rounded-xl p-3 hover:border-main transition-all">
                         <h3 className="text-xs font-bold text-gray-800 mb-1">
                             {isRTL ? "التجار المسجلين في المزاد حتي الان" : "Sellers registered in the auction so far"}
                         </h3>
@@ -709,7 +736,7 @@ const AuctionPage = () => {
                                 <p className="text-center text-main mb-3 text-xl mt-8 font-bold">
                                     {isRTL ? "يمكنك التسجيل المسبق للمزاد القادم والاستفادة من تخفيضات الاسعار" : "You can pre-register for the upcoming auction and benefit from price reductions"}
                                 </p>
-                                <div className={`absolute bottom-0 left-0 right-0 py-3 z-40 bg-white transition-shadow duration-300 ${showShadow ? 'shadow-lg border-t border-gray-200' : ''}`}>
+                                <div className={`absolute bottom-0 left-0 right-0 py-3 z-40 bg-white transition-shadow duration-300 ${showShadow ? '' : 'shadow-lg border-t border-gray-200'}`}>
                                     <div className="max-w-6xl mx-auto px-4">
                                         <div className="grid grid-cols-2 gap-3">
                                             <button
@@ -859,33 +886,36 @@ const AuctionPage = () => {
             </div>
 
             {isParticipating && (
-                <div className={`sticky bottom-0 left-0 right-0 bg-white py-3 z-40 transition-shadow duration-300 ${showShadow ? 'shadow-lg border-t border-gray-200' : ''}`}>
-                    <div className="max-w-6xl mx-auto px-4">
-                        <div className="grid grid-cols-2 gap-3">
-                            {participantRole !== 'buyer' && (
+                <>
+                    <div ref={buttonsRef} className={`${isButtonsFixed ? 'h-20' : ''}`}></div>
+                    <div className={`${isButtonsFixed ? 'fixed' : 'relative'} bottom-0 left-0 right-0 py-3 z-40 bg-white border-t border-gray-200 transition-all duration-300 ${showShadow && isButtonsFixed ? 'shadow-lg' : ''}`}>
+                        <div className="max-w-6xl mx-auto px-4">
+                            <div className="grid grid-cols-2 gap-3">
+                                {participantRole !== 'buyer' && (
+                                    <button
+                                        onClick={() => navigate('/my-auctions')}
+                                        className="w-full cursor-pointer bg-white border-2 border-main text-main hover:bg-main hover:text-white active:scale-95 transition-all duration-200 px-6 py-3 rounded-xl font-bold text-base flex items-center justify-center gap-2 whitespace-nowrap"
+                                    >
+                                        <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                        </svg>
+                                        <span>{isRTL ? "مزاداتي" : "My Auctions"}</span>
+                                    </button>
+                                )}
+
                                 <button
-                                    onClick={() => navigate('/my-auctions')}
-                                    className="w-full cursor-pointer bg-white border-2 border-main text-main hover:bg-main hover:text-white active:scale-95 transition-all duration-200 px-3 py-2.5 rounded-lg font-bold text-sm flex items-center justify-center gap-2 whitespace-nowrap"
+                                    onClick={() => navigate('/previous-auctions')}
+                                    className={`w-full cursor-pointer bg-white border-2 border-gray-300 text-gray-700 hover:border-main hover:text-main active:scale-95 transition-all duration-200 px-6 py-3 rounded-xl font-bold text-base flex items-center justify-center gap-2 whitespace-nowrap ${participantRole === 'buyer' ? 'col-span-2' : ''}`}
                                 >
                                     <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
-                                    <span>{isRTL ? "مزاداتي" : "My Auctions"}</span>
+                                    <span>{isRTL ? "المزادات السابقة" : "Previous Auctions"}</span>
                                 </button>
-                            )}
-
-                            <button
-                                onClick={() => navigate('/previous-auctions')}
-                                className={`w-full cursor-pointer bg-white border-2 border-gray-300 text-gray-700 hover:border-main hover:text-main active:scale-95 transition-all duration-200 px-3 py-2.5 rounded-lg font-bold text-sm flex items-center justify-center gap-2 whitespace-nowrap ${participantRole === 'buyer' ? 'col-span-2' : ''}`} 
-                            >
-                                <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                <span>{isRTL ? "المزادات السابقة" : "Previous Auctions"}</span>
-                            </button>
+                            </div>
                         </div>
                     </div>
-                </div>
+                </>
             )}
         </div>
     );
