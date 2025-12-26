@@ -65,10 +65,7 @@ const ProductsPage = () => {
         selectedDeliveryOptions: [], farmPrep: null
     });
     
-    const [openSections, setOpenSections] = useState({
-        categories: false, governorates: false, weight: false, contactMethod: false,
-        price: false, quantity: false, delivery: false, farmPreparation: false
-    });
+    const [openSection, setOpenSection] = useState(null);
 
     const filterSidebarRef = useRef(null);
     const scrollPositionRef = useRef(0);
@@ -150,6 +147,11 @@ const ProductsPage = () => {
             selectedDeliveryOptions: [], farmPrep: null
         });
     };
+
+    const hasActiveFilters = filterState.selectedCategories.length > 0 || filterState.selectedGovernorates.length > 0 ||
+        filterState.weightRange[0] > 1 || filterState.weightRange[1] < 1000 || filterState.contactMethod !== null ||
+        filterState.priceRange[0] > 100 || filterState.priceRange[1] < 100000 || filterState.quantityRange[0] > 1 ||
+        filterState.quantityRange[1] < 10000 || filterState.selectedDeliveryOptions.length > 0 || filterState.farmPrep !== null;
 
     useEffect(() => {
         const data = localStorage.getItem('userData');
@@ -240,11 +242,6 @@ const ProductsPage = () => {
         }
     };
 
-    const hasActiveFilters = appliedFilters.selectedCategories.length > 0 || appliedFilters.selectedGovernorates.length > 0 ||
-        appliedFilters.weightRange[0] > 1 || appliedFilters.weightRange[1] < 1000 || appliedFilters.contactMethod !== null ||
-        appliedFilters.priceRange[0] > 100 || appliedFilters.priceRange[1] < 100000 || appliedFilters.quantityRange[0] > 1 ||
-        appliedFilters.quantityRange[1] < 10000 || appliedFilters.selectedDeliveryOptions.length > 0 || appliedFilters.farmPrep !== null;
-
     const handleContactMethodChange = (method) => {
         let newMethod = null;
         if (method === 'chat') {
@@ -333,13 +330,14 @@ const ProductsPage = () => {
         );
     };
 
-    const FilterSection = ({ title, isOpen, onToggle, children }) => (
+    const FilterSection = ({ title, sectionKey, children }) => (
         <div className="mb-3.5 pb-3.5 border-b border-gray-100">
-            <button onClick={onToggle} className="flex cursor-pointer items-center justify-between w-full font-bold text-sm hover:text-main group">
+            <button onClick={() => setOpenSection(openSection === sectionKey ? null : sectionKey)} 
+                className="flex cursor-pointer items-center justify-between w-full font-bold text-sm hover:text-main group">
                 <span className="flex items-center gap-2">{title}</span>
-                <ChevronDown size={20} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                <ChevronDown size={20} className={`transition-transform ${openSection === sectionKey ? 'rotate-180' : ''}`} />
             </button>
-            <div className={`overflow-hidden transition-all ${isOpen ? 'max-h-[300px] mt-3 overflow-y-auto' : 'max-h-0'}`}>
+            <div className={`overflow-hidden transition-all ${openSection === sectionKey ? 'max-h-[300px] mt-3 overflow-y-auto' : 'max-h-0'}`}>
                 {children}
             </div>
         </div>
@@ -352,17 +350,19 @@ const ProductsPage = () => {
                     <div className="flex items-center gap-3">
                         <SlidersHorizontal size={22} className="text-white" />
                         <h2 className="text-xl font-bold text-white">{isRTL ? 'الفلاتر' : 'Filters'}</h2>
+                    </div>
+                    <div className="flex items-center gap-2">
                         {hasActiveFilters && (
                             <button onClick={clearFilters}
-                                className="flex items-center gap-1.5 bg-white/20 hover:bg-white/30 text-white px-3 py-1.5 rounded-lg text-xs transition-all">
+                                className="flex cursor-pointer items-center gap-1.5 bg-white/20 hover:bg-white/30 text-white px-3 py-1.5 rounded-lg text-xs transition-all">
                                 <RefreshCw size={14} />
-                                {isRTL ? 'مسح' : 'Clear'}
+                                {isRTL ? 'حذف الكل' : 'Clear All'}
                             </button>
                         )}
+                        <button onClick={() => setIsFilterOpen(false)} className="lg:hidden text-white">
+                            <X size={22} />
+                        </button>
                     </div>
-                    <button onClick={() => setIsFilterOpen(false)} className="lg:hidden text-white">
-                        <X size={22} />
-                    </button>
                 </div>
             </div>
             
@@ -382,8 +382,7 @@ const ProductsPage = () => {
                 `}</style>
 
                 {!isViewAllPage && categories.length > 0 && (
-                    <FilterSection title={isRTL ? 'النوع' : 'Type'} isOpen={openSections.categories}
-                        onToggle={() => setOpenSections(p => ({ ...p, categories: !p.categories }))}>
+                    <FilterSection title={isRTL ? 'النوع' : 'Type'} sectionKey="categories">
                         <div className="space-y-2">
                             {categories.map(cat => (
                                 <label key={cat.id} className="flex items-center cursor-pointer hover:bg-green-50 p-2.5 rounded-xl text-sm">
@@ -398,8 +397,7 @@ const ProductsPage = () => {
                     </FilterSection>
                 )}
 
-                <FilterSection title={isRTL ? 'المحافظة' : 'Governorate'} isOpen={openSections.governorates}
-                    onToggle={() => setOpenSections(p => ({ ...p, governorates: !p.governorates }))}>
+                <FilterSection title={isRTL ? 'المحافظة' : 'Governorate'} sectionKey="governorates">
                     <div className="space-y-2">
                         {governorates.map(gov => (
                             <label key={gov.id} className="flex items-center cursor-pointer hover:bg-green-50 p-2.5 rounded-xl text-sm">
@@ -418,14 +416,12 @@ const ProductsPage = () => {
                     </div>
                 </FilterSection>
 
-                <FilterSection title={isRTL ? 'الوزن' : 'Weight'} isOpen={openSections.weight}
-                    onToggle={() => setOpenSections(p => ({ ...p, weight: !p.weight }))}>
+                <FilterSection title={isRTL ? 'الوزن' : 'Weight'} sectionKey="weight">
                     <RangeFilter min={1} max={1000} value={filterState.weightRange}
                         onChange={(val) => dispatchFilterWithScroll({ type: 'SET_WEIGHT_RANGE', payload: val })} step={10} />
                 </FilterSection>
 
-                <FilterSection title={isRTL ? 'التواصل عن طريق' : 'Contact Via'} isOpen={openSections.contactMethod}
-                    onToggle={() => setOpenSections(p => ({ ...p, contactMethod: !p.contactMethod }))}>
+                <FilterSection title={isRTL ? 'التواصل عن طريق' : 'Contact Via'} sectionKey="contactMethod">
                     <div className="space-y-2">
                         <label className="flex items-center cursor-pointer hover:bg-green-50 p-2.5 rounded-xl text-sm">
                             <input type="checkbox" checked={filterState.contactMethod === 'chat' || filterState.contactMethod === 'both'}
@@ -440,20 +436,17 @@ const ProductsPage = () => {
                     </div>
                 </FilterSection>
 
-                <FilterSection title={isRTL ? 'السعر' : 'Price'} isOpen={openSections.price}
-                    onToggle={() => setOpenSections(p => ({ ...p, price: !p.price }))}>
+                <FilterSection title={isRTL ? 'السعر' : 'Price'} sectionKey="price">
                     <RangeFilter min={100} max={100000} value={filterState.priceRange}
                         onChange={(val) => dispatchFilterWithScroll({ type: 'SET_PRICE_RANGE', payload: val })} step={500} />
                 </FilterSection>
 
-                <FilterSection title={isRTL ? 'الكمية' : 'Quantity'} isOpen={openSections.quantity}
-                    onToggle={() => setOpenSections(p => ({ ...p, quantity: !p.quantity }))}>
+                <FilterSection title={isRTL ? 'الكمية' : 'Quantity'} sectionKey="quantity">
                     <RangeFilter min={1} max={10000} value={filterState.quantityRange}
                         onChange={(val) => dispatchFilterWithScroll({ type: 'SET_QUANTITY_RANGE', payload: val })} step={50} />
                 </FilterSection>
 
-                <FilterSection title={isRTL ? 'التوصيل' : 'Delivery'} isOpen={openSections.delivery}
-                    onToggle={() => setOpenSections(p => ({ ...p, delivery: !p.delivery }))}>
+                <FilterSection title={isRTL ? 'التوصيل' : 'Delivery'} sectionKey="delivery">
                     <div className="space-y-2">
                         {[
                             { value: 'available', label: isRTL ? 'متاح' : 'Available' },
@@ -480,8 +473,7 @@ const ProductsPage = () => {
                     </div>
                 </FilterSection>
 
-                <FilterSection title={isRTL ? 'متاح تجهيز مزارع' : 'Farm Preparation'} isOpen={openSections.farmPreparation}
-                    onToggle={() => setOpenSections(p => ({ ...p, farmPreparation: !p.farmPreparation }))}>
+                <FilterSection title={isRTL ? 'متاح تجهيز مزارع' : 'Farm Preparation'} sectionKey="farmPreparation">
                     <div className="space-y-2">
                         <label className="flex items-center cursor-pointer hover:bg-green-50 p-2.5 rounded-xl text-sm">
                             <input type="checkbox" checked={filterState.farmPrep === true}
@@ -498,18 +490,11 @@ const ProductsPage = () => {
             </div>
 
             <div className="p-5 border-t border-gray-200 bg-white flex-shrink-0">
-                <div className="space-y-3">
-                    <button onClick={applyFilters}
-                        className="w-full bg-gradient-to-r from-main to-green-600 hover:from-green-700 hover:to-green-800 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg hover:shadow-xl">
-                        <Check size={20} />
-                        {isRTL ? 'تطبيق الفلاتر' : 'Apply Filters'}
-                    </button>
-                    <button onClick={clearFilters}
-                        className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all">
-                        <RefreshCw size={18} />
-                        {isRTL ? 'مسح الكل' : 'Clear All'}
-                    </button>
-                </div>
+                <button onClick={applyFilters}
+                    className="w-full bg-gradient-to-r from-main to-green-600 hover:from-green-700 hover:to-green-800 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg hover:shadow-xl">
+                    <Check size={20} />
+                    {isRTL ? 'تطبيق الفلاتر' : 'Apply Filters'}
+                </button>
             </div>
         </div>
     );
