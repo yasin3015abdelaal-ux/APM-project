@@ -168,7 +168,7 @@ const AuctionPage = () => {
     const [showShadow, setShowShadow] = useState(false);
 
     const [currentPage, setCurrentPage] = useState(1);
-    const [productsPerPage] = useState(8);
+    const [productsPerPage] = useState(10);
     const [isButtonsFixed, setIsButtonsFixed] = useState(false);
     const buttonsRef = useRef(null);
 
@@ -195,6 +195,7 @@ const AuctionPage = () => {
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
+
     const showToast = useCallback((message, type = "success") => {
         setToast({ message, type });
         setTimeout(() => setToast(null), 4000);
@@ -518,7 +519,10 @@ const AuctionPage = () => {
     const currentProducts = products.slice(indexOfFirstProduct, indexOfLastProduct);
     const totalPages = Math.ceil(products.length / productsPerPage);
 
-    const paginate = (pageNumber) => setCurrentPage(pageNumber);
+    const paginate = (pageNumber) => {
+        setCurrentPage(pageNumber);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
 
     const canRegisterAsBuyer = maxBuyers === null || buyersCount < maxBuyers;
     const canRegisterAsSeller = maxSellers === null || sellersCount < maxSellers;
@@ -543,8 +547,6 @@ const AuctionPage = () => {
             created_at: product.created_at || auctionProduct.added_at
         };
     };
-
-
 
     return (
         <div className="min-h-screen bg-white" dir={isRTL ? "rtl" : "ltr"}>
@@ -804,7 +806,7 @@ const AuctionPage = () => {
                         {shouldShowProducts && (
                             <div>
                                 <div>
-                                    <h2 className="text-lg font-bold text-gray-800">
+                                    <h2 className="text-lg font-bold text-main mb-4">
                                         {isRTL ? "منتجات المزاد" : "Auction Products"}
                                     </h2>
                                 </div>
@@ -823,7 +825,7 @@ const AuctionPage = () => {
                                     </div>
                                 ) : (
                                     <>
-                                        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+                                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
                                             {currentProducts.map((auctionProduct) => {
                                                 const productData = prepareProductData(auctionProduct);
                                                 return (
@@ -838,12 +840,12 @@ const AuctionPage = () => {
                                             })}
                                         </div>
                                         {totalPages > 1 && (
-                                            <div className="flex justify-center mt-6">
-                                                <div className="flex items-center space-x-1">
+                                            <div className="flex justify-center mt-6 mb-20">
+                                                <div className="flex items-center gap-2">
                                                     <button
                                                         onClick={() => paginate(currentPage - 1)}
                                                         disabled={currentPage === 1}
-                                                        className={`px-3 py-1.5 rounded-lg text-sm ${currentPage === 1
+                                                        className={`px-4 py-2 rounded-lg text-sm font-medium ${currentPage === 1
                                                             ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
                                                             : 'bg-main text-white hover:bg-green-700 cursor-pointer'
                                                             }`}
@@ -851,23 +853,38 @@ const AuctionPage = () => {
                                                         {isRTL ? "السابق" : "Previous"}
                                                     </button>
 
-                                                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                                                        <button
-                                                            key={page}
-                                                            onClick={() => paginate(page)}
-                                                            className={`px-3 py-1.5 rounded-lg text-sm ${currentPage === page
-                                                                ? 'bg-main text-white'
-                                                                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                                                                } cursor-pointer`}
-                                                        >
-                                                            {page}
-                                                        </button>
-                                                    ))}
+                                                    <div className="flex items-center gap-1">
+                                                        {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                                                            let pageNum;
+                                                            if (totalPages <= 5) {
+                                                                pageNum = i + 1;
+                                                            } else if (currentPage <= 3) {
+                                                                pageNum = i + 1;
+                                                            } else if (currentPage >= totalPages - 2) {
+                                                                pageNum = totalPages - 4 + i;
+                                                            } else {
+                                                                pageNum = currentPage - 2 + i;
+                                                            }
+                                                            
+                                                            return (
+                                                                <button
+                                                                    key={pageNum}
+                                                                    onClick={() => paginate(pageNum)}
+                                                                    className={`px-3 py-2 rounded-lg text-sm font-medium ${currentPage === pageNum
+                                                                        ? 'bg-main text-white'
+                                                                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                                                        } cursor-pointer`}
+                                                                >
+                                                                    {pageNum}
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
 
                                                     <button
                                                         onClick={() => paginate(currentPage + 1)}
                                                         disabled={currentPage === totalPages}
-                                                        className={`px-3 py-1.5 rounded-lg text-sm ${currentPage === totalPages
+                                                        className={`px-4 py-2 rounded-lg text-sm font-medium ${currentPage === totalPages
                                                             ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
                                                             : 'bg-main text-white hover:bg-green-700 cursor-pointer'
                                                             }`}
