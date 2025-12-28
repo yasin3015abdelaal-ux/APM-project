@@ -169,7 +169,7 @@ const Login = () => {
                         </label>
                         {!isAdminLogin ? (
                             <div className="flex gap-2" dir="ltr">
-                                <div className="w-36">
+                                <div className="w-48 md:w-36">
                                     <CustomSelect
                                         options={countryOptions}
                                         value={formData.country_id}
@@ -186,7 +186,7 @@ const Login = () => {
                                     placeholder={t("auth.login.phone")}
                                     dir="ltr"
                                     style={{ textAlign: dir === "rtl" ? "right" : "left" }}
-                                    className={`flex-1 border rounded-xl p-3 focus:outline-none focus:ring-2 ${errors.phone ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:ring-green-500"
+                                    className={`border w-39 md:flex-1 rounded-xl p-3 focus:outline-none focus:ring-2 ${errors.phone ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:ring-green-500"
                                         }`}
                                 />
                             </div>

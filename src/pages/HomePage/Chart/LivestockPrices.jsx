@@ -13,8 +13,8 @@ import { Calendar, MapPin, Package, Check } from "lucide-react";
 import { getCachedGovernorates, getCachedLivestockPrices } from "../../../api";
 import CustomSelect from "../../../components/Ui/CustomSelect/CustomSelect";
 
-const SkeletonLoader = ({ mobile = false }) => (
-    <div className={`w-full ${mobile ? 'h-64' : 'h-96'} bg-gray-100 rounded-lg animate-pulse`}></div>
+const SkeletonLoader = () => (
+    <div className="w-full h-64 md:h-96 bg-gray-100 rounded-lg animate-pulse"></div>
 );
 
 const LivestockPrices = () => {
@@ -184,7 +184,7 @@ const LivestockPrices = () => {
     const FilterButton = ({ name, label_ar, label_en, activeColor }) => (
         <button
             onClick={() => toggleFilter(name)}
-            className={`px-3 py-1.5 md:px-4 md:py-2 rounded-lg cursor-pointer text-white font-semibold text-xs md:text-sm transition-all duration-300 shadow-md hover:shadow-lg md:transform md:hover:scale-105 ${activeFilters[name] ? `${activeColor}` : "bg-gray-400 opacity-60"
+            className={`px-3 py-1.5 md:px-4 md:py-2 rounded-lg cursor-pointer text-white font-semibold text-xs md:text-sm transition-all duration-300 shadow-md hover:shadow-lg md:transform md:hover:scale-102 ${activeFilters[name] ? `${activeColor}` : "bg-gray-400 opacity-60"
                 }`}
         >
             {activeFilters[name] ? "✓" : "○"} {isRTL ? label_ar : label_en}
@@ -223,11 +223,21 @@ const LivestockPrices = () => {
 
     const calculateStats = () => {
         if (pricesData.length === 0) return null;
-        const latestData = pricesData[pricesData.length - 1];
+        
+        const standingPrices = pricesData.filter(d => d.standing !== null).map(d => d.standing);
+        const netPrices = pricesData.filter(d => d.net !== null).map(d => d.net);
+        
+        const avgStanding = standingPrices.length > 0
+            ? standingPrices.reduce((sum, price) => sum + price, 0) / standingPrices.length
+            : null;
+        
+        const avgNet = netPrices.length > 0
+            ? netPrices.reduce((sum, price) => sum + price, 0) / netPrices.length
+            : null;
+        
         return {
-            latest: latestData,
-            minPrice: meta?.min_price ? parseFloat(meta.min_price).toFixed(2) : null,
-            maxPrice: meta?.max_price ? parseFloat(meta.max_price).toFixed(2) : null,
+            avgStanding,
+            avgNet,
         };
     };
 
@@ -279,7 +289,7 @@ const LivestockPrices = () => {
                         ))}
                     </div>
                     <div className="bg-white rounded-lg md:rounded-xl shadow-lg p-4 md:p-6 border border-gray-100">
-                        <div className="w-full h-64 md:h-96 bg-gray-100 rounded-lg animate-pulse"></div>
+                        <SkeletonLoader />
                     </div>
                 </div>
             </div>
@@ -353,43 +363,30 @@ const LivestockPrices = () => {
                 </div>
 
                 {stats && pricesData.length > 0 && (
-                    <div className="hidden md:grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                        {stats.latest.standing && (
-                            <div className="bg-gradient-to-br from-red-500 to-red-600 rounded-xl shadow-lg p-4 text-white">
-                                <div className="text-xs font-semibold mb-1 opacity-90">
-                                    {isRTL ? "السعر القائم" : "Standing Price"}
+                    <div className="grid grid-cols-2 gap-3 md:gap-4 mb-3 md:mb-4">
+                        {stats.avgStanding && (
+                            <div className="bg-gradient-to-br from-red-500 via-red-600 to-red-700 rounded-xl md:rounded-2xl shadow-lg md:shadow-xl p-3 md:p-4 text-white text-center transform transition-all hover:scale-102 hover:shadow-2xl">
+                                <div className="text-[10px] md:text-xs font-bold mb-1 md:mb-2 opacity-90 uppercase tracking-wide">
+                                    {isRTL ? "متوسط السعر القائم" : "Avg Standing"}
                                 </div>
-                                <div className="text-2xl font-bold">
-                                    {stats.latest.standing.toFixed(2)} {isRTL ? "ج.م" : "EGP"}
+                                <div className="text-xl md:text-2xl font-black mb-0.5 md:mb-1">
+                                    {stats.avgStanding.toFixed(2)}
                                 </div>
-                                <div className="text-xs mt-1 opacity-75">
-                                    {isRTL ? "للكيلوجرام" : "per kg"}
-                                </div>
-                            </div>
-                        )}
-                        {stats.latest.net && (
-                            <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg p-4 text-white">
-                                <div className="text-xs font-semibold mb-1 opacity-90">
-                                    {isRTL ? "السعر الصافي" : "Net Price"}
-                                </div>
-                                <div className="text-2xl font-bold">
-                                    {stats.latest.net.toFixed(2)} {isRTL ? "ج.م" : "EGP"}
-                                </div>
-                                <div className="text-xs mt-1 opacity-75">
-                                    {isRTL ? "للكيلوجرام" : "per kg"}
+                                <div className="text-[9px] md:text-xs font-semibold opacity-90">
+                                    {isRTL ? "ج.م / كجم" : "EGP / kg"}
                                 </div>
                             </div>
                         )}
-                        {stats.minPrice && stats.maxPrice && (
-                            <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-4 text-white">
-                                <div className="text-xs font-semibold mb-1 opacity-90">
-                                    {isRTL ? "نطاق الأسعار" : "Price Range"}
+                        {stats.avgNet && (
+                            <div className="bg-gradient-to-br from-green-500 via-green-600 to-green-700 rounded-xl md:rounded-2xl shadow-lg md:shadow-xl p-3 md:p-4 text-white text-center transform transition-all hover:scale-102 hover:shadow-2xl">
+                                <div className="text-[10px] md:text-xs font-bold mb-1 md:mb-2 opacity-90 uppercase tracking-wide">
+                                    {isRTL ? "متوسط السعر الصافي" : "Avg Net"}
                                 </div>
-                                <div className="text-xl font-bold">
-                                    {stats.minPrice} - {stats.maxPrice}
+                                <div className="text-xl md:text-2xl font-black mb-0.5 md:mb-1">
+                                    {stats.avgNet.toFixed(2)}
                                 </div>
-                                <div className="text-xs mt-1 opacity-75">
-                                    {isRTL ? "ج.م/كجم" : "EGP/kg"}
+                                <div className="text-[9px] md:text-xs font-semibold opacity-90">
+                                    {isRTL ? "ج.م / كجم" : "EGP / kg"}
                                 </div>
                             </div>
                         )}
@@ -408,8 +405,8 @@ const LivestockPrices = () => {
                     </div>
                 </div>
 
-                <div className="bg-white rounded-lg shadow-lg py-2.5 md:hidden border border-gray-100">
-                    <div className="flex gap-2 justify-center mb-3 px-4">
+                <div className="bg-white rounded-lg md:rounded-xl shadow-lg py-2.5 md:p-4 border border-gray-100">
+                    <div className="flex gap-2 justify-center mb-3 md:mb-4 px-4 md:px-0">
                         <FilterButton
                             name="standing"
                             label_ar="القائم"
@@ -425,41 +422,41 @@ const LivestockPrices = () => {
                     </div>
 
                     {loading ? (
-                        <SkeletonLoader mobile={true} />
+                        <SkeletonLoader />
                     ) : error ? (
-                        <div className="text-center py-8 px-4">
-                            <div className="text-red-500 text-sm font-semibold mb-2">
+                        <div className="text-center py-8 md:py-12 px-4">
+                            <div className="text-red-500 text-sm md:text-lg font-semibold mb-2">
                                 {error}
                             </div>
                             <button
                                 onClick={fetchPrices}
-                                className="mt-2 px-4 py-1.5 cursor-pointer bg-green-600 text-white rounded-lg hover:bg-green-700 text-xs font-semibold"
+                                className="mt-2 md:mt-3 px-4 md:px-5 py-1.5 md:py-2 cursor-pointer bg-green-600 text-white rounded-lg hover:bg-green-700 text-xs md:text-sm font-semibold"
                             >
                                 {isRTL ? "إعادة المحاولة" : "Retry"}
                             </button>
                         </div>
                     ) : pricesData.length === 0 ? (
-                        <div className="text-center py-10 px-4">
-                            <div className="inline-block p-6 bg-gray-50 rounded-2xl mb-4">
-                                <svg className="w-20 h-20 text-gray-300 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div className="text-center py-10 md:py-16 px-4">
+                            <div className="inline-block p-6 md:p-8 bg-gray-50 rounded-2xl md:rounded-3xl mb-4 md:mb-6">
+                                <svg className="w-20 md:w-24 h-20 md:h-24 text-gray-300 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                                 </svg>
                             </div>
-                            <h3 className="text-base md:text-lg font-bold text-gray-700 mb-2">
+                            <h3 className="text-base md:text-xl font-bold text-gray-700 mb-2 md:mb-3">
                                 {isRTL ? "لا توجد بيانات متاحة" : "No data available"}
                             </h3>
-                            <p className="text-xs md:text-sm text-gray-500 max-w-sm mx-auto">
+                            <p className="text-xs md:text-sm text-gray-500 max-w-sm md:max-w-md mx-auto">
                                 {isRTL
                                     ? "لم يتم تسجيل أي أسعار في هذه الفترة. جرب اختيار فترة زمنية أخرى أو محافظة مختلفة."
                                     : "No prices were recorded for this period. Try selecting a different time period or governorate."}
                             </p>
                         </div>
                     ) : (
-                        <div className="w-full flex justify-center">
-                            <ResponsiveContainer width="100%" height={250}>
+                        <div className="w-full flex justify-center px-0 md:px-0 h-70 md:h-100">
+                            <ResponsiveContainer width="100%">
                                 <LineChart
                                     data={pricesData}
-                                    margin={{ top: 5, right: 20, left: -30, bottom: 5 }}
+                                    margin={{ top: 20, right: 30, left: -30, bottom: -10 }}
                                 >
                                     <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                                     <XAxis
@@ -475,17 +472,6 @@ const LivestockPrices = () => {
                                         stroke="#9ca3af"
                                     />
                                     <Tooltip content={<CustomTooltip />} />
-                                    <Legend
-                                        wrapperStyle={{
-                                            paddingTop: "10px",
-                                            fontSize: "10px",
-                                            display: "flex",
-                                            justifyContent: "center"
-                                        }}
-                                        iconType="line"
-                                        align="center"
-                                        verticalAlign="bottom"
-                                    />
 
                                     {activeFilters.standing && (
                                         <Line
@@ -520,120 +506,7 @@ const LivestockPrices = () => {
                                             }}
                                             activeDot={{ r: 7 }}
                                             connectNulls
-                                            isAnimationActive={true}
-                                        />
-                                    )}
-                                </LineChart>
-                            </ResponsiveContainer>
-                        </div>
-                    )}
-                </div>
-
-                <div className="hidden md:block bg-white rounded-xl shadow-lg p-4 mb-4 border border-gray-100">
-                    <div className="flex flex-wrap gap-3 justify-center mb-4">
-                        <FilterButton
-                            name="standing"
-                            label_ar="القائم"
-                            label_en="Standing"
-                            activeColor="bg-gradient-to-r from-red-500 to-red-600"
-                        />
-                        <FilterButton
-                            name="net"
-                            label_ar="الصافي"
-                            label_en="Net"
-                            activeColor="bg-gradient-to-r from-green-500 to-green-600"
-                        />
-                    </div>
-                    {loading ? (
-                        <SkeletonLoader />
-                    ) : error ? (
-                        <div className="text-center py-12">
-                            <div className="text-red-500 text-lg font-semibold mb-2">
-                                {error}
-                            </div>
-                            <button
-                                onClick={fetchPrices}
-                                className="mt-3 px-5 py-2 cursor-pointer bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-semibold"
-                            >
-                                {isRTL ? "إعادة المحاولة" : "Retry"}
-                            </button>
-                        </div>
-                    ) : pricesData.length === 0 ? (
-                        <div className="text-center py-16 px-4">
-                            <div className="inline-block p-8 bg-gray-50 rounded-3xl mb-6">
-                                <svg className="w-24 h-24 text-gray-300 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                                </svg>
-                            </div>
-                            <h3 className="text-xl md:text-2xl font-bold text-gray-700 mb-3">
-                                {isRTL ? "لا توجد بيانات متاحة" : "No data available"}
-                            </h3>
-                            <p className="text-sm md:text-base text-gray-500 max-w-md mx-auto">
-                                {isRTL
-                                    ? "لم يتم تسجيل أي أسعار في هذه الفترة. جرب اختيار فترة زمنية أخرى أو محافظة مختلفة."
-                                    : "No prices were recorded for this period. Try selecting a different time period or governorate."}
-                            </p>
-                        </div>
-                    ) : (
-                        <div className="px-0 mt-2">
-                            <ResponsiveContainer width="100%" height={400}>
-                                <LineChart
-                                    data={pricesData}
-                                    margin={{ top: 10, right: 40, left: 0, bottom: 20 }}
-                                >
-                                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                                    <XAxis
-                                        dataKey="month"
-                                        tick={{ fontSize: 11, fontWeight: 600, fill: "#6b7280" }}
-                                        stroke="#9ca3af"
-                                        angle={pricesData.length > 6 ? -45 : 0}
-                                        textAnchor={pricesData.length > 6 ? "end" : "middle"}
-                                        height={pricesData.length > 6 ? 80 : 50}
-                                    />
-                                    <YAxis
-                                        tick={{ fontSize: 11, fontWeight: 600, fill: "#6b7280" }}
-                                        stroke="#9ca3af"
-                                    />
-                                    <Tooltip content={<CustomTooltip />} />
-                                    <Legend
-                                        wrapperStyle={{ paddingTop: "15px", fontSize: "12px" }}
-                                        iconType="line"
-                                    />
-
-                                    {activeFilters.standing && (
-                                        <Line
-                                            type="linear"
-                                            dataKey="standing"
-                                            stroke="#ef4444"
-                                            strokeWidth={4}
-                                            name={isRTL ? "القائم" : "Standing"}
-                                            dot={{
-                                                fill: "#ef4444",
-                                                r: 6,
-                                                strokeWidth: 3,
-                                                stroke: "#fff",
-                                            }}
-                                            activeDot={{ r: 8 }}
-                                            connectNulls
-                                            isAnimationActive={true}
-                                        />
-                                    )}
-                                    {activeFilters.net && (
-                                        <Line
-                                            type="linear"
-                                            dataKey="net"
-                                            stroke="#22c55e"
-                                            strokeWidth={4}
-                                            name={isRTL ? "الصافي" : "Net"}
-                                            dot={{
-                                                fill: "#22c55e",
-                                                r: 6,
-                                                strokeWidth: 3,
-                                                stroke: "#fff",
-                                            }}
-                                            activeDot={{ r: 8 }}
-                                            connectNulls
-                                            isAnimationActive={true}
+                                            isAnimationAsync={true}
                                         />
                                     )}
                                 </LineChart>

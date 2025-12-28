@@ -399,7 +399,6 @@ const Notifications = () => {
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2">
-
                                     {notifications.length > 0 && (
                                         <button
                                             onClick={markAllAsRead}

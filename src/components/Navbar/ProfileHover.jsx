@@ -17,7 +17,8 @@ const ProfileHover = ({ onClose }) => {
   const [isLoadingCountries, setIsLoadingCountries] = useState(false);
 
   const userCountryId = user?.country?.id;
-  const isVerified = user?.verified_account === 1 || user?.verified_account === "1";
+  const trustStatus = user?.trust_status;
+  const isVerified = trustStatus === "active";
 
   const userCountry = countriesFlags.find((c) => c.id === userCountryId);
   let flagImage;

@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { getCachedCategories, userAPI } from "../../api";
 
 const CategoriesSkeleton = ({ isRTL }) => (
-    <div className="mx-auto p-2" dir={isRTL ? "rtl" : "ltr"}>
+    <div className="container mx-auto p-2" dir={isRTL ? "rtl" : "ltr"}>
         <div className="mb-2">
             <div className="h-8 w-48 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded animate-pulse"
                  style={{animation: 'shimmer 1.5s ease-in-out infinite', backgroundSize: '200% 100%'}}></div>
@@ -106,7 +106,7 @@ const Categories = ({ mode = "products" }) => {
     }
 
     return (
-        <div className="mx-auto p-2" dir={isRTL ? "rtl" : "ltr"}>
+        <div className={`${mode === "create-ad" ? "container" : ""} mx-auto p-2`} dir={isRTL ? "rtl" : "ltr"}>
             <div className="mb-2">
                 <h1 className="text-2xl font-bold text-main">{titleText}</h1>
             </div>

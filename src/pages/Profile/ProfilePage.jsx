@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { userAPI } from "../../api";
-import { VerifiedIcon, Trash2, Edit2, MapPin, Mail, Phone } from "lucide-react";
+import { VerifiedIcon, Trash2, Edit2, MapPin, Mail, Phone, AlertCircle, Clock } from "lucide-react";
 import Loader from "../../components/Ui/Loader/Loader";
 
 const ProfilePage = () => {
@@ -38,12 +38,12 @@ const ProfilePage = () => {
         setIsDeleting(true);
         try {
             await userAPI.delete('/profile/delete-account');
-            
+
             localStorage.removeItem("authToken");
             localStorage.removeItem("userData");
-            
+
             alert(t("profile.accountDeleted"));
-            
+
             window.location.href = "/";
         } catch (err) {
             console.error("Error deleting account:", err);
@@ -64,27 +64,26 @@ const ProfilePage = () => {
         );
 
     const lang = i18n.language;
+    const trustStatus = profile?.trust_status;
+    const isVerified = trustStatus === "active";
 
     return (
         <div dir={dir} className="min-h-screen bg-gray-50 py-8 px-4">
             <div className="max-w-2xl mx-auto">
-                {/* Profile Card */}
                 <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-                    {/* Header Section */}
                     <div className="bg-gradient-to-br from-main to-main/80 px-6 pt-8 pb-20 relative">
                         <div className={`absolute top-4 ${isRTL ? 'left-4' : 'right-4'}`}>
-                            {profile?.verified_account === 1 && (
+                            {isVerified && (
                                 <div className="bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full flex items-center gap-1.5">
                                     <VerifiedIcon className="w-4 h-4 text-white" />
                                     <span className="text-xs text-white font-medium">
-                                        {t("profile.verificationComplete")}
+                                        {isRTL ? "حساب موثق" : "Verified Account"}
                                     </span>
                                 </div>
                             )}
                         </div>
                     </div>
 
-                    {/* Profile Image - Overlapping */}
                     <div className="relative -mt-16 px-6">
                         <div className="flex flex-col items-center">
                             <div className="relative">
@@ -101,15 +100,24 @@ const ProfilePage = () => {
                                         </svg>
                                     </div>
                                 )}
+                                {isVerified && (
+                                    <div className="absolute bottom-0 right-0 bg-main rounded-full p-1.5 border-4 border-white shadow-lg">
+                                        <VerifiedIcon className="w-5 h-5 text-white" />
+                                    </div>
+                                )}
                             </div>
 
                             <div className="text-center mt-4 mb-6">
-                                <h3 className="text-2xl font-bold text-gray-900">{profile.name}</h3>
+                                <div className="flex items-center justify-center gap-2">
+                                    <h3 className="text-2xl font-bold text-gray-900">{profile.name}</h3>
+                                    {isVerified && (
+                                        <VerifiedIcon className="w-5 h-5 text-green-600 flex-shrink-0" />
+                                    )}
+                                </div>
                                 <p className="text-sm text-gray-500 mt-1">{profile.email}</p>
                             </div>
                         </div>
 
-                        {/* Info Grid */}
                         <div className="space-y-3 mb-6">
                             <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl">
                                 <div className="bg-white p-2 rounded-lg">
@@ -162,8 +170,7 @@ const ProfilePage = () => {
                             </div>
                         </div>
 
-                        {/* Verification Status */}
-                        {profile.verified_account !== 1 && (
+                        {trustStatus === "inactive" && (
                             <div className="mb-6 bg-blue-50 border border-blue-100 rounded-xl p-4">
                                 <div className="flex items-start gap-3">
                                     <div className="bg-white p-2 rounded-lg">
@@ -184,7 +191,26 @@ const ProfilePage = () => {
                             </div>
                         )}
 
-                        {/* Action Buttons */}
+                        {trustStatus === "pending" && (
+                            <div className="mb-6 bg-yellow-50 border border-yellow-100 rounded-xl p-4">
+                                <div className="flex items-start gap-3">
+                                    <div className="bg-white p-2 rounded-lg">
+                                        <Clock className="w-5 h-5 text-yellow-600" />
+                                    </div>
+                                    <div className="flex-1">
+                                        <p className="text-sm font-medium text-gray-900 mb-1">
+                                            {isRTL ? "طلب التوثيق قيد المراجعة" : "Verification Under Review"}
+                                        </p>
+                                        <p className="text-xs text-gray-600">
+                                            {isRTL
+                                                ? "تم استلام طلب التوثيق الخاص بك وهو قيد المراجعة. سنقوم بإشعارك فور اكتمال المراجعة."
+                                                : "Your verification request has been received and is under review. We'll notify you once completed."}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
                         <div className="flex gap-3 pb-6">
                             <button
                                 onClick={() => navigate("/profile/edit")}
@@ -206,7 +232,6 @@ const ProfilePage = () => {
                 </div>
             </div>
 
-            {/* Delete Confirmation Modal */}
             {showDeleteModal && (
                 <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl" dir={dir}>
@@ -215,11 +240,11 @@ const ProfilePage = () => {
                                 <Trash2 className="w-7 h-7 text-red-600" />
                             </div>
                         </div>
-                        
+
                         <h3 className="text-xl font-bold text-gray-900 mb-2 text-center">
-                            {t("profile.deleteAccountTitle") }
+                            {t("profile.deleteAccountTitle")}
                         </h3>
-                        
+
                         <p className="text-gray-600 text-sm mb-6 text-center leading-relaxed">
                             {t("profile.deleteAccountWarning")}
                         </p>
@@ -232,7 +257,7 @@ const ProfilePage = () => {
                             >
                                 {t("profile.cancel")}
                             </button>
-                            
+
                             <button
                                 onClick={handleDeleteAccount}
                                 disabled={isDeleting}

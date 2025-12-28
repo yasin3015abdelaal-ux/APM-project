@@ -345,11 +345,11 @@ const ProductsPage = () => {
 
     const FilterSidebar = () => (
         <div className="flex flex-col max-h-full">
-            <div className="bg-gradient-to-r from-main to-green-600 p-5 flex-shrink-0">
+            <div className="p-5 flex-shrink-0">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <SlidersHorizontal size={22} className="text-white" />
-                        <h2 className="text-xl font-bold text-white">{isRTL ? 'الفلاتر' : 'Filters'}</h2>
+                        <SlidersHorizontal size={22} className="text-main" />
+                        <h2 className="text-xl font-bold text-main">{isRTL ? 'الفلاتر' : 'Filters'}</h2>
                     </div>
                     <div className="flex items-center gap-2">
                         {hasActiveFilters && (
