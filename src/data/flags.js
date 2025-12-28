@@ -26,6 +26,7 @@ export const countriesFlags = [
         name_en: "Egypt",
         name_ar: "مصر",
         phone_code: "+20",
+        phone_length: 11,
         flag: eg
     },
     {
@@ -34,6 +35,7 @@ export const countriesFlags = [
         name_en: "Saudi Arabia",
         name_ar: "السعودية",
         phone_code: "+966",
+        phone_length: 9,
         flag: ksa
     },
     {
@@ -42,6 +44,7 @@ export const countriesFlags = [
         name_en: "United Arab Emirates",
         name_ar: "الإمارات",
         phone_code: "+971",
+        phone_length: 9,
         flag: uae
     },
     {
@@ -50,6 +53,7 @@ export const countriesFlags = [
         name_en: "Kuwait",
         name_ar: "الكويت",
         phone_code: "+965",
+        phone_length: 8,
         flag: kw
     },
     {
@@ -58,6 +62,7 @@ export const countriesFlags = [
         name_en: "Jordan",
         name_ar: "الأردن",
         phone_code: "+962",
+        phone_length: 9,
         flag: jo
     },
     {
@@ -66,6 +71,7 @@ export const countriesFlags = [
         name_en: "Oman",
         name_ar: "عمان",
         phone_code: "+968",
+        phone_length: 8,
         flag: om
     },
     {
@@ -74,6 +80,7 @@ export const countriesFlags = [
         name_en: "Sudan",
         name_ar: "السودان",
         phone_code: "+249",
+        phone_length: 9,
         flag: sd
     },
     {
@@ -82,6 +89,7 @@ export const countriesFlags = [
         name_en: "Libya",
         name_ar: "ليبيا",
         phone_code: "+218",
+        phone_length: 10,
         flag: ly
     },
     {
@@ -90,6 +98,7 @@ export const countriesFlags = [
         name_en: "Tunisia",
         name_ar: "تونس",
         phone_code: "+216",
+        phone_length: 8,
         flag: tn
     },
     {
@@ -98,6 +107,7 @@ export const countriesFlags = [
         name_en: "Algeria",
         name_ar: "الجزائر",
         phone_code: "+213",
+        phone_length: 9,
         flag: dz
     },
     {
@@ -106,6 +116,7 @@ export const countriesFlags = [
         name_en: "Morocco",
         name_ar: "المغرب",
         phone_code: "+212",
+        phone_length: 9,
         flag: ma
     },
     {
@@ -114,6 +125,7 @@ export const countriesFlags = [
         name_en: "Qatar",
         name_ar: "قطر",
         phone_code: "+974",
+        phone_length: 8,
         flag: qa
     },
     {
@@ -122,6 +134,7 @@ export const countriesFlags = [
         name_en: "Iraq",
         name_ar: "العراق",
         phone_code: "+964",
+        phone_length: 10,
         flag: iq
     },
     {
@@ -130,6 +143,7 @@ export const countriesFlags = [
         name_en: "Mauritania",
         name_ar: "موريتانيا",
         phone_code: "+222",
+        phone_length: 8,
         flag: mr
     },
     {
@@ -138,6 +152,7 @@ export const countriesFlags = [
         name_en: "South Africa",
         name_ar: "جنوب أفريقيا",
         phone_code: "+27",
+        phone_length: 9,
         flag: za
     },
     {
@@ -146,6 +161,7 @@ export const countriesFlags = [
         name_en: "Lebanon",
         name_ar: "لبنان",
         phone_code: "+961",
+        phone_length: 8,
         flag: lb
     },
     {
@@ -154,6 +170,7 @@ export const countriesFlags = [
         name_en: "Palestine",
         name_ar: "فلسطين",
         phone_code: "+970",
+        phone_length: 9,
         flag: ps
     },
     {
@@ -162,6 +179,7 @@ export const countriesFlags = [
         name_en: "Syria",
         name_ar: "سوريا",
         phone_code: "+963",
+        phone_length: 9,
         flag: sy
     },
     {
@@ -170,6 +188,7 @@ export const countriesFlags = [
         name_en: "Yemen",
         name_ar: "اليمن",
         phone_code: "+967",
+        phone_length: 9,
         flag: ye
     },
     {
@@ -178,6 +197,7 @@ export const countriesFlags = [
         name_en: "Bahrain",
         name_ar: "البحرين",
         phone_code: "+973",
+        phone_length: 8,
         flag: bh
     }
 ];

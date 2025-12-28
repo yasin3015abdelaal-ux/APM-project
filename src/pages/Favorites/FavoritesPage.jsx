@@ -85,12 +85,20 @@ const FavoritesPage = () => {
 
     if (error) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <div className="text-center">
-                    <p className="text-red-600 text-lg mb-4">{error}</p>
+            <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 flex items-center justify-center px-4">
+                <div className="text-center bg-white rounded-2xl shadow-xl p-8 max-w-md w-full">
+                    <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-800 mb-2">
+                        {isRTL ? 'حدث خطأ' : 'Error Occurred'}
+                    </h3>
+                    <p className="text-red-600 mb-6">{error}</p>
                     <button
                         onClick={fetchFavorites}
-                        className="bg-main hover:bg-green-800 cursor-pointer text-white px-6 py-2 rounded-lg transition"
+                        className="bg-main hover:bg-green-800 cursor-pointer text-white px-8 py-3 rounded-xl transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:scale-105"
                     >
                         {t('common.retry')}
                     </button>
@@ -100,85 +108,102 @@ const FavoritesPage = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50" dir={isRTL ? 'rtl' : 'ltr'}>
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-green-50" dir={isRTL ? 'rtl' : 'ltr'}>
             {toast && (
-                <div className={`fixed top-4 sm:top-5 ${isRTL ? "left-4 sm:left-5" : "right-4 sm:right-5"} z-50 animate-slide-in max-w-[90%] sm:max-w-md`}>
-                    <div className={`px-4 py-3 sm:px-6 sm:py-4 rounded-lg sm:rounded-xl shadow-lg flex items-center gap-2 sm:gap-3 ${toast.type === "success" ? "bg-main text-white" : "bg-red-500 text-white"}`}>
+                <div className={`fixed top-4 sm:top-6 ${isRTL ? "left-4 sm:left-6" : "right-4 sm:right-6"} z-50 animate-slide-in max-w-[90%] sm:max-w-md`}>
+                    <div className={`px-5 py-4 rounded-2xl shadow-2xl flex items-center gap-3 backdrop-blur-sm ${toast.type === "success" ? "bg-gradient-to-r from-green-600 to-green-700 text-white" : "bg-gradient-to-r from-red-500 to-red-600 text-white"}`}>
                         {toast.type === "success" ? (
-                            <svg className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                            </svg>
+                            <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                                </svg>
+                            </div>
                         ) : (
-                            <svg className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
+                            <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </div>
                         )}
                         <span className="font-semibold text-sm sm:text-base break-words">{toast.message}</span>
                     </div>
                 </div>
             )}
             
-            <div className="max-w-7xl mx-auto px-4 py-8">
-                <div className="mb-8">
-                    <h1 className="text-3xl font-bold text-main mb-2">
-                        {isRTL ? 'الإعلانات المفضلة' : 'Favorite Ads'}
-                    </h1>
-                    <p className="text-gray-600">
-                        {isRTL 
-                            ? `لديك ${favorites.length} منتج في المفضلة` 
-                            : `You have ${favorites.length} products in favorites`}
-                    </p>
+            <div className="max-w-7xl mx-auto px-4 py-8 sm:py-12">
+                {/* Header Section */}
+                <div className="mb-10">
+                    <div className="flex items-center justify-between gap-3 mb-3">
+                        <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 bg-gradient-to-br from-main to-green-700 rounded-2xl flex items-center justify-center shadow-lg">
+                                <Heart className="text-white" size={24} fill="white" />
+                            </div>
+                            <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-main to-green-700 bg-clip-text text-transparent">
+                                {isRTL ? 'الإعلانات المفضلة' : 'Favorite Ads'}
+                            </h1>
+                        </div>
+                        <span className="text-sm text-main font-semibold bg-main/10 px-3 py-1 rounded-lg">
+                            {favorites.length} {isRTL ? "منتج" : "products"}
+                        </span>
+                    </div>
                 </div>
 
                 {favorites.length === 0 ? (
-                    <div className="bg-white rounded-xl shadow-sm p-12 text-center">
-                        <div className="text-gray-400 mb-6">
-                            <Heart size={80} className="mx-auto" />
+                    <div className="bg-white rounded-3xl shadow-xl p-8 sm:p-16 text-center border border-gray-100">
+                        <div className="max-w-md mx-auto">
+                            <div className="relative mb-8">
+                                <div className="w-32 h-32 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto">
+                                    <Heart size={64} className="text-gray-300" strokeWidth={1.5} />
+                                </div>
+                            </div>
+                            <h3 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-3">
+                                {isRTL ? 'لا توجد منتجات مفضلة' : 'No favorite products'}
+                            </h3>
+                            <p className="text-gray-500 text-base sm:text-lg mb-8 leading-relaxed">
+                                {isRTL 
+                                    ? 'ابدأ بإضافة منتجات إلى المفضلة لتظهر هنا وتتمكن من الوصول إليها بسهولة' 
+                                    : 'Start adding products to favorites to see them here and access them easily'}
+                            </p>
+                            <button
+                                onClick={() => navigate('/products')}
+                                className="bg-gradient-to-r from-main to-green-700 hover:from-green-700 hover:to-green-800 cursor-pointer text-white px-8 py-4 rounded-xl font-semibold transition-all duration-300 inline-flex items-center gap-3 shadow-lg hover:shadow-xl transform hover:scale-105"
+                            >
+                                <ShoppingCart size={22} />
+                                <span className="text-lg">{isRTL ? 'تصفح المنتجات' : 'Browse Products'}</span>
+                            </button>
                         </div>
-                        <h3 className="text-2xl font-semibold text-gray-600 mb-3">
-                            {isRTL ? 'لا توجد منتجات مفضلة' : 'No favorite products'}
-                        </h3>
-                        <p className="text-gray-500 mb-6">
-                            {isRTL 
-                                ? 'ابدأ بإضافة منتجات إلى المفضلة لتظهر هنا' 
-                                : 'Start adding products to favorites to see them here'}
-                        </p>
-                        <button
-                            onClick={() => navigate('/products')}
-                            className="bg-main hover:bg-green-800 cursor-pointer text-white px-6 py-3 rounded-lg font-medium transition inline-flex items-center gap-2"
-                        >
-                            <ShoppingCart size={20} />
-                            <span>{isRTL ? 'تصفح المنتجات' : 'Browse Products'}</span>
-                        </button>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
-                        {favorites.map((favorite) => {
-                            const product = favorite.product || favorite;
-                            
-                            const productData = {
-                                ...product,
-                                id: product.id,
-                                name_ar: product.name_ar,
-                                name_en: product.name_en,
-                                price: product.price,
-                                image: product.image || product.images?.[0],
-                                governorate: product.governorate,
-                                created_at: product.created_at,
-                                user_id: product.user_id || product.seller_id
-                            };
+                    <div>
+                        {/* Products Grid */}
+                        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 sm:gap-5">
+                            {favorites.map((favorite) => {
+                                const product = favorite.product || favorite;
+                                
+                                const productData = {
+                                    ...product,
+                                    id: product.id,
+                                    name_ar: product.name_ar,
+                                    name_en: product.name_en,
+                                    price: product.price,
+                                    image: product.image || product.images?.[0],
+                                    governorate: product.governorate,
+                                    created_at: product.created_at,
+                                    user_id: product.user_id || product.seller_id
+                                };
 
-                            return (
-                                <ProductCard
-                                    key={product.id}
-                                    product={productData}
-                                    isFavorite={true}
-                                    onToggleFavorite={handleToggleFavorite}
-                                    onProductClick={handleProductClick}
-                                    onContactSeller={handleContactSeller}
-                                />
-                            );
-                        })}
+                                return (
+                                    <ProductCard
+                                        key={product.id}
+                                        product={productData}
+                                        isFavorite={true}
+                                        onToggleFavorite={handleToggleFavorite}
+                                        onProductClick={handleProductClick}
+                                        onContactSeller={handleContactSeller}
+                                    />
+                                );
+                            })}
+                        </div>
                     </div>
                 )}
             </div>

@@ -75,6 +75,17 @@ const Login = () => {
         if (errors[name]) setErrors((prev) => ({ ...prev, [name]: "" }));
     };
 
+    const handlePhoneChange = (value) => {
+        let numbersOnly = value.replace(/\D/g, '');
+
+        const maxLength = selectedCountryData?.phone_length || 15;
+
+        const limitedPhone = numbersOnly.slice(0, maxLength);
+
+        setFormData((prev) => ({ ...prev, phone: limitedPhone }));
+        if (errors.phone) setErrors((prev) => ({ ...prev, phone: "" }));
+    };
+
     const validateForm = () => {
         const newErrors = {};
         if (!formData.phone.trim()) {
@@ -168,27 +179,39 @@ const Login = () => {
                             {isAdminLogin ? t("auth.login.email") : t("auth.login.phone")}
                         </label>
                         {!isAdminLogin ? (
-                            <div className="flex gap-2" dir="ltr">
-                                <div className="w-48 md:w-36">
-                                    <CustomSelect
-                                        options={countryOptions}
-                                        value={formData.country_id}
-                                        onChange={(value) => setFormData(prev => ({ ...prev, country_id: value }))}
-                                        placeholder="+20"
-                                        isRTL={false}
+                            <div>
+                                <div className="flex gap-2" dir="ltr">
+                                    <div className="w-48 md:w-36">
+                                        <CustomSelect
+                                            options={countryOptions}
+                                            value={formData.country_id}
+                                            onChange={(value) => setFormData(prev => ({ ...prev, country_id: value }))}
+                                            placeholder="+20"
+                                            isRTL={false}
+                                        />
+                                    </div>
+                                    <input
+                                        type="tel"
+                                        name="phone"
+                                        value={formData.phone}
+                                        onChange={(e) => handlePhoneChange(e.target.value)}
+                                        placeholder={t("auth.login.phone")}
+                                        dir="ltr"
+                                        maxLength={selectedCountryData?.phone_length || 15}
+                                        style={{ textAlign: dir === "rtl" ? "right" : "left" }}
+                                        className={`border w-39 md:flex-1 rounded-xl p-3 focus:outline-none focus:ring-2 ${errors.phone ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:ring-green-500"
+                                            }`}
                                     />
                                 </div>
-                                <input
-                                    type="tel"
-                                    name="phone"
-                                    value={formData.phone}
-                                    onChange={handleChange}
-                                    placeholder={t("auth.login.phone")}
-                                    dir="ltr"
-                                    style={{ textAlign: dir === "rtl" ? "right" : "left" }}
-                                    className={`border w-39 md:flex-1 rounded-xl p-3 focus:outline-none focus:ring-2 ${errors.phone ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:ring-green-500"
-                                        }`}
-                                />
+                                {/* ✅ رسالة توضح عدد الأرقام المطلوب */}
+                                {selectedCountryData && !errors.phone && (
+                                    <p className="text-gray-500 text-xs mt-1" dir={dir}>
+                                        {dir === "rtl"
+                                            ? `يجب أن يكون الرقم ${selectedCountryData.phone_length} رقم`
+                                            : `Must be ${selectedCountryData.phone_length} digits`
+                                        }
+                                    </p>
+                                )}
                             </div>
                         ) : (
                             <input
