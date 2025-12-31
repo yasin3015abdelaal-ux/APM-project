@@ -114,7 +114,7 @@ const Register = () => {
             ) : (
                 <span className="text-xl">🌍</span>
             ),
-            phoneCode: flagData?.phone_code || ""  // ✅ هنا جبنا الكود من countriesFlags
+            phoneCode: flagData?.phone_code || "" 
         };
     });
 
@@ -137,6 +137,25 @@ const Register = () => {
         setFormData(prev => ({ ...prev, [name]: value }));
         if (errors[name]) setErrors(prev => ({ ...prev, [name]: "" }));
     };
+
+    const handlePhoneChange = (value) => {
+    let numbersOnly = value.replace(/\D/g, '');
+    
+    if (selectedCountry?.code?.toLowerCase() === 'eg' && numbersOnly.startsWith('0')) {
+        numbersOnly = numbersOnly.slice(1);
+    }
+    
+    const selectedCountryData = countriesFlags.find(f =>
+        f.code?.toLowerCase() === selectedCountry?.code?.toLowerCase() ||
+        f.id === selectedCountry?.id
+    );
+    
+    const maxLength = selectedCountryData?.phone_length || 15;
+    
+    const limitedPhone = numbersOnly.slice(0, maxLength);
+    
+    handleChange('phone', limitedPhone);
+};
 
     const handleImageChange = (e) => {
         const file = e.target.files[0];
@@ -379,24 +398,30 @@ const Register = () => {
                                     )}
                                     <div className="absolute left-14 top-1/2 transform -translate-y-1/2 z-10 pointer-events-none">
                                         <span className="font-semibold text-sm text-gray-700">
-                                            {countriesFlags.find(f =>
-                                                f.code?.toLowerCase() === selectedCountry?.code?.toLowerCase() ||
-                                                f.id === selectedCountry?.id
-                                            )?.phone_code}
+                                            {selectedCountryData?.phone_code}
                                         </span>
                                     </div>
                                     <input
                                         name="phone"
                                         type="tel"
                                         value={formData.phone}
-                                        onChange={(e) => handleChange('phone', e.target.value)}
+                                        onChange={(e) => handlePhoneChange(e.target.value)}
                                         placeholder={t("auth.register.phone")}
                                         dir="ltr"
+                                        maxLength={selectedCountryData?.phone_length || 15}
                                         className={`w-full border rounded-lg p-2.5 text-sm focus:outline-none focus:ring-2 ${errors.phone ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:ring-green-600"}`}
                                         style={{ paddingLeft: '95px', textAlign: 'left' }}
                                     />
                                 </div>
                                 {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
+                                {selectedCountryData && !errors.phone && (
+                                    <p className="text-gray-500 text-xs mt-1">
+                                        {dir === "rtl"
+                                            ? `يجب أن يكون الرقم ${selectedCountryData.phone_length} رقم`
+                                            : `Must be ${selectedCountryData.phone_length} digits`
+                                        }
+                                    </p>
+                                )}
                             </div>
 
                             <div>
