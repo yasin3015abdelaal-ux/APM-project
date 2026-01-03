@@ -156,6 +156,17 @@ const ProductsPage = () => {
     useEffect(() => {
         const data = localStorage.getItem('userData');
         if (data) setUserData(JSON.parse(data));
+        
+        const fetchInitialData = async () => {
+            try {
+                const govs = await getCachedGovernorates(data ? JSON.parse(data).country?.id : null);
+                setGovernorates(govs.data || []);
+            } catch {
+                setGovernorates([]);
+            }
+        };
+        
+        fetchInitialData();
     }, []);
 
     useEffect(() => {
@@ -172,18 +183,20 @@ const ProductsPage = () => {
                 })
                 .catch(() => {});
         }
-        getCachedGovernorates(countryId).then(({data}) => setGovernorates(data)).catch(() => setGovernorates([]));
+        
         userAPI.get('/favorites').then(res => {
             const favs = Array.isArray(res.data) ? res.data : (res.data.data || res.data.favorites || []);
             setFavorites(new Set(favs.map(fav => (fav.product || fav).id)));
         }).catch(() => {});
-    }, [isViewAllPage, categoryId, countryId]);
+    }, [isViewAllPage, categoryId]);
     
     useEffect(() => {
-        if (countryId) fetchProducts(1);
-    }, [appliedFilters, countryId, categoryId, isViewAllPage]);
+        fetchProducts(1);
+    }, [appliedFilters, categoryId, isViewAllPage]);
 
-    useEffect(() => { if (countryId && currentPage > 1) fetchProducts(currentPage); }, [currentPage]);
+    useEffect(() => { 
+        if (currentPage > 1) fetchProducts(currentPage); 
+    }, [currentPage]);
     
     useEffect(() => {
         if (categoryId) {
@@ -529,33 +542,35 @@ const ProductsPage = () => {
                     </>
                 )}
 
-                <div className="flex-1 min-w-0" style={{height: '100vh', overflow: 'auto'}}>
+                <div className={`flex-1 min-w-0 ${!isViewAllPage ? 'h-screen overflow-auto' : ''}`}>
                     <div className="w-full px-4 py-6">
-                        <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
+                        <div className="flex items-center justify-between mb-6 gap-4">
+                            <h1 className="text-2xl md:text-3xl font-bold text-main">
+                                {isViewAllPage 
+                                    ? (isRTL ? 'جميع المنتجات' : 'All Products')
+                                    : (isRTL 
+                                        ? `منتجات ${currentCategory ? currentCategory.name_ar : ''}`
+                                        : `${currentCategory ? currentCategory.name_en : ''} Products`
+                                    )
+                                }
+                            </h1>
+                            
                             <div className="flex items-center gap-3">
+                                {isViewAllPage && (
+                                    <div className="bg-white px-4 py-2 rounded-xl shadow-md">
+                                        <span className="text-sm text-gray-600">
+                                            {isRTL ? `${pagination.total} منتج` : `${pagination.total} products`}
+                                        </span>
+                                    </div>
+                                )}
+                                
                                 {!isViewAllPage && (
                                     <button onClick={() => setIsFilterOpen(true)}
-                                        className="lg:hidden flex items-center gap-3 bg-gradient-to-r from-main to-green-600 text-white px-6 py-3 rounded-xl shadow-lg">
+                                        className="lg:hidden flex items-center gap-3 bg-gradient-to-r from-main to-green-600 text-white px-6 py-3 rounded-xl shadow-lg flex-shrink-0">
                                         <Filter size={20} />
                                         <span>{isRTL ? 'الفلاتر' : 'Filters'}</span>
                                     </button>
                                 )}
-                                
-                                <h1 className="text-2xl md:text-3xl font-bold text-main">
-                                    {isViewAllPage 
-                                        ? (isRTL ? 'جميع المنتجات' : 'All Products')
-                                        : (isRTL 
-                                            ? `منتجات ${currentCategory ? currentCategory.name_ar : ''}`
-                                            : `${currentCategory ? currentCategory.name_en : ''} Products`
-                                        )
-                                    }
-                                </h1>
-                            </div>
-                            
-                            <div className="bg-white px-4 py-2 rounded-xl shadow-md">
-                                <span className="text-sm text-gray-600">
-                                    {isRTL ? `${pagination.total} منتج` : `${pagination.total} products`}
-                                </span>
                             </div>
                         </div>
 

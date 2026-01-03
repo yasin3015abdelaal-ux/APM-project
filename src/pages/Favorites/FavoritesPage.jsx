@@ -132,17 +132,17 @@ const FavoritesPage = () => {
             
             <div className="max-w-7xl mx-auto px-4 py-8 sm:py-12">
                 {/* Header Section */}
-                <div className="mb-10">
-                    <div className="flex items-center justify-between gap-3 mb-3">
-                        <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 bg-gradient-to-br from-main to-green-700 rounded-2xl flex items-center justify-center shadow-lg">
-                                <Heart className="text-white" size={24} fill="white" />
+<div className="mb-10">
+                    <div className="flex items-center justify-between gap-2 sm:gap-3 mb-3">
+                        <div className="flex items-center gap-2 sm:gap-3">
+                            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-main to-green-700 rounded-2xl flex items-center justify-center shadow-lg">
+                                <Heart className="text-white" size={20} fill="white" />
                             </div>
-                            <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-main to-green-700 bg-clip-text text-transparent">
+                            <h1 className="text-xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-main to-green-700 bg-clip-text text-transparent">
                                 {isRTL ? 'الإعلانات المفضلة' : 'Favorite Ads'}
                             </h1>
                         </div>
-                        <span className="text-sm text-main font-semibold bg-main/10 px-3 py-1 rounded-lg">
+                        <span className="text-xs sm:text-sm text-main font-semibold bg-main/10 px-2 py-1 sm:px-3 rounded-lg whitespace-nowrap">
                             {favorites.length} {isRTL ? "منتج" : "products"}
                         </span>
                     </div>

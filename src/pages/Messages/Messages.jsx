@@ -5,29 +5,23 @@ import { chatAPI } from "../../api";
 import { useChat } from "../../contexts/ChatContext";
 import ChatView from "./ChatView";
 
-// Skeleton Loading Component
 const MessagesSkeleton = ({ isRTL }) => (
     <div className="h-[calc(100vh-90px)] flex bg-gradient-to-br from-gray-50 to-green-50/20 p-4 gap-4" dir={isRTL ? "rtl" : "ltr"}>
         <div className="w-full lg:w-96 bg-white rounded-2xl shadow-xl border border-gray-100 flex flex-col flex-shrink-0 overflow-hidden">
-            {/* Header Skeleton */}
             <div className="p-5 border-b border-gray-100 bg-gradient-to-r from-white to-green-50/30 flex-shrink-0">
                 <div className="flex items-center gap-3 mb-4">
-                    {/* Icon Skeleton */}
                     <div className="w-10 h-10 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded-xl animate-pulse"
                         style={{ animation: 'shimmer 1.5s ease-in-out infinite', backgroundSize: '200% 100%' }}></div>
 
-                    {/* Title Skeleton */}
                     <div className="flex-1">
                         <div className="h-6 w-32 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded animate-pulse"
                             style={{ animation: 'shimmer 1.5s ease-in-out infinite', backgroundSize: '200% 100%' }}></div>
                     </div>
 
-                    {/* Count Skeleton */}
                     <div className="w-10 h-6 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded-full animate-pulse"
                         style={{ animation: 'shimmer 1.5s ease-in-out infinite', backgroundSize: '200% 100%' }}></div>
                 </div>
 
-                {/* Tabs Skeleton */}
                 <div className="flex gap-2 mb-4">
                     {[...Array(3)].map((_, i) => (
                         <div key={i} className="flex-1 h-9 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded-lg animate-pulse"
@@ -35,21 +29,17 @@ const MessagesSkeleton = ({ isRTL }) => (
                     ))}
                 </div>
 
-                {/* Search Skeleton */}
                 <div className="h-11 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded-xl animate-pulse"
                     style={{ animation: 'shimmer 1.5s ease-in-out infinite', backgroundSize: '200% 100%' }}></div>
             </div>
 
-            {/* Message Cards Skeleton */}
             <div className="flex-1 overflow-y-auto">
                 {[...Array(6)].map((_, index) => (
                     <div key={index} className="flex items-center gap-3 p-4 border-b border-gray-100/50">
-                        {/* Avatar Skeleton */}
                         <div className="w-12 h-12 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded-full animate-pulse flex-shrink-0"
                             style={{ animation: 'shimmer 1.5s ease-in-out infinite', backgroundSize: '200% 100%' }}></div>
 
                         <div className="flex-1 min-w-0">
-                            {/* Name Skeleton */}
                             <div className="flex items-center justify-between gap-2 mb-2">
                                 <div className="h-4 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded animate-pulse"
                                     style={{ animation: 'shimmer 1.5s ease-in-out infinite', backgroundSize: '200% 100%', width: '60%' }}></div>
@@ -57,7 +47,6 @@ const MessagesSkeleton = ({ isRTL }) => (
                                     style={{ animation: 'shimmer 1.5s ease-in-out infinite', backgroundSize: '200% 100%', width: '50px' }}></div>
                             </div>
 
-                            {/* Message Skeleton */}
                             <div className="h-3 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded animate-pulse"
                                 style={{ animation: 'shimmer 1.5s ease-in-out infinite', backgroundSize: '200% 100%', width: '80%' }}></div>
                         </div>
@@ -66,7 +55,6 @@ const MessagesSkeleton = ({ isRTL }) => (
             </div>
         </div>
 
-        {/* Empty State Skeleton for Desktop */}
         <div className="hidden lg:flex flex-1 items-center justify-center bg-white rounded-2xl border border-gray-100 shadow-xl overflow-hidden">
             <div className="text-center p-8">
                 <div className="w-32 h-32 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded-3xl mx-auto mb-6 animate-pulse"
@@ -164,8 +152,8 @@ const MessageCard = memo(({ conversation, isSelected, onSelect }) => {
                 </div>
 
                 <p className={`text-sm truncate ${unreadCount > 0
-                        ? 'font-semibold text-gray-800'
-                        : 'text-gray-500'
+                    ? 'font-semibold text-gray-800'
+                    : 'text-gray-500'
                     }`}>
                     {lastMessage?.message || t('messages.noMessages')}
                 </p>
@@ -259,7 +247,7 @@ const Messages = () => {
             }
             if (!a.last_message) return 1;
             if (!b.last_message) return -1;
-            
+
             const dateA = new Date(a.last_message.created_at);
             const dateB = new Date(b.last_message.created_at);
             return dateB - dateA;
@@ -272,8 +260,7 @@ const Messages = () => {
 
             const params = {
                 page,
-                limit: 50,
-                type: 'auction'
+                limit: 50
             };
 
             if (activeFilter !== 'all') {
@@ -314,8 +301,7 @@ const Messages = () => {
 
         const params = {
             page: 1,
-            limit: 50,
-            type: 'auction'
+            limit: 50
         };
 
         if (newFilter !== 'all') {
@@ -613,8 +599,8 @@ const Messages = () => {
             {toast && (
                 <div className={`fixed top-6 ${isRTL ? "left-6" : "right-6"} z-50 animate-slide-in max-w-sm`}>
                     <div className={`px-4 py-3 rounded-xl shadow-lg flex items-center gap-2 ${toast.type === "success"
-                            ? "bg-gradient-to-r from-main to-green-600 text-white"
-                            : "bg-gradient-to-r from-red-500 to-red-600 text-white"
+                        ? "bg-gradient-to-r from-main to-green-600 text-white"
+                        : "bg-gradient-to-r from-red-500 to-red-600 text-white"
                         }`}>
                         {toast.type === "success" ? (
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -631,8 +617,8 @@ const Messages = () => {
             )}
 
             <div className={`${selectedConversation
-                    ? 'hidden lg:flex lg:w-96'
-                    : 'w-full lg:w-96'
+                ? 'hidden lg:flex lg:w-96'
+                : 'w-full lg:w-96'
                 } bg-white rounded-2xl shadow-xl border border-gray-100 flex flex-col flex-shrink-0 overflow-hidden`}>
                 <div className="p-5 border-b border-gray-100 bg-gradient-to-r from-white to-green-50/30 flex-shrink-0">
                     <div className="flex items-center gap-3 mb-4">
@@ -661,6 +647,7 @@ const Messages = () => {
                         >
                             {t('messages.tabs.all')}
                         </button>
+
                         <button
                             onClick={() => handleFilterChange("buy")}
                             className={`flex-1 cursor-pointer px-3 py-2 rounded-lg text-sm font-medium transition-all ${activeFilter === "buy"
@@ -670,6 +657,7 @@ const Messages = () => {
                         >
                             {t('messages.tabs.buy')}
                         </button>
+
                         <button
                             onClick={() => handleFilterChange("sale")}
                             className={`flex-1 cursor-pointer px-3 py-2 rounded-lg text-sm font-medium transition-all ${activeFilter === "sale"
@@ -679,8 +667,8 @@ const Messages = () => {
                         >
                             {t('messages.tabs.sell')}
                         </button>
-                    </div>
 
+                    </div>
                     <div className="relative">
                         <input
                             type="text"

@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Check, X } from "lucide-react";
 import { authAPI, dataAPI } from "../../api";
+import { useAuth } from "../../contexts/AuthContext"; 
 import CustomSelect from "../Ui/CustomSelect/CustomSelect";
 import { countriesFlags } from "../../data/flags";
 
@@ -35,6 +36,7 @@ const Register = () => {
     const { t, i18n } = useTranslation();
     const dir = i18n.language === "ar" ? "rtl" : "ltr";
     const navigate = useNavigate();
+    const { login } = useAuth(); 
     const [step, setStep] = useState(1);
     const [loading, setLoading] = useState(false);
     const [errors, setErrors] = useState({});
@@ -139,23 +141,22 @@ const Register = () => {
     };
 
     const handlePhoneChange = (value) => {
-    let numbersOnly = value.replace(/\D/g, '');
-    
-    if (selectedCountry?.code?.toLowerCase() === 'eg' && numbersOnly.startsWith('0')) {
-        numbersOnly = numbersOnly.slice(1);
-    }
-    
-    const selectedCountryData = countriesFlags.find(f =>
-        f.code?.toLowerCase() === selectedCountry?.code?.toLowerCase() ||
-        f.id === selectedCountry?.id
-    );
-    
-    const maxLength = selectedCountryData?.phone_length || 15;
-    
-    const limitedPhone = numbersOnly.slice(0, maxLength);
-    
-    handleChange('phone', limitedPhone);
-};
+        let numbersOnly = value.replace(/\D/g, '');
+        
+        if (selectedCountry?.code?.toLowerCase() === 'eg' && numbersOnly.startsWith('0')) {
+            numbersOnly = numbersOnly.slice(1);
+        }
+        
+        const selectedCountryData = countriesFlags.find(f =>
+            f.code?.toLowerCase() === selectedCountry?.code?.toLowerCase() ||
+            f.id === selectedCountry?.id
+        );
+        
+        const maxLength = selectedCountryData?.phone_length || 15;
+        const limitedPhone = numbersOnly.slice(0, maxLength);
+        
+        handleChange('phone', limitedPhone);
+    };
 
     const handleImageChange = (e) => {
         const file = e.target.files[0];
@@ -270,13 +271,17 @@ const Register = () => {
 
             const response = await authAPI.register(submitData);
 
+            const { token, user } = response.data.data;
+
+            login(token, user);
+
             if (verifiedAccount === 1) {
                 showToast(t("auth.register.verifiedAccountSuccess") || "تم إنشاء حسابك بنجاح وإضافتك كتاجر معتمد", "success");
             } else {
                 showToast(t("auth.register.successMessage") || "تم إنشاء الحساب بنجاح", "success");
             }
 
-            setTimeout(() => navigate("/login"), 1500);
+            setTimeout(() => navigate("/"), 1500);
         } catch (err) {
             const errorMessage = err.response?.data?.message || t("auth.register.error");
             showToast(errorMessage, "error");
@@ -291,6 +296,7 @@ const Register = () => {
         f.code?.toLowerCase() === selectedCountry?.code?.toLowerCase() ||
         f.id === selectedCountry?.id
     );
+
     return (
         <div dir={dir} className="min-h-screen w-full flex items-center justify-center p-6 bg-gray-50">
             {toast && (

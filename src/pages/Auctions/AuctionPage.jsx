@@ -48,18 +48,24 @@ function ProductCard({ product, onProductClick, onContactSeller, isAuctionOpen }
     const displayName = isRTL ? name_ar : name_en;
     const displayPrice = auction_price || price;
 
+    const handleImageClick = () => {
+        if (isAuctionOpen) {
+            onProductClick(id);
+        }
+    };
+
     return (
         <div className="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
             <div
-                className="h-32 bg-gray-100 relative cursor-pointer group"
-                onClick={() => onProductClick(id)}
+                className={`h-32 bg-gray-100 relative group ${isAuctionOpen ? 'cursor-pointer' : 'cursor-not-allowed'}`}
+                onClick={handleImageClick}
             >
                 {allImages.length > 0 && allImages[currentImageIndex] ? (
                     <>
                         <img
                             src={allImages[currentImageIndex]}
                             alt={displayName}
-                            className="w-full h-full object-cover"
+                            className={`w-full h-full object-cover ${!isAuctionOpen ? 'opacity-60' : ''}`}
                             onError={(e) => {
                                 e.target.style.display = 'none';
                                 e.target.nextElementSibling.style.display = 'flex';
@@ -72,6 +78,19 @@ function ProductCard({ product, onProductClick, onContactSeller, isAuctionOpen }
                 ) : (
                     <div className="w-full h-full flex items-center justify-center">
                         <PlaceholderSVG />
+                    </div>
+                )}
+
+                {!isAuctionOpen && (
+                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                        <div className="bg-white/90 px-3 py-2 rounded-lg text-center">
+                            <svg className="w-6 h-6 mx-auto text-gray-600 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                            </svg>
+                            <p className="text-xs font-bold text-gray-700">
+                                {isRTL ? "متاح عند فتح المزاد" : "Available when auction opens"}
+                            </p>
+                        </div>
                     </div>
                 )}
 
@@ -547,6 +566,15 @@ const AuctionPage = () => {
             created_at: product.created_at || auctionProduct.added_at
         };
     };
+    const remainingBuyers =
+        maxBuyers == null
+            ? "∞"
+            : Math.max(maxBuyers - buyersCount, 0);
+
+    const remainingSellers =
+        maxSellers == null
+            ? "∞"
+            : Math.max(maxSellers - sellersCount, 0);
 
     return (
         <div className="min-h-screen bg-white" dir={isRTL ? "rtl" : "ltr"}>
@@ -679,53 +707,43 @@ const AuctionPage = () => {
                         <div className="text-xl font-bold text-main">{buyersCount}</div>
                     </div>
 
-                    {!loading && !isParticipating && (
-                        <div className="bg-white border border-gray-200 text-center rounded-xl p-3 hover:border-main transition-all">
-                            <h3 className="text-xs font-bold text-gray-800 mb-1">
-                                {isRTL ? (
-                                    <>
-                                        احجز <span style={{ color: "red" }}>ك</span>تاجر في المزاد القادم <br />
-                                        {(!maxSellers || maxSellers - sellersCount <= 0)
-                                            ? "∞"
-                                            : maxSellers - sellersCount}{" "}
-                                        تجار
-                                    </>
-                                ) : (
-                                    <>
-                                        Book as a seller in the upcoming auction <br />
-                                        {(!maxSellers || maxSellers - sellersCount <= 0)
-                                            ? "∞"
-                                            : maxSellers - sellersCount}{" "}
-                                        sellers remaining
-                                    </>
-                                )}
-                            </h3>
-                        </div>
-                    )}
+                    {!loading && !isParticipating && timeRemaining.registrationOpen && (
+                        <>
+                            <div className="bg-white border border-gray-200 text-center rounded-xl p-3 hover:border-main transition-all">
+                                <h3 className="text-xs font-bold text-gray-800 mb-1">
+                                    {isRTL ? (
+                                        <>
+                                            احجز <span style={{ color: "red" }}>ك</span>تاجر في المزاد القادم <br />
+                                            متبقي{" "}
+                                            {remainingSellers} تجار
+                                        </>
+                                    ) : (
+                                        <>
+                                            Book as a seller in the upcoming auction <br />
+                                            {remainingSellers} sellers remaining
+                                        </>
+                                    )}
+                                </h3>
+                            </div>
 
-                    {!loading && !isParticipating && (
-                        <div className="bg-white border border-gray-200 text-center rounded-xl p-3 hover:border-main transition-all">
-                            <h3 className="text-xs font-bold text-gray-800 mb-1">
-                                {isRTL ? (
-                                    <>
-                                        احجز <span style={{ color: "red" }}>ك</span>مشتري في المزاد القادم <br />
-                                        متبقي{" "}
-                                        {(!maxBuyers || maxBuyers - buyersCount <= 0)
-                                            ? "∞"
-                                            : maxBuyers - buyersCount}{" "}
-                                        مشترين
-                                    </>
-                                ) : (
-                                    <>
-                                        Book as a buyer in the upcoming auction <br />
-                                        {(!maxBuyers || maxBuyers - buyersCount <= 0)
-                                            ? "∞"
-                                            : maxBuyers - buyersCount}{" "}
-                                        buyers remaining
-                                    </>
-                                )}
-                            </h3>
-                        </div>
+                            <div className="bg-white border border-gray-200 text-center rounded-xl p-3 hover:border-main transition-all">
+                                <h3 className="text-xs font-bold text-gray-800 mb-1">
+                                    {isRTL ? (
+                                        <>
+                                            احجز <span style={{ color: "red" }}>ك</span>مشتري في المزاد القادم <br />
+                                            متبقي{" "}
+                                            {remainingBuyers} مشترين
+                                        </>
+                                    ) : (
+                                        <>
+                                            Book as a buyer in the upcoming auction <br />
+                                            {remainingBuyers} buyers remaining
+                                        </>
+                                    )}
+                                </h3>
+                            </div>
+
+                        </>
                     )}
                 </div>
 
@@ -865,7 +883,7 @@ const AuctionPage = () => {
                                                             } else {
                                                                 pageNum = currentPage - 2 + i;
                                                             }
-                                                            
+
                                                             return (
                                                                 <button
                                                                     key={pageNum}
