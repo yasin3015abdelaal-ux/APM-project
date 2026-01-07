@@ -111,6 +111,12 @@ const ProductsReview = () => {
     const [statusFilter, setStatusFilter] = useState('all');
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [showModal, setShowModal] = useState(false);
+    const [stats, setStats] = useState({
+        total: 0,
+        pending: 0,
+        active: 0,
+        rejected: 0,
+    });
     
     // Pagination states
     const [currentPage, setCurrentPage] = useState(1);
@@ -134,6 +140,14 @@ const ProductsReview = () => {
         try {
             setLoading(true);
             const response = await adminAPI.get('/products');
+            setStats(response?.data?.data?.status_counts || {
+                total: 0,
+                pending: 0,
+                active: 0,
+                rejected: 0,
+                expired: 0,
+                deleted: 0,
+            });
             setProducts(response?.data?.data?.products || []);
         } catch (error) {
             console.error('Error fetching products:', error);
@@ -273,13 +287,6 @@ const ProductsReview = () => {
 
     const navigateToUser = (userId) => {
         window.location.href = `/dashboard/accounts/update-account/${userId}`;
-    };
-
-    const stats = {
-        total: products.length,
-        pending: products.filter(p => p.status === 'pending').length,
-        active: products.filter(p => p.status === 'active').length,
-        rejected: products.filter(p => p.status === 'rejected').length,
     };
 
     if (loading) {
