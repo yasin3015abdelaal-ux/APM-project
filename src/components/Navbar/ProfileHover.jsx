@@ -4,7 +4,22 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "../../contexts/AuthContext";
 import { countriesFlags } from "../../data/flags";
 import { authAPI, dataAPI } from "../../api";
-import { BadgeCheck, LogOut } from "lucide-react";
+import { 
+  BadgeCheck, 
+  LogOut, 
+  Heart, 
+  FileText, 
+  Phone, 
+  Share2, 
+  PlusCircle, 
+  Bell, 
+  Receipt, 
+  DollarSign, 
+  Info, 
+  Shield,
+  ChevronLeft,
+  ChevronRight
+} from "lucide-react";
 import CustomSelect from "../Ui/CustomSelect/CustomSelect";
 
 const ProfileHover = ({ onClose }) => {
@@ -18,7 +33,9 @@ const ProfileHover = ({ onClose }) => {
 
   const userCountryId = user?.country?.id;
   const trustStatus = user?.trust_status;
+  
   const isVerified = trustStatus === "active";
+  const isVerifiedAccount = user?.verified_account === 1 || user?.verified_account === "1";
 
   const userCountry = countriesFlags.find((c) => c.id === userCountryId);
   let flagImage;
@@ -104,22 +121,22 @@ const ProfileHover = ({ onClose }) => {
   };
 
   const menuItems = [
-    { key: "favorite ads", icon: "favorite", route: "/favorites" },
-    { key: "subscriptions", icon: "article", route: "/packages" },
-    { key: "contact us", icon: "call", route: "/contact" },
-    { key: "share the app", icon: "share" },
-    { key: "my ads", icon: "add_ad", route: "/ads" },
-    { key: "notification", icon: "notifications", route: "/notifications" },
+    { key: "favorite ads", icon: Heart, route: "/favorites" },
+    { key: "subscriptions", icon: FileText, route: "/packages" },
+    { key: "contact us", icon: Phone, route: "/contact" },
+    { key: "share the app", icon: Share2 },
+    { key: "my ads", icon: PlusCircle, route: "/ads" },
+    { key: "notification", icon: Bell, route: "/notifications" },
     {
       key: "subscriptions and invoices",
-      icon: "receipt",
+      icon: Receipt,
       route: "/invoices",
     },
-    { key: "today's meat price", icon: "payments", route: "/prices", verifiedOnly: true },
-    { key: "about us", icon: "info", route: "/about-us" },
+    { key: "today's meat price", icon: DollarSign, route: "/prices", verifiedOnly: true },
+    { key: "about us", icon: Info, route: "/about-us" },
     {
       key: "privacy, terms, and conditions",
-      icon: "policy",
+      icon: Shield,
       route: "/terms-and-conditions",
     },
   ];
@@ -155,7 +172,7 @@ const ProfileHover = ({ onClose }) => {
   });
 
   const filteredMenuItems = menuItems.filter(item => {
-    if (item.verifiedOnly && !isVerified) {
+    if (item.verifiedOnly && !isVerifiedAccount) {
       return false;
     }
     return true;
@@ -204,25 +221,26 @@ const ProfileHover = ({ onClose }) => {
         <div className="flex flex-col mt-4 gap-1">
           {menuItems
             .filter(item => ["about us", "privacy, terms, and conditions"].includes(item.key))
-            .map((item) => (
-              <div
-                key={item.key}
-                onClick={() => handleMenuClick(item)}
-                className="flex justify-between items-center text-gray-700 hover:bg-green-50 hover:text-main p-3 rounded-lg transition-all duration-200 cursor-pointer group"
-              >
-                <div className="flex gap-3 text-sm sm:text-base items-center">
-                  <span className="material-symbols-outlined text-xl group-hover:scale-110 transition-transform">
-                    {item.icon}
-                  </span>
-                  <span className="font-medium">{t(item.key)}</span>
+            .map((item) => {
+              const IconComponent = item.icon;
+              return (
+                <div
+                  key={item.key}
+                  onClick={() => handleMenuClick(item)}
+                  className="flex justify-between items-center text-gray-700 hover:bg-green-50 hover:text-main p-3 rounded-lg transition-all duration-200 cursor-pointer group"
+                >
+                  <div className="flex gap-3 text-sm sm:text-base items-center">
+                    <IconComponent className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                    <span className="font-medium">{t(item.key)}</span>
+                  </div>
+                  {i18n.language === "ar" ? (
+                    <ChevronLeft className="w-5 h-5 text-gray-400 group-hover:text-main group-hover:translate-x-1 transition-all" />
+                  ) : (
+                    <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-main group-hover:translate-x-1 transition-all" />
+                  )}
                 </div>
-                <span className="material-symbols-outlined text-xl text-gray-400 group-hover:text-main group-hover:translate-x-1 transition-all">
-                  {i18n.language === "ar"
-                    ? "keyboard_arrow_left"
-                    : "keyboard_arrow_right"}
-                </span>
-              </div>
-            ))}
+              );
+            })}
         </div>
       </div>
     );
@@ -314,25 +332,26 @@ const ProfileHover = ({ onClose }) => {
       <div className="w-full h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent my-4"></div>
 
       <div className="flex flex-col gap-1">
-        {filteredMenuItems.map((item) => (
-          <div
-            key={item.key}
-            onClick={() => handleMenuClick(item)}
-            className="flex justify-between items-center text-gray-700 hover:bg-green-50 hover:text-main p-3 rounded-lg transition-all duration-200 cursor-pointer group"
-          >
-            <div className="flex gap-3 text-sm sm:text-base items-center">
-              <span className="material-symbols-outlined text-xl group-hover:scale-110 transition-transform">
-                {item.icon}
-              </span>
-              <span className="font-medium">{t(item.key)}</span>
+        {filteredMenuItems.map((item) => {
+          const IconComponent = item.icon;
+          return (
+            <div
+              key={item.key}
+              onClick={() => handleMenuClick(item)}
+              className="flex justify-between items-center text-gray-700 hover:bg-green-50 hover:text-main p-3 rounded-lg transition-all duration-200 cursor-pointer group"
+            >
+              <div className="flex gap-3 text-sm sm:text-base items-center">
+                <IconComponent className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                <span className="font-medium">{t(item.key)}</span>
+              </div>
+              {i18n.language === "ar" ? (
+                <ChevronLeft className="w-5 h-5 text-gray-400 group-hover:text-main group-hover:translate-x-1 transition-all" />
+              ) : (
+                <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-main group-hover:translate-x-1 transition-all" />
+              )}
             </div>
-            <span className="material-symbols-outlined text-xl text-gray-400 group-hover:text-main group-hover:translate-x-1 transition-all">
-              {i18n.language === "ar"
-                ? "keyboard_arrow_left"
-                : "keyboard_arrow_right"}
-            </span>
-          </div>
-        ))}
+          );
+        })}
 
         <button
           onClick={handleLogout}

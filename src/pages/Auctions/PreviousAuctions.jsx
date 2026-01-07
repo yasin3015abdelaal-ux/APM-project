@@ -9,7 +9,7 @@ import CustomSelect from "../../components/Ui/CustomSelect/CustomSelect";
 import { HeartIcon } from "lucide-react";
 
 function ProductItem({ item }) {
-    const { id, images, image, name, name_ar, name_en, governorate, price, auction_price, description, description_ar, description_en, added_at } = item;
+    const { id, images, image, name, name_ar, name_en, governorate, price, auction_price, added_at } = item;
     const { i18n } = useTranslation();
     const isRTL = i18n.language === 'ar';
     const navigate = useNavigate();
@@ -42,7 +42,6 @@ function ProductItem({ item }) {
     };
 
     const displayName = isRTL ? name_ar : name_en || name;
-    const displayDescription = isRTL ? description_ar : description_en || description;
     const displayPrice = auction_price || price;
 
     const formatDate = (dateString) => {
@@ -104,12 +103,6 @@ function ProductItem({ item }) {
                     <h3 className="font-bold text-main text-sm mb-1 line-clamp-1">
                         {displayName}
                     </h3>
-
-                    {displayDescription && (
-                        <p className="text-xs text-gray-600 mb-2 line-clamp-2">
-                            {displayDescription}
-                        </p>
-                    )}
 
                     <div className="flex items-center gap-1 mb-2">
                         <IoLocationOutline className="text-main" size={14} />

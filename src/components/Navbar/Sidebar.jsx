@@ -4,7 +4,22 @@ import { useTranslation } from "react-i18next";
 import { useAuth } from "../../contexts/AuthContext";
 import { countriesFlags } from "../../data/flags";
 import { authAPI, dataAPI } from "../../api";
-import { BadgeCheck } from "lucide-react";
+import { 
+    BadgeCheck, 
+    X, 
+    Heart, 
+    FileText, 
+    Phone, 
+    Share2, 
+    PlusCircle, 
+    Bell, 
+    Receipt, 
+    DollarSign, 
+    Info, 
+    Shield,
+    ChevronLeft,
+    ChevronRight
+} from "lucide-react";
 import CustomSelect from "../Ui/CustomSelect/CustomSelect";
 
 const Sidebar = ({ isOpen, onClose }) => {
@@ -106,22 +121,22 @@ const Sidebar = ({ isOpen, onClose }) => {
     };
 
     const menuItems = [
-        { key: "favorite ads", icon: "favorite", route: "/favorites" },
-        { key: "subscriptions", icon: "article", route: "/packages" },
-        { key: "contact us", icon: "call", route: "/contact" },
-        { key: "share the app", icon: "share" },
-        { key: "my ads", icon: "add_ad", route: "/ads" },
-        { key: "notification", icon: "notifications", route: "/notifications" },
+        { key: "favorite ads", icon: Heart, route: "/favorites" },
+        { key: "subscriptions", icon: FileText, route: "/packages" },
+        { key: "contact us", icon: Phone, route: "/contact" },
+        { key: "share the app", icon: Share2 },
+        { key: "my ads", icon: PlusCircle, route: "/ads" },
+        { key: "notification", icon: Bell, route: "/notifications" },
         {
             key: "subscriptions and invoices",
-            icon: "receipt",
+            icon: Receipt,
             route: "/invoices",
         },
-        { key: "today's meat price", icon: "payments", route: "/prices", verifiedOnly: true },
-        { key: "about us", icon: "info", route: "/about-us" },
+        { key: "today's meat price", icon: DollarSign, route: "/prices", verifiedOnly: true },
+        { key: "about us", icon: Info, route: "/about-us" },
         {
             key: "privacy, terms, and conditions",
-            icon: "policy",
+            icon: Shield,
             route: "/terms-and-conditions",
         },
     ];
@@ -178,9 +193,7 @@ const Sidebar = ({ isOpen, onClose }) => {
                             onClick={onClose}
                             className="p-2 hover:bg-gray-100 rounded-lg transition"
                         >
-                            <span className="material-symbols-outlined text-main text-2xl">
-                                close
-                            </span>
+                            <X className="text-main w-6 h-6" />
                         </button>
                     </div>
 
@@ -329,25 +342,26 @@ const Sidebar = ({ isOpen, onClose }) => {
 
                     <div className="p-4">
                         <div className="flex flex-col gap-1">
-                            {filteredMenuItems.map((item) => (
-                                <button
-                                    key={item.key}
-                                    className="flex items-center justify-between p-2.5 hover:bg-green-50 rounded-lg transition text-gray-700 hover:text-main group"
-                                    onClick={() => handleMenuClick(item)}
-                                >
-                                    <div className="flex items-center gap-2 text-sm sm:text-base">
-                                        <span className="material-symbols-outlined text-xl group-hover:scale-110 transition-transform">
-                                            {item.icon}
-                                        </span>
-                                        <span className="font-medium">{t(item.key)}</span>
-                                    </div>
-                                    <span className="material-symbols-outlined text-xl text-gray-400 group-hover:text-main group-hover:translate-x-1 transition-all">
-                                        {i18n.language === "ar"
-                                            ? "keyboard_arrow_left"
-                                            : "keyboard_arrow_right"}
-                                    </span>
-                                </button>
-                            ))}
+                            {filteredMenuItems.map((item) => {
+                                const IconComponent = item.icon;
+                                return (
+                                    <button
+                                        key={item.key}
+                                        className="flex items-center justify-between p-2.5 hover:bg-green-50 rounded-lg transition text-gray-700 hover:text-main group"
+                                        onClick={() => handleMenuClick(item)}
+                                    >
+                                        <div className="flex items-center gap-2 text-sm sm:text-base">
+                                            <IconComponent className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                                            <span className="font-medium">{t(item.key)}</span>
+                                        </div>
+                                        {i18n.language === "ar" ? (
+                                            <ChevronLeft className="w-5 h-5 text-gray-400 group-hover:text-main group-hover:translate-x-1 transition-all" />
+                                        ) : (
+                                            <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-main group-hover:translate-x-1 transition-all" />
+                                        )}
+                                    </button>
+                                );
+                            })}
                         </div>
                     </div>
                 </div>

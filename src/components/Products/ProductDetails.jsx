@@ -8,7 +8,6 @@ import PlaceholderSVG from '../../assets/PlaceholderSVG';
 import Loader from '../../components/Ui/Loader/Loader';
 import SellerReportModal from '../SellerRating/SellerReport';
 
-// الحقول اللي مش محتاجين نعرضها (System Fields)
 const systemFields = [
     'id', 'country_id', 'user_id', 'created_at', 'updated_at',
     'status', 'watchers_count', 'interested_count', 'is_active',
@@ -18,7 +17,6 @@ const systemFields = [
     'name_ar', 'name_en', 'description_ar', 'description_en', 'price'
 ];
 
-// دالة لتحويل اسم الحقل لعنوان مقروء
 const getFieldLabel = (fieldName, isRTL) => {
     const labels = {
         'age': { ar: 'العمر', en: 'Age' },
@@ -54,7 +52,6 @@ const getFieldLabel = (fieldName, isRTL) => {
     return fieldName.replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
 };
 
-// دالة لتنسيق القيمة
 const formatFieldValue = (fieldName, value, isRTL, product) => {
     if (value === null || value === undefined || value === '') {
         return null;
@@ -88,13 +85,11 @@ const formatFieldValue = (fieldName, value, isRTL, product) => {
     return value;
 };
 
-// دالة لاستخراج كل الـ attributes من المنتج
 const extractProductDetails = (product, isRTL) => {
     if (!product) return [];
 
     const details = [];
 
-    // إضافة الفئة والفئة الفرعية أولاً
     if (product.category) {
         details.push({
             label: isRTL ? 'الفئة' : 'Category',
@@ -109,7 +104,6 @@ const extractProductDetails = (product, isRTL) => {
         });
     }
 
-    // نمر على كل حقل في المنتج
     Object.keys(product).forEach(key => {
         if (systemFields.includes(key)) {
             return;
@@ -526,9 +520,31 @@ const ProductDetails = () => {
         );
     }
 
-    const images = product.images || (product.image ? [product.image] : []);
-    const productDetails = extractProductDetails(product, isRTL);
-    const getCurrency = () => {
+const extractImageUrls = (images) => {
+    if (!images) return [];
+    
+    if (Array.isArray(images)) {
+        return images.map(img => {
+            if (typeof img === 'object' && img !== null) {
+                return img.image_url || img.url || img.path || '';
+            }
+            return img;
+        }).filter(Boolean);
+    }
+    
+    return [];
+};
+
+const imageUrls = extractImageUrls(product.images);
+const singleImage = typeof product.image === 'object' && product.image?.image_url 
+    ? product.image.image_url 
+    : product.image;
+
+const images = imageUrls.length > 0 
+    ? imageUrls 
+    : (singleImage ? [singleImage] : []);
+
+const productDetails = extractProductDetails(product, isRTL);    const getCurrency = () => {
         if (product.country?.currency) {
             return product.country.currency;
         }

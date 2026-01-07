@@ -226,6 +226,10 @@ const SellerDetails = () => {
         setShowReportModal(true);
     };
 
+    const navigateToProduct = (productId) => {
+        navigate(`/product-details/${productId}`);
+    };
+
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (sellerOptionsRef.current && !sellerOptionsRef.current.contains(event.target)) {
@@ -790,10 +794,13 @@ const SellerDetails = () => {
                         <>
                             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
                                 {currentProducts.map((product) => (
-                                    <ProductCard
+                                    <div
                                         key={product.id}
-                                        product={product}
-                                    />
+                                        onClick={() => navigateToProduct(product.id)}
+                                        className="cursor-pointer"
+                                    >
+                                        <ProductCard product={product} />
+                                    </div>
                                 ))}
                             </div>
 

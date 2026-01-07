@@ -53,20 +53,19 @@ function ProductItem({
   showToast,
   isAddedToAuction = false,
   isPastAuction = false,
+  isAuctionOpen = false,
 }) {
   const { id, images, image, name, name_ar, name_en, governorate, price } = item;
   const { i18n } = useTranslation();
   const isRTL = i18n.language === "ar";
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-  // Get all images
   const allImages = images && images.length > 0
     ? images
     : (image ? [image] : []);
 
   const hasMultipleImages = allImages.length > 1;
 
-  // Auto-slide effect
   useEffect(() => {
     if (!hasMultipleImages) return;
 
@@ -98,6 +97,16 @@ function ProductItem({
         isRTL
           ? "لا يمكن تعديل المزادات القديمة"
           : "Cannot modify past auctions",
+        "error"
+      );
+      return;
+    }
+
+    if (isAuctionOpen) {
+      showToast(
+        isRTL
+          ? "لا يمكن تعديل الأسعار أثناء فتح المزاد"
+          : "Cannot modify prices while auction is open",
         "error"
       );
       return;
@@ -199,7 +208,6 @@ function ProductItem({
         className={`bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow overflow-hidden ${isPastAuction ? "opacity-90" : ""
           }`}
       >
-        {/* Image with Auto Slider */}
         <div className="h-36 bg-gray-100 relative group">
           {allImages.length > 0 && allImages[currentImageIndex] ? (
             <>
@@ -228,7 +236,6 @@ function ProductItem({
             </div>
           )}
 
-          {/* Image Indicators (Dots) */}
           {hasMultipleImages && (
             <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 z-10 bg-black/30 px-2 py-1 rounded-full backdrop-blur-sm">
               {allImages.map((_, index) => (
@@ -286,11 +293,26 @@ function ProductItem({
 
             {!isPastAuction && (
               <button
-                onClick={() => setShowAuctionModal(true)}
-                className={`py-1.5 px-2.5 rounded-lg transition text-xs cursor-pointer flex items-center justify-center gap-1 w-full md:w-auto ${isAddedToAuction
-                    ? "bg-blue-600 text-white hover:bg-blue-700"
-                    : "bg-main text-white hover:bg-green-700"
-                  }`}
+                onClick={() => {
+                  if (isAuctionOpen) {
+                    showToast(
+                      isRTL
+                        ? "لا يمكن تعديل الأسعار أثناء فتح المزاد"
+                        : "Cannot modify prices while auction is open",
+                      "error"
+                    );
+                    return;
+                  }
+                  setShowAuctionModal(true);
+                }}
+                disabled={isAuctionOpen}
+                className={`py-1.5 px-2.5 rounded-lg transition text-xs flex items-center justify-center gap-1 w-full md:w-auto ${
+                  isAuctionOpen
+                    ? "bg-gray-400 text-gray-200 cursor-not-allowed"
+                    : isAddedToAuction
+                      ? "bg-blue-600 text-white hover:bg-blue-700 cursor-pointer"
+                      : "bg-main text-white hover:bg-green-700 cursor-pointer"
+                }`}
               >
                 {isAddedToAuction ? (
                   <>
@@ -309,7 +331,7 @@ function ProductItem({
         </div>
       </div>
 
-      {showAuctionModal && !isPastAuction && (
+      {showAuctionModal && !isPastAuction && !isAuctionOpen && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl p-6 max-w-md w-full">
             <h3 className="text-xl font-bold text-main mb-4">
@@ -415,11 +437,33 @@ export default function AuctionProducts() {
   const [error, setError] = useState(null);
   const [isRegisteredAsSeller, setIsRegisteredAsSeller] = useState(false);
   const [toast, setToast] = useState(null);
+  const [isAuctionOpen, setIsAuctionOpen] = useState(false);
 
   const showToast = (message, type = "success") => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 4000);
   };
+
+  const checkAuctionStatus = useCallback(() => {
+    const now = new Date();
+    const currentDay = now.getDay();
+    const currentHour = now.getHours();
+    
+    const isOpen = currentDay === 5 && currentHour >= 7 && currentHour < 22;
+    setIsAuctionOpen(isOpen);
+    
+    return isOpen;
+  }, []);
+
+  useEffect(() => {
+    checkAuctionStatus();
+    
+    const interval = setInterval(() => {
+      checkAuctionStatus();
+    }, 60000);
+
+    return () => clearInterval(interval);
+  }, [checkAuctionStatus]);
 
   const loadAllData = useCallback(async () => {
     if (!currentAuctionId) return;
@@ -427,7 +471,6 @@ export default function AuctionProducts() {
     try {
       setLoading(true);
       setError(null);
-
 
       const { data: categoriesData, fromCache: catFromCache } = await getCachedCategories();
       console.log(catFromCache ? "📦 Categories من الكاش" : "🌐 Categories من API");
@@ -474,7 +517,6 @@ export default function AuctionProducts() {
           };
         });
       }
-
 
       setCategories(categoriesData);
       setProducts(finalProducts);
@@ -594,6 +636,26 @@ export default function AuctionProducts() {
               : "My Auctions"}
         </h3>
 
+        {isAuctionOpen && !isPastAuction && (
+          <div className="mb-6 bg-yellow-50 border-2 border-yellow-400 rounded-xl p-4">
+            <div className="flex items-start gap-3">
+              <svg className="w-6 h-6 text-yellow-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <div>
+                <h4 className="font-bold text-yellow-800 mb-1">
+                  {isRTL ? "المزاد مفتوح حالياً" : "Auction is Currently Open"}
+                </h4>
+                <p className="text-yellow-700 text-sm">
+                  {isRTL
+                    ? "لا يمكن إضافة أو تعديل المنتجات أثناء فتح المزاد. يمكنك التعديل بعد إغلاق المزاد."
+                    : "You cannot add or modify products while the auction is open. You can make changes after the auction closes."}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="mb-6">
           {categories.length > 0 && (
             <FilterProducts
@@ -630,6 +692,7 @@ export default function AuctionProducts() {
                 showToast={showToast}
                 isAddedToAuction={isPastAuction ? true : item.isAddedToAuction}
                 isPastAuction={isPastAuction}
+                isAuctionOpen={isAuctionOpen}
               />
             ))
           )}
